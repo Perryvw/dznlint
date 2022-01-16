@@ -1,16 +1,17 @@
 export interface DznLintConfiguration {
     // Format configuration
-    "format": {
+    format: {
         indent: "tabs" | "spaces",
         indentWidth: number,
         braces: "same-line" | "next-line"
     };
     // Rule configuration
-    "naming-convention": {
+    naming_convention: {
         component: string,
         enum: string,
+        enum_member: string,
         interface: string,
-        system: string,
+        local: string,
         type: string
     };
 }

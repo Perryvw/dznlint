@@ -10,7 +10,7 @@
 * import_statement := IMPORT _ file_name=file_name _ SEMICOLON
 *   file_name := '[^;]+'
 * type := enum_definition | int | extern
-*   enum_definition := ENUM _ name=compound_name _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
+*   enum_definition := ENUM _ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
 *     fields := {name=identifier _ COMMA? _}*
 *   int := SUBINT _ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE SEMICOLON
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
@@ -21,7 +21,7 @@
 * interface_definition := INTERFACE _ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
 *     event := direction _ type_name=identifier _ event_name=identifier  PAREN_OPEN _ PAREN_CLOSE _ SEMICOLON
 *       direction := IN | OUT | INOUT
-* component := COMPONENT _ name=compound_name _ BRACE_OPEN _ ports={_ port=port _}* _ body=body _ BRACE_CLOSE
+* component := COMPONENT _ name=identifier _ BRACE_OPEN _ ports={_ port=port _}* _ body=body _ BRACE_CLOSE
 *   body := behavior | system
 *     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
 *       instances_and_bindings := {_{instance | binding}_}*
@@ -58,7 +58,7 @@
 *   unary_expression  := operator=unary_operator _ expression=expression
 *     unary_operator  := NOT
 * compound_name := {compound_name DOT identifier} | identifier
-* identifier          := text='[a-zA-Z_][a-zA-Z0-9_]*'
+* identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 * NUMBER              := MINUS? '[0-9]+'
 * ASTERISK            := '\*'
 * DOLLAR              := '\$'
@@ -336,7 +336,7 @@ export type type_2 = int;
 export type type_3 = extern;
 export interface enum_definition {
     kind: ASTKinds.enum_definition;
-    name: compound_name;
+    name: identifier;
     fields: fields;
 }
 export type fields = fields_$0[];
@@ -401,7 +401,7 @@ export type direction_2 = OUT;
 export type direction_3 = INOUT;
 export interface component {
     kind: ASTKinds.component;
-    name: compound_name;
+    name: identifier;
     ports: component_$0[];
     body: body;
 }
@@ -608,7 +608,9 @@ export interface compound_name_$0 {
 }
 export interface identifier {
     kind: ASTKinds.identifier;
+    start: PosInfo;
     text: string;
+    end: PosInfo;
 }
 export interface NUMBER {
     kind: ASTKinds.NUMBER;
@@ -803,13 +805,13 @@ export class Parser {
     public matchenum_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<enum_definition> {
         return this.run<enum_definition>($$dpth,
             () => {
-                let $scope$name: Nullable<compound_name>;
+                let $scope$name: Nullable<identifier>;
                 let $scope$fields: Nullable<fields>;
                 let $$res: Nullable<enum_definition> = null;
                 if (true
                     && this.matchENUM($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -1067,14 +1069,14 @@ export class Parser {
     public matchcomponent($$dpth: number, $$cr?: ErrorTracker): Nullable<component> {
         return this.run<component>($$dpth,
             () => {
-                let $scope$name: Nullable<compound_name>;
+                let $scope$name: Nullable<identifier>;
                 let $scope$ports: Nullable<component_$0[]>;
                 let $scope$body: Nullable<body>;
                 let $$res: Nullable<component> = null;
                 if (true
                     && this.matchCOMPONENT($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -1921,12 +1923,16 @@ export class Parser {
     public matchidentifier($$dpth: number, $$cr?: ErrorTracker): Nullable<identifier> {
         return this.run<identifier>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$text: Nullable<string>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<identifier> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z_][a-zA-Z0-9_]*)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.identifier, text: $scope$text};
+                    $$res = {kind: ASTKinds.identifier, start: $scope$start, text: $scope$text, end: $scope$end};
                 }
                 return $$res;
             });
