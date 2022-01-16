@@ -1,0 +1,142 @@
+file := statements={_ statement=root_statement _}* $
+
+root_statement :=
+  import_statement
+  |interface_definition
+  | component
+  | sl_comment
+
+sl_comment := text='//[^\n]*\n'
+
+import_statement := IMPORT _ file_name=file_name _ SEMICOLON
+  file_name := '[^;]+'
+
+type := enum_definition | int | extern
+  enum_definition := ENUM _ name=compound_name _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
+    fields := {name=identifier _ COMMA? _}*
+
+  int := SUBINT _ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE SEMICOLON
+    range := from=NUMBER _ DOTDOT _ to=NUMBER
+
+  extern := _ EXTERN _ name=identifier _ value=expression _ SEMICOLON
+
+namespace := NAMESPACE _ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
+  namespace_root      := statements={_ statement=namespace_statement _}*
+  namespace_statement := type | namespace | interface_definition | component
+
+interface_definition := INTERFACE _ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
+    event := direction _ type_name=identifier _ event_name=identifier  PAREN_OPEN _ PAREN_CLOSE _ SEMICOLON
+      direction := IN | OUT | INOUT
+
+component := COMPONENT _ name=compound_name _ BRACE_OPEN _ ports={_ port=port _}* _ body=body _ BRACE_CLOSE
+  body := behavior | system
+    system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
+      instances_and_bindings := {_{instance | binding}_}*
+        instance := type=compound_name _ name=identifier _ SEMICOLON
+        binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
+          end_point := name=expression _ {DOT ASTERISK}? | ASTERISK
+
+  port := direction=port_direction _ qualifiers=port_qualifiers _ name=compound_name _ arguments=formals? _ identifier _ SEMICOLON
+    port_direction := PROVIDES | REQUIRES
+    port_qualifiers := {_{EXTERNAL | INJECTED}_}*
+    formals := PAREN_OPEN _ {formal COMMA?}* _ PAREN_CLOSE
+      formal := direction? _ type_name=identifier _ name=identifier
+
+behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
+  behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
+    behavior_statements := {_ statement=behavior_statement _}*
+      behavior_statement := port | function_definition | variable_definition | declarative_statement | type
+        function_definition := type_name=identifier _ name=identifier _ formals _ compound
+
+declarative_statement := on | guard | compound
+  on        := blocking=BLOCKING? _ ON _ expression=expression _ arguments=formals? _ COLON _ statement=imperative_statement
+  guard     := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
+
+compound := blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE
+  statements  := {_ statement=statement _}*
+  statement   := declarative_statement | imperative_statement
+
+imperative_statement := variable_definition | assignment | expression_statement | compound
+  assignment            := left=identifier _ ASSIGN _ right=expression _ SEMICOLON
+  expression_statement  := expression=expression SEMICOLON
+  variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
+
+expression := property_expression | binary_expression | call_expression | identifier | unary_expression
+  call_expression   := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
+    arguments       := {_ expression=expression _ COMMA?}*
+  dollars := DOLLAR value={!DOLLAR}* DOLLAR
+  binary_expression := left=expression _ operator=binary_operator _ right=expression
+    binary_operator := AND | OR | COMPARE
+  property_expression := expression=expression DOT access_name=identifier
+  unary_expression  := operator=unary_operator _ expression=expression
+    unary_operator  := NOT
+
+
+compound_name := {compound_name DOT identifier} | identifier
+
+identifier          := text='[a-zA-Z_][a-zA-Z0-9_]*'
+
+NUMBER              := MINUS? '[0-9]+'
+ASTERISK            := '\*'
+DOLLAR              := '\$'
+BRACE_OPEN          := '{'
+BRACE_CLOSE         := '}'
+BRACKET_OPEN        := '\['
+BRACKET_CLOSE       := '\]'
+PAREN_OPEN          := '\('
+PAREN_CLOSE         := '\)'
+SEMICOLON           := ';'
+COLON               := ':'
+DOT                 := '\.'
+DOTDOT              := '\.\.'
+COMMA               := ','
+BIND                := '<=>'
+ASSIGN              := '='
+LEFT_ARROW          := ':='
+OR                  := '||'
+AND                 := '&&'
+EQUAL               := '=='
+NOT_EQUAL           := '!='
+LESS                := '<'
+LESS_EQUAL          := '<='
+GREATER             := '>'
+GREATER_EQUAL       := '>='
+PLUS                := '\+'
+MINUS               := '-'
+NOT                 := '!'
+COMPARE             := EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER
+
+BEHAVIOR            := 'behavior' | 'behaviour'
+BLOCKING            := 'blocking'
+BOOL                := 'bool'
+COMPONENT           := 'component'
+ELSE                := 'else'
+ENUM                := 'enum'
+EXTERN              := 'extern'
+EXTERNAL            := 'external'
+FALSE               := 'false'
+IF                  := 'if'
+ILLEGAL             := 'illegal'
+IMPORT              := 'import'
+IN                  := 'in'
+INEVITABLE          := 'inevitable'
+INJECTED            := 'injected'
+INOUT               := 'inout'
+INTERFACE           := 'interface'
+NAMESPACE           := 'namespace'
+ON                  := 'on'
+OPTIONAL            := 'optional'
+OTHERWISE           := 'otherwise'
+OUT                 := 'out'
+PROVIDES            := 'provides'
+REPLY               := 'reply'
+REQUIRES            := 'requires'
+RETURN              := 'return'
+SUBINT              := 'subint'
+SYSTEM              := 'system'
+TRUE                := 'true'
+VOID                := 'void'
+NEWLINE             := '\n'
+
+// Discard whitespace
+_                   := '\s*'

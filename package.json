@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "scripts": {
+    "generate-parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts && tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.8",
+    "tspeg": "^3.2.0"
+  }
+}
