@@ -1,9 +1,12 @@
 {
     "compilerOptions": {
         "rootDir": "src",
+        "types": ["node"],
+        "module": "commonjs",
         "outDir": "dist",
         "strict": true,
         "target": "ESNext",
         //"sourceMap": true
-    }
+    },
+    "exclude": ["test/**/*"]
 }

@@ -1,9 +1,11 @@
-import { DznLintConfiguration } from "./config/dznlint-configuration.js";
-import { Diagnostic } from "./diagnostic.js";
-import * as parser from "./grammar/parser.js";
+import { DznLintConfiguration } from "./config/dznlint-configuration";
+import { Diagnostic } from "./diagnostic";
+import { InputSource } from "./dznlint";
+import * as parser from "./grammar/parser";
 
 interface LintContext {
-    config: DznLintConfiguration
+    config: DznLintConfiguration;
+    source: InputSource;
 }
 
 export type ASTNode = { kind: parser.ASTKinds };
@@ -16,7 +18,7 @@ export interface RuleFactoryContext {
     registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
 }
 
-import { naming_convention } from "./rules/naming-convention.js";
+import { naming_convention } from "./rules/naming-convention";
 
 export function loadLinters(config: DznLintConfiguration) {
     const factories = [

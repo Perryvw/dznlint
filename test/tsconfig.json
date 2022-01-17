@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+        "rootDir": "..",
+        "types": ["node", "jest"],
+        "strict": true
+    },
+    "include": [".", "../src"]
+}

@@ -1,4 +1,4 @@
-import * as parser from "./grammar/parser.js";
+import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
 const stopVisiting = () => {};
