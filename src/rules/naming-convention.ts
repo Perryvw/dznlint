@@ -1,21 +1,31 @@
+import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticLevel } from "../diagnostic";
 import { InputSource } from "../dznlint";
-import { ASTKinds, component, enum_definition, identifier, interface_definition, variable_definition } from "../grammar/parser";
+import {
+    ASTKinds,
+    component,
+    enum_definition,
+    identifier,
+    interface_definition,
+    variable_definition,
+} from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { nodeToSourceRange } from "../util";
 
 export const nameDoesNotMatchConvention = createDiagnosticsFactory();
 
-export const naming_convention: RuleFactory = (factoryContext) => {
+export const naming_convention: RuleFactory = factoryContext => {
+    const config = getRuleConfig("naming_convention", factoryContext.userConfig);
 
-    const convention = factoryContext.config.naming_convention;
-    const level = DiagnosticLevel.Warning;
-
-    const fail = (identifier: identifier, type: string, convention: string, source: InputSource) =>
-        nameDoesNotMatchConvention(level, `${type} ${identifier.text} does not match naming convention: ${convention}.`,
-                source, nodeToSourceRange(identifier));
-
-    if (convention) {
+    if (config.isEnabled) {
+        const convention = config.config;
+        const fail = (identifier: identifier, type: string, convention: string, source: InputSource) =>
+            nameDoesNotMatchConvention(
+                config.severity,
+                `${type} ${identifier.text} does not match naming convention: ${convention}.`,
+                source,
+                nodeToSourceRange(identifier)
+            );
 
         factoryContext.registerRule<component>(ASTKinds.component, (node, context) => {
             if (!identifierMatches(node.name, convention.component)) {
@@ -53,7 +63,7 @@ export const naming_convention: RuleFactory = (factoryContext) => {
             return [];
         });
     }
-}
+};
 
 function identifierMatches(identifier: identifier, pattern: string): boolean {
     return new RegExp(pattern).test(identifier.text);

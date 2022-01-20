@@ -1,0 +1,1 @@
+// Not using a parameter is not allowed

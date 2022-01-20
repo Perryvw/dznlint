@@ -1,4 +1,4 @@
-import { DznLintConfiguration } from "./config/dznlint-configuration";
+import { DznLintConfiguration, DznLintUserConfiguration } from "./config/dznlint-configuration";
 import { Diagnostic } from "./diagnostic";
 import { InputSource } from "./dznlint";
 import * as parser from "./grammar/parser";
@@ -14,7 +14,7 @@ export type Linter<T extends ASTNode> = (node: T, context: LintContext) => Diagn
 export type RuleFactory = (context: RuleFactoryContext) => void;
 
 export interface RuleFactoryContext {
-    config: DznLintConfiguration
+    userConfig: DznLintUserConfiguration
     registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
 }
 
@@ -28,7 +28,7 @@ export function loadLinters(config: DznLintConfiguration) {
     const linters = new Map<parser.ASTKinds, Linter<ASTNode>[]>();
 
     const ruleFactoryContext: RuleFactoryContext = {
-        config,
+        userConfig: config,
         registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>) {
             if (!linters.has(kind)) {
                 linters.set(kind, []);

@@ -1,0 +1,1 @@
+// Do not redefine variables that already exist in scope
