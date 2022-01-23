@@ -1,0 +1,26 @@
+import interface.dzn;
+
+component HelloWorld {
+    provides IHelloWorld api;
+
+    requires IRequired required;
+    requires injected IInjected requiredInjected;
+
+    behavior {
+        enum State { Hello, World };
+        State s = State.Hello;
+
+        [s.Hello] {
+            on api.hello(): {
+                s = State.World;
+            }
+        }
+
+        [s.World] {
+            on api.world(): {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+    }
+}

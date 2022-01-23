@@ -20,7 +20,7 @@ export interface RuleFactoryContext {
 
 import { naming_convention } from "./rules/naming-convention";
 
-export function loadLinters(config: DznLintConfiguration) {
+export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
         naming_convention
     ];

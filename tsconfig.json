@@ -6,7 +6,7 @@
         "outDir": "dist",
         "strict": true,
         "target": "ESNext",
-        //"sourceMap": true
+        "sourceMap": true
     },
     "exclude": ["test/**/*"]
 }

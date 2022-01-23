@@ -6,7 +6,6 @@ import * as parser from "./grammar/parser";
 import { ASTNode, Linter, loadLinters } from "./linting-rule";
 import { visit } from "./visitor";
 
-
 export function lintString(source: string, config?: DznLintUserConfiguration): Diagnostic[] {
     const sources = [{ fileContent: source }];
     return lint(sources, config);
@@ -18,36 +17,40 @@ export function lintFiles(fileNames: string[], config?: DznLintUserConfiguration
 }
 
 export interface InputSource {
-    fileName?: string,
-    fileContent: string,
+    fileName?: string;
+    fileContent: string;
 }
 
-export function lint(sources: InputSource[], config?: DznLintUserConfiguration): Diagnostic[] {
-    const rules = loadLinters(DEFAULT_DZNLINT_CONFIG);
+export function lint(sources: InputSource[], config: DznLintUserConfiguration = {}): Diagnostic[] {
+    const rules = loadLinters(config);
     return sources.flatMap(s => lintSource(s, rules));
 }
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
 function lintSource(source: InputSource, rules: Map<parser.ASTKinds, Linter<ASTNode>[]>): Diagnostic[] {
-
     const diagnostics: Diagnostic[] = [];
 
     const p = new parser.Parser(source.fileContent);
     const { ast, errs } = p.parse();
     if (errs.length > 0) {
-        diagnostics.push(failedToFullyParseFile(DiagnosticLevel.Error, `Failed to fully parse file ${source.fileName ?? "string"}`,
-            source, { from: { index: 0, line: 0, column: 0 }, to: { index: 0, line: 0, column: 0 } }))
+        for (const err of errs) {
+            diagnostics.push(
+                failedToFullyParseFile(DiagnosticLevel.Error, err.toString(), source, {
+                    from: { index: err.pos.overallPos, line: err.pos.line, column: err.pos.offset },
+                    to: { index: err.pos.overallPos + 1, line: err.pos.line, column: err.pos.offset + 1 },
+                })
+            );
+        }
     }
 
     if (ast) {
-        const context =  {
+        const context = {
             config: DEFAULT_DZNLINT_CONFIG,
-            source
+            source,
         };
 
         if (ast) {
-            //printAst(ast);
             visit(ast, node => {
                 for (const linter of rules.get(node.kind) ?? []) {
                     diagnostics.push(...linter(node, context));

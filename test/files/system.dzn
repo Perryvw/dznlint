@@ -1,0 +1,13 @@
+import component.dzn;
+
+component HelloWorldSystem {
+    provides IHelloWorld api;
+    requires IRequired required;
+
+    system
+    {
+        HelloWorld helloWorld;
+        api <=> helloWorld.api;
+        helloWorld.required <=> required;
+    }
+}

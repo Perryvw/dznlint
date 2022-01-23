@@ -1,34 +1,39 @@
-file := statements={_ statement=root_statement _}* $
+file := _ statements={_ statement=root_statement _}* _ $
 
 root_statement :=
-  import_statement
-  |interface_definition
+  namespace
+  | extern_definition
+  | type
+  | import_statement
+  | interface_definition
   | component
   | sl_comment
+  | statement
 
-sl_comment := text='//[^\n]*\n'
+extern_definition := EXTERN __ type=identifier __ literal=dollars _ SEMICOLON
 
-import_statement := IMPORT _ file_name=file_name _ SEMICOLON
+import_statement := IMPORT __ file_name=file_name _ SEMICOLON
   file_name := '[^;]+'
 
-type := enum_definition | int | extern
-  enum_definition := ENUM _ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
-    fields := {name=identifier _ COMMA? _}*
+type := enum_definition | int | extern_definition
+  enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
+    fields := head=member_identifier? tail={_ COMMA _ tail=member_identifier}*
 
-  int := SUBINT _ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE SEMICOLON
+  int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
     range := from=NUMBER _ DOTDOT _ to=NUMBER
 
-  extern := _ EXTERN _ name=identifier _ value=expression _ SEMICOLON
-
-namespace := NAMESPACE _ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
+namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
   namespace_root      := statements={_ statement=namespace_statement _}*
   namespace_statement := type | namespace | interface_definition | component
 
-interface_definition := INTERFACE _ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
-    event := direction _ type_name=identifier _ event_name=identifier  PAREN_OPEN _ PAREN_CLOSE _ SEMICOLON
-      direction := IN | OUT | INOUT
+interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
+    event := direction=direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
+    event_params := head=event_parameter tail={ _ COMMA _ parameter=event_parameter }*
+    event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
+      direction := IN | OUT
+      param_direction := INOUT | IN | OUT
 
-component := COMPONENT _ name=identifier _ BRACE_OPEN _ ports={_ port=port _}* _ body=body _ BRACE_CLOSE
+component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
   body := behavior | system
     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
       instances_and_bindings := {_{instance | binding}_}*
@@ -36,20 +41,24 @@ component := COMPONENT _ name=identifier _ BRACE_OPEN _ ports={_ port=port _}* _
         binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
           end_point := name=expression _ {DOT ASTERISK}? | ASTERISK
 
-  port := direction=port_direction _ qualifiers=port_qualifiers _ name=compound_name _ arguments=formals? _ identifier _ SEMICOLON
+  port := direction=port_direction __ qualifiers=port_qualifiers? name=compound_name _ arguments=formals? _ identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
-    port_qualifiers := {_{EXTERNAL | INJECTED}_}*
-    formals := PAREN_OPEN _ {formal COMMA?}* _ PAREN_CLOSE
+    port_qualifiers := {_{EXTERNAL | INJECTED} __}*
+    formals := PAREN_OPEN _ formal=formal_list? _ PAREN_CLOSE
+      formal_list := head=formal tail={ _ COMMA _ formal=formal }*
       formal := direction? _ type_name=identifier _ name=identifier
 
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
     behavior_statements := {_ statement=behavior_statement _}*
-      behavior_statement := port | function_definition | variable_definition | declarative_statement | type
+      behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
         function_definition := type_name=identifier _ name=identifier _ formals _ compound
 
 declarative_statement := on | guard | compound
-  on        := blocking=BLOCKING? _ ON _ expression=expression _ arguments=formals? _ COLON _ statement=imperative_statement
+  on        := blocking=BLOCKING? _ ON _ expression=expression _ arguments=on_formals? _ COLON _ statement=imperative_statement
+    on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
+      on_formal_list := head=on_formal tail={ _ COMMA formal=on_formal }*
+        on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
   guard     := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
 
 compound := blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE
@@ -61,20 +70,22 @@ imperative_statement := variable_definition | assignment | expression_statement 
   expression_statement  := expression=expression SEMICOLON
   variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
 
-expression := property_expression | binary_expression | call_expression | identifier | unary_expression
+expression := binary_expression | property_expression | call_expression | dollars | identifier | numeric_literal | unary_expression
   call_expression   := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
     arguments       := {_ expression=expression _ COMMA?}*
-  dollars := DOLLAR value={!DOLLAR}* DOLLAR
+  dollars := DOLLAR value='[^$]*' DOLLAR
   binary_expression := left=expression _ operator=binary_operator _ right=expression
-    binary_operator := AND | OR | COMPARE
-  property_expression := expression=expression DOT access_name=identifier
+    binary_operator := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER
+  numeric_literal   := text=NUMBER
+  property_expression := expression=expression? DOT access_name=member_identifier
   unary_expression  := operator=unary_operator _ expression=expression
     unary_operator  := NOT
 
 
-compound_name := {compound_name DOT identifier} | identifier
+compound_name := {compound_name? DOT member_identifier} | identifier
 
 identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
+member_identifier    := start=@ text='[a-zA-Z0-9_]*' end=@
 
 NUMBER              := MINUS? '[0-9]+'
 ASTERISK            := '\*'
@@ -92,8 +103,8 @@ DOTDOT              := '\.\.'
 COMMA               := ','
 BIND                := '<=>'
 ASSIGN              := '='
-LEFT_ARROW          := ':='
-OR                  := '||'
+LEFT_ARROW          := '<-'
+OR                  := '\|\|'
 AND                 := '&&'
 EQUAL               := '=='
 NOT_EQUAL           := '!='
@@ -138,5 +149,9 @@ TRUE                := 'true'
 VOID                := 'void'
 NEWLINE             := '\n'
 
-// Discard whitespace
-_                   := '\s*'
+
+sl_comment          := text='//[^\n]*\n'
+ml_comment          := '/\*' text={!ml_comment_end '.'}* ml_comment_end
+  ml_comment_end    := '\*' '/'
+_                   := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s*'
+__                  := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s+'

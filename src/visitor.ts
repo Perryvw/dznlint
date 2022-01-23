@@ -45,7 +45,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, cb: Callback) => voi
             visit(port, cb);
         }
 
-        visit(node.body, cb);
+        if (node.body) {
+            visit(node.body, cb);
+        }
     },
     [parser.ASTKinds.compound]: (node: parser.compound, cb: Callback) => {
         for (const { statement } of node.statements) {
@@ -82,7 +84,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, cb: Callback) => voi
         visit(node.statement, cb);
     },
     [parser.ASTKinds.property_expression]: (node: parser.property_expression, cb: Callback) => {
-        visit(node.expression, cb);
+        if (node.expression) {
+            visit(node.expression, cb);
+        }
     },
     [parser.ASTKinds.system]: (node: parser.system, cb: Callback) => {
         for (const { instance_or_binding } of node.instances_and_bindings) {

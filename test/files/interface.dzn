@@ -1,0 +1,24 @@
+interface IHelloWorld {
+    in void hello();
+    in void world();
+
+    out void helloWorld();
+
+    behavior {
+        enum State { Hello, World };
+        State s = State.Hello;
+
+        [s.Hello] {
+            on hello: {
+                s = State.World;
+            }
+        }
+
+        [s.World] {
+            on world: {
+                helloWorld;
+                s = State.Hello;
+            }
+        }
+    }
+}
