@@ -10,7 +10,7 @@ import {
     variable_definition,
 } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { nodeToSourceRange } from "../util";
+import { headTailToList, nodeToSourceRange } from "../util";
 
 export const nameDoesNotMatchConvention = createDiagnosticsFactory();
 
@@ -67,18 +67,4 @@ export const naming_convention: RuleFactory = factoryContext => {
 
 function identifierMatches(identifier: identifier, pattern: string): boolean {
     return new RegExp(pattern).test(identifier.text);
-}
-
-function headTailToList<T>(obj: { head?: T, tail: Array<{tail: T}> }): T[] {
-    const result = [];
-
-    if (obj.head) {
-        result.push(obj.head);
-    }
-
-    for (const { tail } of obj.tail) {
-        result.push(tail);
-    }
-
-    return result;
 }

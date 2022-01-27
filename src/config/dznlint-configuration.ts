@@ -20,6 +20,7 @@ export interface DznLintConfiguration {
         local: string,
         type: string
     }>;
+    no_shadowing: ConfigValue;
 }
 
 export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =

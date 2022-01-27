@@ -16,5 +16,6 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
         interface: "I[A-Z][a-zA-Z0-9]*",
         local: "[a-z_][a-zA-Z0-9]*",
         type: "[A-Z][a-zA-Z0-9]*"
-    }]
+    }],
+    no_shadowing: "error",
 };

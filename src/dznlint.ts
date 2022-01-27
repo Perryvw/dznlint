@@ -1,10 +1,9 @@
 import * as fs from "fs";
-import { DEFAULT_DZNLINT_CONFIG } from "./config/default-config";
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
-import { createDiagnosticsFactory, Diagnostic, DiagnosticLevel, formatDiagnostic } from "./diagnostic";
+import { createDiagnosticsFactory, Diagnostic, DiagnosticLevel } from "./diagnostic";
 import * as parser from "./grammar/parser";
 import { ASTNode, Linter, loadLinters } from "./linting-rule";
-import { visit } from "./visitor";
+import { visitFile } from "./visitor";
 
 export function lintString(source: string, config?: DznLintUserConfiguration): Diagnostic[] {
     const sources = [{ fileContent: source }];
@@ -45,13 +44,8 @@ function lintSource(source: InputSource, rules: Map<parser.ASTKinds, Linter<ASTN
     }
 
     if (ast) {
-        const context = {
-            config: DEFAULT_DZNLINT_CONFIG,
-            source,
-        };
-
         if (ast) {
-            visit(ast, node => {
+            visitFile(ast, source, (node, context) => {
                 for (const linter of rules.get(node.kind) ?? []) {
                     diagnostics.push(...linter(node, context));
                 }

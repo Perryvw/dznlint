@@ -15,7 +15,7 @@
 *   file_name := '[^;]+'
 * type := enum_definition | int | extern_definition
 *   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
-*     fields := head=member_identifier? tail={_ COMMA _ tail=member_identifier}*
+*     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier}*
 *   int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
 * namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
@@ -23,7 +23,7 @@
 *   namespace_statement := type | namespace | interface_definition | component
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
 *     event := direction=direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
-*     event_params := head=event_parameter tail={ _ COMMA _ parameter=event_parameter }*
+*     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
 *     event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
 *       direction := IN | OUT
 *       param_direction := INOUT | IN | OUT
@@ -38,7 +38,7 @@
 *     port_direction := PROVIDES | REQUIRES
 *     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
 *     formals := PAREN_OPEN _ formal=formal_list? _ PAREN_CLOSE
-*       formal_list := head=formal tail={ _ COMMA _ formal=formal }*
+*       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
 *       formal := direction? _ type_name=identifier _ name=identifier
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
@@ -46,9 +46,9 @@
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
 *         function_definition := type_name=identifier _ name=identifier _ formals _ compound
 * declarative_statement := on | guard | compound
-*   on        := blocking=BLOCKING? _ ON _ expression=expression _ arguments=on_formals? _ COLON _ statement=imperative_statement
+*   on        := blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement
 *     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
-*       on_formal_list := head=on_formal tail={ _ COMMA formal=on_formal }*
+*       on_formal_list := head=on_formal tail={ _ COMMA elem=on_formal }*
 *         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
 *   guard     := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
 * compound := blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE
@@ -68,7 +68,7 @@
 *   property_expression := expression=expression? DOT access_name=member_identifier
 *   unary_expression  := operator=unary_operator _ expression=expression
 *     unary_operator  := NOT
-* compound_name := {compound_name? DOT member_identifier} | identifier
+* compound_name := {compound=compound_name? DOT name=member_identifier} | identifier
 * identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 * member_identifier    := start=@ text='[a-zA-Z0-9_]*' end=@
 * NUMBER              := MINUS? '[0-9]+'
@@ -403,7 +403,7 @@ export interface fields {
 }
 export interface fields_$0 {
     kind: ASTKinds.fields_$0;
-    tail: member_identifier;
+    elem: member_identifier;
 }
 export interface int {
     kind: ASTKinds.int;
@@ -460,7 +460,7 @@ export interface event_params {
 }
 export interface event_params_$0 {
     kind: ASTKinds.event_params_$0;
-    parameter: event_parameter;
+    elem: event_parameter;
 }
 export interface event_parameter {
     kind: ASTKinds.event_parameter;
@@ -562,7 +562,7 @@ export interface formal_list {
 }
 export interface formal_list_$0 {
     kind: ASTKinds.formal_list_$0;
-    formal: formal;
+    elem: formal;
 }
 export interface formal {
     kind: ASTKinds.formal;
@@ -602,8 +602,8 @@ export type declarative_statement_3 = compound;
 export interface on {
     kind: ASTKinds.on;
     blocking: Nullable<BLOCKING>;
-    expression: expression;
-    arguments: Nullable<on_formals>;
+    name: compound_name;
+    parameters: Nullable<on_formals>;
     statement: imperative_statement;
 }
 export interface on_formals {
@@ -617,7 +617,7 @@ export interface on_formal_list {
 }
 export interface on_formal_list_$0 {
     kind: ASTKinds.on_formal_list_$0;
-    formal: on_formal;
+    elem: on_formal;
 }
 export interface on_formal {
     kind: ASTKinds.on_formal;
@@ -730,6 +730,8 @@ export type compound_name_1 = compound_name_$0;
 export type compound_name_2 = identifier;
 export interface compound_name_$0 {
     kind: ASTKinds.compound_name_$0;
+    compound: Nullable<compound_name>;
+    name: member_identifier;
 }
 export interface identifier {
     kind: ASTKinds.identifier;
@@ -1033,15 +1035,15 @@ export class Parser {
     public matchfields_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<fields_$0> {
         return this.run<fields_$0>($$dpth,
             () => {
-                let $scope$tail: Nullable<member_identifier>;
+                let $scope$elem: Nullable<member_identifier>;
                 let $$res: Nullable<fields_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$tail = this.matchmember_identifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$elem = this.matchmember_identifier($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.fields_$0, tail: $scope$tail};
+                    $$res = {kind: ASTKinds.fields_$0, elem: $scope$elem};
                 }
                 return $$res;
             });
@@ -1254,15 +1256,15 @@ export class Parser {
     public matchevent_params_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<event_params_$0> {
         return this.run<event_params_$0>($$dpth,
             () => {
-                let $scope$parameter: Nullable<event_parameter>;
+                let $scope$elem: Nullable<event_parameter>;
                 let $$res: Nullable<event_params_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$parameter = this.matchevent_parameter($$dpth + 1, $$cr)) !== null
+                    && ($scope$elem = this.matchevent_parameter($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.event_params_$0, parameter: $scope$parameter};
+                    $$res = {kind: ASTKinds.event_params_$0, elem: $scope$elem};
                 }
                 return $$res;
             });
@@ -1635,15 +1637,15 @@ export class Parser {
     public matchformal_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<formal_list_$0> {
         return this.run<formal_list_$0>($$dpth,
             () => {
-                let $scope$formal: Nullable<formal>;
+                let $scope$elem: Nullable<formal>;
                 let $$res: Nullable<formal_list_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$formal = this.matchformal($$dpth + 1, $$cr)) !== null
+                    && ($scope$elem = this.matchformal($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal_list_$0, formal: $scope$formal};
+                    $$res = {kind: ASTKinds.formal_list_$0, elem: $scope$elem};
                 }
                 return $$res;
             });
@@ -1787,8 +1789,8 @@ export class Parser {
         return this.run<on>($$dpth,
             () => {
                 let $scope$blocking: Nullable<Nullable<BLOCKING>>;
-                let $scope$expression: Nullable<expression>;
-                let $scope$arguments: Nullable<Nullable<on_formals>>;
+                let $scope$name: Nullable<compound_name>;
+                let $scope$parameters: Nullable<Nullable<on_formals>>;
                 let $scope$statement: Nullable<imperative_statement>;
                 let $$res: Nullable<on> = null;
                 if (true
@@ -1796,15 +1798,15 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$arguments = this.matchon_formals($$dpth + 1, $$cr)) || true)
+                    && (($scope$parameters = this.matchon_formals($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOLON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on, blocking: $scope$blocking, expression: $scope$expression, arguments: $scope$arguments, statement: $scope$statement};
+                    $$res = {kind: ASTKinds.on, blocking: $scope$blocking, name: $scope$name, parameters: $scope$parameters, statement: $scope$statement};
                 }
                 return $$res;
             });
@@ -1844,14 +1846,14 @@ export class Parser {
     public matchon_formal_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<on_formal_list_$0> {
         return this.run<on_formal_list_$0>($$dpth,
             () => {
-                let $scope$formal: Nullable<on_formal>;
+                let $scope$elem: Nullable<on_formal>;
                 let $$res: Nullable<on_formal_list_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
-                    && ($scope$formal = this.matchon_formal($$dpth + 1, $$cr)) !== null
+                    && ($scope$elem = this.matchon_formal($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on_formal_list_$0, formal: $scope$formal};
+                    $$res = {kind: ASTKinds.on_formal_list_$0, elem: $scope$elem};
                 }
                 return $$res;
             });
@@ -2313,13 +2315,15 @@ export class Parser {
     public matchcompound_name_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<compound_name_$0> {
         return this.run<compound_name_$0>($$dpth,
             () => {
+                let $scope$compound: Nullable<Nullable<compound_name>>;
+                let $scope$name: Nullable<member_identifier>;
                 let $$res: Nullable<compound_name_$0> = null;
                 if (true
-                    && ((this.matchcompound_name($$dpth + 1, $$cr)) || true)
+                    && (($scope$compound = this.matchcompound_name($$dpth + 1, $$cr)) || true)
                     && this.matchDOT($$dpth + 1, $$cr) !== null
-                    && this.matchmember_identifier($$dpth + 1, $$cr) !== null
+                    && ($scope$name = this.matchmember_identifier($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.compound_name_$0, };
+                    $$res = {kind: ASTKinds.compound_name_$0, compound: $scope$compound, name: $scope$name};
                 }
                 return $$res;
             });
