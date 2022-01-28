@@ -37,7 +37,17 @@ test("component with event", () => {
     expectCanParseWithoutDiagnostics(`
         component MyComponent {
             behavior {
-                on event(data mydata): {}
+                on event(mydata): {}
+            }
+        }
+    `);
+});
+
+test("blocking on with assignment", () => {
+    expectCanParseWithoutDiagnostics(`
+        component MyComponent {
+            behavior {
+                on event(outVar <- myData): {}
             }
         }
     `);

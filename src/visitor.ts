@@ -115,6 +115,13 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         }
         context.popScope();
     },
+    [parser.ASTKinds.namespace]: (node: parser.namespace, context: VisitorContext, cb: Callback) => {
+        context.pushScope(node);
+        for (const { statement } of node.root.statements) {
+            visit(statement, context, cb);
+        }
+        context.popScope();
+    },
     [parser.ASTKinds.on]: (node: parser.on, context: VisitorContext, cb: Callback) => {
         visit(node.name, context, cb);
 
@@ -150,10 +157,14 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 
     // Leaf nodes, no need to visit children of these
     [parser.ASTKinds.compound_name_$0]: stopVisiting,
+    [parser.ASTKinds.dollars]: stopVisiting,
     [parser.ASTKinds.enum_definition]: stopVisiting,
+    [parser.ASTKinds.extern_definition]: stopVisiting,
     [parser.ASTKinds.event]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
+    [parser.ASTKinds.import_statement]: stopVisiting,
     [parser.ASTKinds.instance]: stopVisiting,
+    [parser.ASTKinds.int]: stopVisiting,
     [parser.ASTKinds.member_identifier]: stopVisiting,
     [parser.ASTKinds.port]: stopVisiting,
     [parser.ASTKinds.sl_comment]: stopVisiting,
