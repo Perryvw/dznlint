@@ -18,4 +18,5 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
         type: "[A-Z][a-zA-Z0-9]*"
     }],
     no_shadowing: "error",
+    parameter_direction: ["warning", "always"],
 };

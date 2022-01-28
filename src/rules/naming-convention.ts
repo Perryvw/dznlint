@@ -1,5 +1,5 @@
 import { getRuleConfig } from "../config/util";
-import { createDiagnosticsFactory, DiagnosticLevel } from "../diagnostic";
+import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { InputSource } from "../dznlint";
 import {
     ASTKinds,

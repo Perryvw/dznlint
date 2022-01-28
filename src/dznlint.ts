@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
-import { createDiagnosticsFactory, Diagnostic, DiagnosticLevel } from "./diagnostic";
+import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "./diagnostic";
 import * as parser from "./grammar/parser";
 import { ASTNode, Linter, loadLinters } from "./linting-rule";
 import { visitFile } from "./visitor";
@@ -35,7 +35,7 @@ function lintSource(source: InputSource, rules: Map<parser.ASTKinds, Linter<ASTN
     if (errs.length > 0) {
         for (const err of errs) {
             diagnostics.push(
-                failedToFullyParseFile(DiagnosticLevel.Error, err.toString(), source, {
+                failedToFullyParseFile(DiagnosticSeverity.Error, err.toString(), source, {
                     from: { index: err.pos.overallPos, line: err.pos.line, column: err.pos.offset },
                     to: { index: err.pos.overallPos + 1, line: err.pos.line, column: err.pos.offset + 1 },
                 })

@@ -37,20 +37,20 @@
 *   port := direction=port_direction __ qualifiers=port_qualifiers? name=compound_name _ arguments=formals? _ identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
 *     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
-*     formals := PAREN_OPEN _ formal=formal_list? _ PAREN_CLOSE
+*     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
 *       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
-*       formal := direction? _ type_name=identifier _ name=identifier
+*       formal := direction=direction? _ type_name=compound_name _ name=identifier
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
-*         function_definition := type_name=identifier _ name=identifier _ formals _ compound
+*         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 * declarative_statement := on | guard | compound
-*   on        := blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement
+*   on := blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement
 *     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
-*       on_formal_list := head=on_formal tail={ _ COMMA elem=on_formal }*
+*       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
 *         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
-*   guard     := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
+*   guard := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
 * compound := blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
@@ -59,18 +59,18 @@
 *   expression_statement  := expression=expression SEMICOLON
 *   variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
 * expression := binary_expression | property_expression | call_expression | dollars | identifier | numeric_literal | unary_expression
-*   call_expression   := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
-*     arguments       := {_ expression=expression _ COMMA?}*
-*   dollars := DOLLAR value='[^$]*' DOLLAR
-*   binary_expression := left=expression _ operator=binary_operator _ right=expression
-*     binary_operator := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER
-*   numeric_literal   := text=NUMBER
+*   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
+*     arguments         := {_ expression=expression _ COMMA?}*
+*   dollars             := DOLLAR value='[^$]*' DOLLAR
+*   binary_expression   := left=expression _ operator=binary_operator _ right=expression
+*     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER
+*   numeric_literal     := text=NUMBER
 *   property_expression := expression=expression? DOT access_name=member_identifier
-*   unary_expression  := operator=unary_operator _ expression=expression
-*     unary_operator  := NOT
+*   unary_expression    := operator=unary_operator _ expression=expression
+*     unary_operator    := NOT
 * compound_name := {compound=compound_name? DOT name=member_identifier} | identifier
 * identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
-* member_identifier    := start=@ text='[a-zA-Z0-9_]*' end=@
+* member_identifier   := start=@ text='[a-zA-Z0-9_]*' end=@
 * NUMBER              := MINUS? '[0-9]+'
 * ASTERISK            := '\*'
 * DOLLAR              := '\$'
@@ -553,7 +553,7 @@ export type port_qualifiers_$0_$0_1 = EXTERNAL;
 export type port_qualifiers_$0_$0_2 = INJECTED;
 export interface formals {
     kind: ASTKinds.formals;
-    formal: Nullable<formal_list>;
+    formals: Nullable<formal_list>;
 }
 export interface formal_list {
     kind: ASTKinds.formal_list;
@@ -566,7 +566,8 @@ export interface formal_list_$0 {
 }
 export interface formal {
     kind: ASTKinds.formal;
-    type_name: identifier;
+    direction: Nullable<direction>;
+    type_name: compound_name;
     name: identifier;
 }
 export interface behavior {
@@ -592,8 +593,10 @@ export type behavior_statement_5 = type;
 export type behavior_statement_6 = sl_comment;
 export interface function_definition {
     kind: ASTKinds.function_definition;
-    type_name: identifier;
+    return_type: compound_name;
     name: identifier;
+    parameters: formals;
+    body: compound;
 }
 export type declarative_statement = declarative_statement_1 | declarative_statement_2 | declarative_statement_3;
 export type declarative_statement_1 = on;
@@ -1605,16 +1608,16 @@ export class Parser {
     public matchformals($$dpth: number, $$cr?: ErrorTracker): Nullable<formals> {
         return this.run<formals>($$dpth,
             () => {
-                let $scope$formal: Nullable<Nullable<formal_list>>;
+                let $scope$formals: Nullable<Nullable<formal_list>>;
                 let $$res: Nullable<formals> = null;
                 if (true
                     && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$formal = this.matchformal_list($$dpth + 1, $$cr)) || true)
+                    && (($scope$formals = this.matchformal_list($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formals, formal: $scope$formal};
+                    $$res = {kind: ASTKinds.formals, formals: $scope$formals};
                 }
                 return $$res;
             });
@@ -1653,17 +1656,18 @@ export class Parser {
     public matchformal($$dpth: number, $$cr?: ErrorTracker): Nullable<formal> {
         return this.run<formal>($$dpth,
             () => {
-                let $scope$type_name: Nullable<identifier>;
+                let $scope$direction: Nullable<Nullable<direction>>;
+                let $scope$type_name: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
                 let $$res: Nullable<formal> = null;
                 if (true
-                    && ((this.matchdirection($$dpth + 1, $$cr)) || true)
+                    && (($scope$direction = this.matchdirection($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$type_name = this.matchidentifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal, type_name: $scope$type_name, name: $scope$name};
+                    $$res = {kind: ASTKinds.formal, direction: $scope$direction, type_name: $scope$type_name, name: $scope$name};
                 }
                 return $$res;
             });
@@ -1752,19 +1756,21 @@ export class Parser {
     public matchfunction_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<function_definition> {
         return this.run<function_definition>($$dpth,
             () => {
-                let $scope$type_name: Nullable<identifier>;
+                let $scope$return_type: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
+                let $scope$parameters: Nullable<formals>;
+                let $scope$body: Nullable<compound>;
                 let $$res: Nullable<function_definition> = null;
                 if (true
-                    && ($scope$type_name = this.matchidentifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$return_type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchformals($$dpth + 1, $$cr) !== null
+                    && ($scope$parameters = this.matchformals($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchcompound($$dpth + 1, $$cr) !== null
+                    && ($scope$body = this.matchcompound($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.function_definition, type_name: $scope$type_name, name: $scope$name};
+                    $$res = {kind: ASTKinds.function_definition, return_type: $scope$return_type, name: $scope$name, parameters: $scope$parameters, body: $scope$body};
                 }
                 return $$res;
             });
@@ -1851,6 +1857,7 @@ export class Parser {
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$elem = this.matchon_formal($$dpth + 1, $$cr)) !== null
                 ) {
                     $$res = {kind: ASTKinds.on_formal_list_$0, elem: $scope$elem};

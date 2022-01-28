@@ -1,6 +1,6 @@
 import { InputSource } from "./dznlint";
 
-export enum DiagnosticLevel {
+export enum DiagnosticSeverity {
     Hint,
     Warning,
     Error,
@@ -22,7 +22,7 @@ export type DiagnosticCode = number & { __diagnosticIdBrand: never };
 export interface Diagnostic {
     code: DiagnosticCode;
     source: InputSource;
-    level: DiagnosticLevel;
+    severity: DiagnosticSeverity;
     message: string;
     range: SourceRange;
 }
@@ -43,20 +43,20 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
         : `-:${diagnostic.range.from.line}`;
 
     const color =
-        diagnostic.level === DiagnosticLevel.Error
+        diagnostic.severity === DiagnosticSeverity.Error
             ? FgRed
-            : diagnostic.level === DiagnosticLevel.Warning
+            : diagnostic.severity === DiagnosticSeverity.Warning
             ? FgYellow
-            : diagnostic.level === DiagnosticLevel.Hint
+            : diagnostic.severity === DiagnosticSeverity.Hint
             ? FgCyan
             : "";
 
     const typeLabel =
-        diagnostic.level === DiagnosticLevel.Error
+        diagnostic.severity === DiagnosticSeverity.Error
             ? color + "error" + Reset
-            : diagnostic.level === DiagnosticLevel.Warning
+            : diagnostic.severity === DiagnosticSeverity.Warning
             ? color + "warning" + Reset
-            : diagnostic.level === DiagnosticLevel.Hint
+            : diagnostic.severity === DiagnosticSeverity.Hint
             ? color + "hint" + Reset
             : "";
 
@@ -94,7 +94,7 @@ function findFullLine(range: SourceRange, source: string) {
 let diagnosticsId = 1;
 
 type DiagnosticFactory = (
-    level: DiagnosticLevel,
+    level: DiagnosticSeverity,
     message: string,
     source: InputSource,
     range: SourceRange
@@ -103,9 +103,9 @@ type DiagnosticFactoryWithCode = DiagnosticFactory & { code: DiagnosticCode };
 
 export function createDiagnosticsFactory(): DiagnosticFactoryWithCode {
     const code = diagnosticsId++;
-    const factory = (level: DiagnosticLevel, message: string, source: InputSource, range: SourceRange): Diagnostic => ({
+    const factory = (level: DiagnosticSeverity, message: string, source: InputSource, range: SourceRange): Diagnostic => ({
         code: code as DiagnosticCode,
-        level,
+        severity: level,
         message,
         source,
         range,

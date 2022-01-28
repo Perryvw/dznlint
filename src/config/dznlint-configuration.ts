@@ -21,6 +21,7 @@ export interface DznLintConfiguration {
         type: string
     }>;
     no_shadowing: ConfigValue;
+    parameter_direction: ConfigValueWithData<"always">;
 }
 
 export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =
@@ -32,5 +33,5 @@ export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =
 
 // Make all items optional, partial, and assignable with 'false' (to disable)
 export type DznLintUserConfiguration = {
-    [P in keyof DznLintConfiguration]?: false | DznLintConfiguration[P];
+    [P in keyof DznLintConfiguration]?: false | ConfigSeverity | DznLintConfiguration[P];
 };

@@ -91,6 +91,15 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.expression_statement]: (node: parser.expression_statement, context: VisitorContext, cb: Callback) => {
         visit(node.expression, context, cb);
     },
+    [parser.ASTKinds.function_definition]: (node: parser.function_definition, context: VisitorContext, cb: Callback) => {
+        visit(node.name, context, cb);
+        if (node.parameters.formals) {
+            for (const p of headTailToList(node.parameters.formals)) {
+                visit(p, context, cb);
+            }
+        }
+        visit(node.body, context, cb);
+    },
     [parser.ASTKinds.guard]: (node: parser.guard, context: VisitorContext, cb: Callback) => {
         if (node.condition) {
             if (typeof node.condition !== "string") {
@@ -161,6 +170,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.enum_definition]: stopVisiting,
     [parser.ASTKinds.extern_definition]: stopVisiting,
     [parser.ASTKinds.event]: stopVisiting,
+    [parser.ASTKinds.formal]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
     [parser.ASTKinds.import_statement]: stopVisiting,
     [parser.ASTKinds.instance]: stopVisiting,

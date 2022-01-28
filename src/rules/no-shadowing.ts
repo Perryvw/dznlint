@@ -1,7 +1,7 @@
 // Do not redefine variables that already exist in scope
 
 import { getRuleConfig } from "../config/util";
-import { createDiagnosticsFactory, DiagnosticLevel } from "../diagnostic";
+import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { InputSource } from "../dznlint";
 import { ASTKinds, identifier, on, variable_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
@@ -24,7 +24,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
             ),
             // Create hint diagnostic pointing back at original definition
             shadowingVariablesNotAllowed(
-                DiagnosticLevel.Hint,
+                DiagnosticSeverity.Hint,
                 `Original declaration of '${newVariable.text}' here.`,
                 source,
                 nodeToSourceRange(originalDefinition)

@@ -1,4 +1,4 @@
-import { DiagnosticLevel } from "../diagnostic";
+import { DiagnosticSeverity } from "../diagnostic";
 import { DEFAULT_DZNLINT_CONFIG } from "./default-config";
 import { ConfigSeverity, DznLintConfiguration, DznLintUserConfiguration } from "./dznlint-configuration";
 
@@ -9,7 +9,7 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     | { isEnabled: false }
     | {
           isEnabled: true;
-          severity: DiagnosticLevel;
+          severity: DiagnosticSeverity;
           config: DznLintConfiguration[TRule][1];
       } {
     const value = config[name];
@@ -27,13 +27,13 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     }
 
     if (value === "error") {
-        return { isEnabled: true, severity: DiagnosticLevel.Error, config: DEFAULT_DZNLINT_CONFIG[name][1] };
+        return { isEnabled: true, severity: DiagnosticSeverity.Error, config: DEFAULT_DZNLINT_CONFIG[name][1] };
     }
     if (value === "warning") {
-        return { isEnabled: true, severity: DiagnosticLevel.Warning, config: DEFAULT_DZNLINT_CONFIG[name][1] };
+        return { isEnabled: true, severity: DiagnosticSeverity.Warning, config: DEFAULT_DZNLINT_CONFIG[name][1] };
     }
     if (value === "hint") {
-        return { isEnabled: true, severity: DiagnosticLevel.Hint, config: DEFAULT_DZNLINT_CONFIG[name][1] };
+        return { isEnabled: true, severity: DiagnosticSeverity.Hint, config: DEFAULT_DZNLINT_CONFIG[name][1] };
     }
 
     if (Array.isArray(value)) {
@@ -53,15 +53,15 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     }
 }
 
-function stringToDiagnosticLevel(str: string): DiagnosticLevel {
+function stringToDiagnosticLevel(str: string): DiagnosticSeverity {
     switch (str) {
         case "error":
-            return DiagnosticLevel.Error;
+            return DiagnosticSeverity.Error;
         case "warning":
-            return DiagnosticLevel.Warning;
+            return DiagnosticSeverity.Warning;
         case "hint":
-            return DiagnosticLevel.Hint;
+            return DiagnosticSeverity.Hint;
         default:
-            return DiagnosticLevel.Error;
+            return DiagnosticSeverity.Error;
     }
 }
