@@ -15,10 +15,11 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     const value = config[name];
 
     if (value === undefined) {
+        const ruleConfig = DEFAULT_DZNLINT_CONFIG[name];
         return {
             isEnabled: true,
-            severity: stringToDiagnosticLevel(DEFAULT_DZNLINT_CONFIG[name][0]),
-            config: DEFAULT_DZNLINT_CONFIG[name][1],
+            severity: stringToDiagnosticLevel(Array.isArray(ruleConfig) ? ruleConfig[0] : ruleConfig),
+            config: ruleConfig[1],
         };
     }
 

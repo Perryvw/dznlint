@@ -17,6 +17,7 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
         local: "[a-z_][a-zA-Z0-9]*",
         type: "[A-Z][a-zA-Z0-9]*"
     }],
+    no_recursive_system: "error",
     no_shadowing: "error",
-    parameter_direction: ["warning", "always"],
+    parameter_direction: "warning",
 };

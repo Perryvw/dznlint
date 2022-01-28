@@ -65,6 +65,8 @@ export const naming_convention: RuleFactory = factoryContext => {
     }
 };
 
+export default naming_convention;
+
 function identifierMatches(identifier: identifier, pattern: string): boolean {
     return new RegExp(pattern).test(identifier.text);
 }

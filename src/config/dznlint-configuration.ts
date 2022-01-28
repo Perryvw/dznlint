@@ -20,8 +20,9 @@ export interface DznLintConfiguration {
         local: string,
         type: string
     }>;
+    no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;
-    parameter_direction: ConfigValueWithData<"always">;
+    parameter_direction: ConfigValue;
 }
 
 export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =

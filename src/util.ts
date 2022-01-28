@@ -1,5 +1,6 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
 import { PosInfo } from "./grammar/parser";
+import { VisitorContext } from "./visitor";
 
 export function nodeToSourceRange(node: { start: PosInfo, end: PosInfo }): SourceRange {
     return {

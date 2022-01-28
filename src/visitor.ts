@@ -6,7 +6,7 @@ import { headTailToList } from "./util";
 const stopVisiting = () => {};
 
 interface Scope {
-    root: any,
+    root: { kind: parser.ASTKinds },
     variable_declarations: Record<string, parser.identifier>
 }
 

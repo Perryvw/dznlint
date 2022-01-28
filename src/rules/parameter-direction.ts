@@ -33,3 +33,5 @@ export const parameter_direction: RuleFactory = factoryContext => {
         });
     }
 };
+
+export default parameter_direction;

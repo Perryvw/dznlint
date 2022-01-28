@@ -14,11 +14,12 @@ export interface RuleFactoryContext {
 }
 
 import { naming_convention } from "./rules/naming-convention";
+import no_recursive_system from "./rules/no-recursive-system";
 import { no_shadowing } from "./rules/no-shadowing";
-import { parameter_direction } from "./rules/parameter-direction";
+import parameter_direction from "./rules/parameter-direction";
 
 export function loadLinters(config: DznLintUserConfiguration) {
-    const factories = [naming_convention, no_shadowing, parameter_direction];
+    const factories = [naming_convention, no_recursive_system, no_shadowing, parameter_direction];
 
     const linters = new Map<parser.ASTKinds, Linter<ASTNode>[]>();
 

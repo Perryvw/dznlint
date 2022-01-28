@@ -86,3 +86,5 @@ export const no_shadowing: RuleFactory = factoryContext => {
         }
     }
 };
+
+export default no_shadowing;
