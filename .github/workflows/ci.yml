@@ -12,7 +12,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Use Node.js 16.13.2
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.13.2
       - run: npm ci
       - run: npm run lint
         env:
@@ -27,7 +30,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Use Node.js 16.13.2
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.13.2
       - run: npm ci
       - run: npx jest --maxWorkers 2 --coverage
         env:
