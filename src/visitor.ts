@@ -94,8 +94,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.function_definition]: (node: parser.function_definition, context: VisitorContext, cb: Callback) => {
         visit(node.name, context, cb);
         if (node.parameters.formals) {
-            for (const p of headTailToList(node.parameters.formals)) {
-                visit(p, context, cb);
+            for (const parameter of headTailToList(node.parameters.formals)) {
+                context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
+                visit(parameter, context, cb);
             }
         }
         visit(node.body, context, cb);

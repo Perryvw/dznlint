@@ -60,3 +60,60 @@ test("variable shadowing other variable", () => {
         }`,
     });
 });
+
+test("function name shadowing variable", () => {
+    testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                bool _myBool;
+                bool myBool() {}
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                bool myBool;
+                bool myBool() {}
+            }
+        }`,
+    });
+});
+
+test("function parameter shadowing variable", () => {
+    testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                bool _myBool;
+                bool f(bool myBool) {}
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                bool myBool;
+                bool f(bool myBool) {}
+            }
+        }`,
+    });
+});
+
+test("variable shadowing function parameter", () => {
+    testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                bool f(bool myBool) {
+                    bool _myBool;
+                }
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                bool f(bool myBool) {
+                    bool myBool;
+                }
+            }
+        }`,
+    });
+});
+

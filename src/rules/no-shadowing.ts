@@ -3,7 +3,7 @@
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { InputSource } from "../dznlint";
-import { ASTKinds, identifier, on, variable_definition } from "../grammar/parser";
+import { ASTKinds, function_definition, identifier, on, variable_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { headTailToList, nodeToSourceRange } from "../util";
 import { VisitorContext } from "../visitor";
@@ -53,6 +53,26 @@ export const no_shadowing: RuleFactory = factoryContext => {
             }
 
             return [];
+        });
+
+        factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
+            const diagnostics = [];
+
+            const previousFunctionNameDefinition = findDeclarationInUpperScope(node.name.text, context);
+            if (previousFunctionNameDefinition) {
+                diagnostics.push(...createDiagnostics(node.name, previousFunctionNameDefinition, context.source));
+            }
+
+            if (node.parameters.formals) {
+                for (const { name } of headTailToList(node.parameters.formals)) {
+                    const previousDefinition = findDeclarationInUpperScope(name.text, context);
+                    if (previousDefinition) {
+                        diagnostics.push(...createDiagnostics(node.name, previousDefinition, context.source));
+                    }
+                }
+            }
+
+            return diagnostics;
         });
 
         function findDeclarationInUpperScope(name: string, context: VisitorContext): identifier | undefined {
