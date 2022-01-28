@@ -1,5 +1,5 @@
 import { getRuleConfig } from "../config/util";
-import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
+import { createDiagnosticsFactory } from "../diagnostic";
 import { InputSource } from "../dznlint";
 import {
     ASTKinds,
@@ -7,6 +7,7 @@ import {
     enum_definition,
     identifier,
     interface_definition,
+    member_identifier,
     variable_definition,
 } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
@@ -19,7 +20,7 @@ export const naming_convention: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         const convention = config.config;
-        const fail = (identifier: identifier, type: string, convention: string, source: InputSource) =>
+        const fail = (identifier: identifier | member_identifier, type: string, convention: string, source: InputSource) =>
             nameDoesNotMatchConvention(
                 config.severity,
                 `${type} ${identifier.text} does not match naming convention: ${convention}.`,
@@ -41,8 +42,8 @@ export const naming_convention: RuleFactory = factoryContext => {
             }
 
             for (const name of headTailToList(node.fields)) {
-                if (!identifierMatches(node.name, convention.enum_member)) {
-                    diagnostics.push(fail(node.name, "Enum member", convention.enum_member, context.source));
+                if (!identifierMatches(name, convention.enum_member)) {
+                    diagnostics.push(fail(name, "Enum member", convention.enum_member, context.source));
                 }
             }
 
@@ -67,6 +68,6 @@ export const naming_convention: RuleFactory = factoryContext => {
 
 export default naming_convention;
 
-function identifierMatches(identifier: identifier, pattern: string): boolean {
+function identifierMatches(identifier: identifier | member_identifier, pattern: string): boolean {
     return new RegExp(pattern).test(identifier.text);
 }

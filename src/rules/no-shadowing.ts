@@ -74,17 +74,17 @@ export const no_shadowing: RuleFactory = factoryContext => {
 
             return diagnostics;
         });
-
-        function findDeclarationInUpperScope(name: string, context: VisitorContext): identifier | undefined {
-            for (const scope of context.scopeStack) {
-                const previousDefinition = scope.variable_declarations[name];
-                if (previousDefinition) {
-                    return previousDefinition;
-                }
-            }
-            return undefined;
-        }
     }
 };
+
+function findDeclarationInUpperScope(name: string, context: VisitorContext): identifier | undefined {
+    for (const scope of context.scopeStack) {
+        const previousDefinition = scope.variable_declarations[name];
+        if (previousDefinition) {
+            return previousDefinition;
+        }
+    }
+    return undefined;
+}
 
 export default no_shadowing;

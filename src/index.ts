@@ -1,5 +1,5 @@
-// CLI entry point
-import { DEFAULT_DZNLINT_CONFIG } from "./config/default-config";
+// This file is the CLI entry point
+
 import { formatDiagnostic } from "./diagnostic";
 import { lintFiles } from "./dznlint";
 

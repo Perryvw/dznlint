@@ -6,17 +6,16 @@ import { headTailToList } from "./util";
 const stopVisiting = () => {};
 
 interface Scope {
-    root: { kind: parser.ASTKinds },
-    variable_declarations: Record<string, parser.identifier>
+    root: ASTNode;
+    variable_declarations: Record<string, parser.identifier>;
 }
 
 export class VisitorContext {
-
     scopeStack: Scope[] = [];
 
     constructor(public source: InputSource) {}
 
-    pushScope(root: any): void {
+    pushScope(root: ASTNode): void {
         this.scopeStack.unshift({ root, variable_declarations: {} });
     }
 
@@ -31,6 +30,7 @@ export class VisitorContext {
 
 type Callback = (node: ASTNode, context: VisitorContext) => void;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorContext, cb: Callback) => void>> = {
     // Root node
     [parser.ASTKinds.file]: (node: parser.file, context: VisitorContext, cb: Callback) => {
@@ -88,10 +88,18 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         }
         context.popScope();
     },
-    [parser.ASTKinds.expression_statement]: (node: parser.expression_statement, context: VisitorContext, cb: Callback) => {
+    [parser.ASTKinds.expression_statement]: (
+        node: parser.expression_statement,
+        context: VisitorContext,
+        cb: Callback
+    ) => {
         visit(node.expression, context, cb);
     },
-    [parser.ASTKinds.function_definition]: (node: parser.function_definition, context: VisitorContext, cb: Callback) => {
+    [parser.ASTKinds.function_definition]: (
+        node: parser.function_definition,
+        context: VisitorContext,
+        cb: Callback
+    ) => {
         visit(node.name, context, cb);
         if (node.parameters.formals) {
             for (const parameter of headTailToList(node.parameters.formals)) {
@@ -112,7 +120,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             visit(node.statement, context, cb);
         }
     },
-    [parser.ASTKinds.interface_definition]: (node: parser.interface_definition, context: VisitorContext, cb: Callback) => {
+    [parser.ASTKinds.interface_definition]: (
+        node: parser.interface_definition,
+        context: VisitorContext,
+        cb: Callback
+    ) => {
         context.pushScope(node);
         for (const { type_or_event } of node.body) {
             visit(type_or_event, context, cb);
@@ -143,7 +155,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 
         visit(node.statement, context, cb);
     },
-    [parser.ASTKinds.property_expression]: (node: parser.property_expression, context: VisitorContext, cb: Callback) => {
+    [parser.ASTKinds.property_expression]: (
+        node: parser.property_expression,
+        context: VisitorContext,
+        cb: Callback
+    ) => {
         if (node.expression) {
             visit(node.expression, context, cb);
         }
@@ -155,7 +171,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         }
         context.popScope();
     },
-    [parser.ASTKinds.variable_definition]: (node: parser.variable_definition, context: VisitorContext, cb: Callback) => {
+    [parser.ASTKinds.variable_definition]: (
+        node: parser.variable_definition,
+        context: VisitorContext,
+        cb: Callback
+    ) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
         if (node.initializer) {
             visit(node.initializer.expression, context, cb);

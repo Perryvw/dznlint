@@ -8,7 +8,9 @@ export enum SyntaxKind {
     ComponentDeclaration,
     InterfaceDeclaration,
     ExternDeclaration,
+    VariableDeclaration,
 
+    CompoundName,
     DollarLiteral,
     Identifier,
 }
@@ -37,7 +39,7 @@ export interface MultiLineComment extends AstNode<SyntaxKind.MultiLineComment> {
 
 
 
-type Declaration = ComponentDeclaration | InterfaceDeclaration | ExternDeclaration;
+type Declaration = ComponentDeclaration | InterfaceDeclaration | ExternDeclaration | VariableDeclaration;
 
 interface ComponentDeclaration extends AstNode<SyntaxKind.ComponentDeclaration> {
     behavior?: Block;
@@ -51,6 +53,12 @@ interface InterfaceDeclaration extends AstNode<SyntaxKind.InterfaceDeclaration> 
 interface ExternDeclaration extends AstNode<SyntaxKind.ExternDeclaration> {
     name: Identifier;
     value: DollarLiteral;
+}
+
+interface VariableDeclaration extends AstNode<SyntaxKind.VariableDeclaration> {
+    type: Identifier | CompoundName;
+    name: Identifier;
+    initializer?: Expression;
 }
 
 interface Block extends AstNode<SyntaxKind.Block> {
@@ -67,4 +75,9 @@ interface DollarLiteral extends AstNode<SyntaxKind.DollarLiteral> {
 
 interface Identifier extends AstNode<SyntaxKind.Identifier> {
     text: string;
+}
+
+interface CompoundName extends AstNode<SyntaxKind.CompoundName> {
+    head?: CompoundName | Identifier;
+    tail: string;
 }

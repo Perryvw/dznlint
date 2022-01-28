@@ -1,6 +1,5 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
 import { PosInfo } from "./grammar/parser";
-import { VisitorContext } from "./visitor";
 
 export function nodeToSourceRange(node: { start: PosInfo, end: PosInfo }): SourceRange {
     return {
@@ -17,10 +16,13 @@ export function posInfoToSourcePosition(pos: PosInfo): SourcePosition {
     };
 }
 
-export function headTailToList<T>(obj: { head: T, tail: Array<{ elem: T }> }): T[] {
-    const result = [obj.head];
+export function headTailToList<T>(obj: { head?: T, tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
+    const result = [];
+    if (obj.head) {
+        result.push(obj.head as NonNullable<T>);
+    }
     for (const { elem } of obj.tail) {
-        result.push(elem);
+        result.push(elem as NonNullable<T>);
     }
     return result;
 }

@@ -29,12 +29,9 @@ export interface Diagnostic {
 
 // Colors to use in console
 const Reset = "\x1b[0m";
-const Underscore = "\x1b[4m";
 const FgRed = "\x1b[31m";
-const FgGreen = "\x1b[32m";
 const FgCyan = "\x1b[36m";
 const FgYellow = "\x1b[93m";
-const FgWhite = "\x1b[37m";
 const Dim = "\x1b[2m";
 
 export function formatDiagnostic(diagnostic: Diagnostic): string {
