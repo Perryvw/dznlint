@@ -1,7 +1,7 @@
 import { DEFAULT_DZNLINT_CONFIG } from "../src/config/default-config";
 import { ConfigSeverity } from "../src/config/dznlint-configuration";
 import { DiagnosticSeverity } from "../src/diagnostic";
-import { lintString } from "../src/dznlint";
+import { lintString } from "../src";
 
 const codeWithDiagnostic = `component A { behavior {
     function myFunction(data foo) {}

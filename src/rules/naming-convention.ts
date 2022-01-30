@@ -1,6 +1,6 @@
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { InputSource } from "../dznlint";
+import { InputSource } from "..";
 import {
     ASTKinds,
     component,

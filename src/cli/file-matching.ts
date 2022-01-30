@@ -7,6 +7,13 @@ interface FileSystemHost {
     readDir(path: string): Array<{ name: string; isDirectory(): boolean }>;
 }
 
+export function resolveInputFiles(patterns: string[], host: FileSystemHost): string[] {
+    const allFiles = patterns.flatMap(p => filesFromGlob(p, host)).filter(host.exists);
+
+    // Deduplicate files
+    return [...new Set(allFiles).values()];
+}
+
 export function filesFromGlob(pattern: string, host: FileSystemHost): string[] {
     if (!pattern.includes("*")) {
         return [pattern];

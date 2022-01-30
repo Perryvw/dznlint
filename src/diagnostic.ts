@@ -1,4 +1,4 @@
-import { InputSource } from "./dznlint";
+import { InputSource } from ".";
 
 export enum DiagnosticSeverity {
     Hint,

@@ -10,7 +10,7 @@ describe("argument parsing", () => {
         } else {
             expect(parsedArgs.success).toEqual(true);
         }
-    })
+    });
 
     test("can parse simplest cli input", () => {
         const parsedArgs = parseCommandLineArguments(["myfile.dzn"]);
@@ -47,12 +47,14 @@ describe("argument parsing", () => {
         } else {
             expect(parsedArgs.success).toEqual(true);
         }
-    })
+    });
 
     test("fails gracefully for unknown option", () => {
         const parsedArgs = parseCommandLineArguments(["--unknown-opt"]);
         if (parsedArgs.success === false) {
-            expect(parsedArgs.message).toEqual("Unknown cli option: --unknown-opt. See --help for supported arguments.");
+            expect(parsedArgs.message).toEqual(
+                "Unknown cli option: --unknown-opt. See --help for supported arguments."
+            );
         } else {
             expect(parsedArgs.success).toEqual(false);
         }

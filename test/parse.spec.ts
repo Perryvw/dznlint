@@ -1,6 +1,6 @@
 import * as path from "path";
 import { formatDiagnostic } from "../src/diagnostic";
-import { lintFiles, lintString } from "../src/dznlint";
+import { lintFiles, lintString } from "../src";
 
 test.each(["component.dzn", "interface.dzn", "system.dzn"])("can parse file without diagnostics (%p)", fileName => {
     const filePath = path.join(__dirname, "files", fileName);
