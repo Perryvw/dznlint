@@ -1,0 +1,64 @@
+extern int $int$;
+
+interface HelloWorld {
+    in void hello();
+    in void world();
+
+    out void helloWorld();
+
+    behavior {
+        enum State { Hello, World };
+        State s = State.Hello;
+
+        [s.Hello] {
+            on hello: {
+                s = State.World;
+            }
+        }
+
+        [s.World] {
+            on world: {
+                helloWorld;
+                s = State.Hello;
+            }
+        }
+    }
+}
+
+component HelloWorld {
+    provides IHelloWorld api;
+
+    behavior {
+        enum State { Hello, World };
+        State s = State.Hello;
+
+        [s.Hello] {
+            on api.hello(): {
+                s = State.World;
+            }
+        }
+
+        [s.World] {
+            on api.world(): {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+
+        int myFunction(in int s) {}
+
+        int myOtherFunction(int t) {}
+    }
+}
+
+component HelloWorldSystem {
+    provides IHelloWorld api;
+
+    system
+    {
+        HelloWorld helloWorld;
+        api <=> helloWorld.api;
+
+        HelloWorldSystem recursiveSystem;
+    }
+}

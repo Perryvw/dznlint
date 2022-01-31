@@ -35,9 +35,12 @@ const FgYellow = "\x1b[93m";
 const Dim = "\x1b[2m";
 
 export function formatDiagnostic(diagnostic: Diagnostic): string {
+    const lineColumn =
+        `${diagnostic.range.from.line}:${diagnostic.range.from.column + 1}-` +
+        `${diagnostic.range.to.line}:${diagnostic.range.to.column + 1}`;
     const fileLabel = diagnostic.source.fileName
-        ? `${FgCyan}${diagnostic.source.fileName ?? "-"}${Reset}:${diagnostic.range.from.line}`
-        : `-:${diagnostic.range.from.line}`;
+        ? `${FgCyan}${diagnostic.source.fileName ?? "-"}${Reset}:${lineColumn}`
+        : `-:${lineColumn}`;
 
     const color =
         diagnostic.severity === DiagnosticSeverity.Error
@@ -100,7 +103,12 @@ type DiagnosticFactoryWithCode = DiagnosticFactory & { code: DiagnosticCode };
 
 export function createDiagnosticsFactory(): DiagnosticFactoryWithCode {
     const code = diagnosticsId++;
-    const factory = (level: DiagnosticSeverity, message: string, source: InputSource, range: SourceRange): Diagnostic => ({
+    const factory = (
+        level: DiagnosticSeverity,
+        message: string,
+        source: InputSource,
+        range: SourceRange
+    ): Diagnostic => ({
         code: code as DiagnosticCode,
         severity: level,
         message,

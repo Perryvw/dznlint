@@ -46,7 +46,7 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
-      formal := direction=direction? _ type_name=compound_name _ name=identifier
+      formal := start=@ direction={direction=direction __}? type_name=compound_name __ name=identifier end=@
 
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE

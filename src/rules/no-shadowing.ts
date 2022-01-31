@@ -67,7 +67,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
                 for (const { name } of headTailToList(node.parameters.formals)) {
                     const previousDefinition = findDeclarationInUpperScope(name.text, context);
                     if (previousDefinition) {
-                        diagnostics.push(...createDiagnostics(node.name, previousDefinition, context.source));
+                        diagnostics.push(...createDiagnostics(name, previousDefinition, context.source));
                     }
                 }
             }

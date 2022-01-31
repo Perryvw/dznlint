@@ -23,7 +23,7 @@ export const parameter_direction: RuleFactory = factoryContext => {
                             config.severity,
                             "Parameter direction should be specified",
                             context.source,
-                            nodeToSourceRange(param.name)
+                            nodeToSourceRange(param)
                         )
                     );
                 }

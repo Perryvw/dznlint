@@ -8,13 +8,23 @@
             "name": "Debug current jest test",
             "type": "node",
             "request": "launch",
-            "env": { "CI": "true" },
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
             "args": ["--runInBand", "--no-cache", "--runTestsByPath", "${relativeFile}"],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
-        }
+        },
+        {
+            "name": "Debug dznlint on dzn file",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "node",
+            "args": ["${workspaceRoot}/dist/cli/dznlint.js", "${relativeFile}"],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
     ]
 }

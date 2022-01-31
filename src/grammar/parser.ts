@@ -39,7 +39,7 @@
 *     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
 *     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
 *       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
-*       formal := direction=direction? _ type_name=compound_name _ name=identifier
+*       formal := start=@ direction={direction=direction __}? type_name=compound_name __ name=identifier end=@
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
@@ -213,6 +213,7 @@ export enum ASTKinds {
     formal_list = "formal_list",
     formal_list_$0 = "formal_list_$0",
     formal = "formal",
+    formal_$0 = "formal_$0",
     behavior = "behavior",
     behavior_compound = "behavior_compound",
     behavior_statements = "behavior_statements",
@@ -566,9 +567,15 @@ export interface formal_list_$0 {
 }
 export interface formal {
     kind: ASTKinds.formal;
-    direction: Nullable<direction>;
+    start: PosInfo;
+    direction: Nullable<formal_$0>;
     type_name: compound_name;
     name: identifier;
+    end: PosInfo;
+}
+export interface formal_$0 {
+    kind: ASTKinds.formal_$0;
+    direction: direction;
 }
 export interface behavior {
     kind: ASTKinds.behavior;
@@ -1656,18 +1663,35 @@ export class Parser {
     public matchformal($$dpth: number, $$cr?: ErrorTracker): Nullable<formal> {
         return this.run<formal>($$dpth,
             () => {
-                let $scope$direction: Nullable<Nullable<direction>>;
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$direction: Nullable<Nullable<formal_$0>>;
                 let $scope$type_name: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<formal> = null;
                 if (true
-                    && (($scope$direction = this.matchdirection($$dpth + 1, $$cr)) || true)
-                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$start = this.mark()) !== null
+                    && (($scope$direction = this.matchformal_$0($$dpth + 1, $$cr)) || true)
                     && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal, direction: $scope$direction, type_name: $scope$type_name, name: $scope$name};
+                    $$res = {kind: ASTKinds.formal, start: $scope$start, direction: $scope$direction, type_name: $scope$type_name, name: $scope$name, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchformal_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<formal_$0> {
+        return this.run<formal_$0>($$dpth,
+            () => {
+                let $scope$direction: Nullable<direction>;
+                let $$res: Nullable<formal_$0> = null;
+                if (true
+                    && ($scope$direction = this.matchdirection($$dpth + 1, $$cr)) !== null
+                    && this.match__($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.formal_$0, direction: $scope$direction};
                 }
                 return $$res;
             });
