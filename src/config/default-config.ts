@@ -8,7 +8,7 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
     // },
 
     dead_code: "error",
-    implicit_illegal: ["hint", "always"],
+    implicit_illegal: "warning",
     naming_convention: ["hint", {
         component: "[A-Z][a-zA-Z0-9]*",
         enum: "[A-Z][a-zA-Z0-9]*",

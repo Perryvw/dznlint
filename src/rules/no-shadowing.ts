@@ -18,7 +18,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
             // Create error diagnostic at re-definition node
             shadowingVariablesNotAllowed(
                 config.severity,
-                `Redeclaring already defined '${newVariable.text}'.`,
+                `Shadowing already defined variable '${newVariable.text}'.`,
                 source,
                 nodeToSourceRange(newVariable)
             ),

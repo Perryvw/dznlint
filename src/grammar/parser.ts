@@ -46,7 +46,7 @@
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
 *         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 * declarative_statement := on | guard | compound
-*   on := blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement
+*   on := start=@ blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement end=@
 *     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
 *       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
 *         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
@@ -58,7 +58,7 @@
 *   assignment            := left=identifier _ ASSIGN _ right=expression _ SEMICOLON
 *   expression_statement  := expression=expression SEMICOLON
 *   variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
-* expression := binary_expression | property_expression | call_expression | dollars | identifier | numeric_literal | unary_expression
+* expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
 *   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
 *     arguments         := {_ expression=expression _ COMMA?}*
 *   dollars             := DOLLAR value='[^$]*' DOLLAR
@@ -110,7 +110,7 @@
 * EXTERNAL            := 'external'
 * FALSE               := 'false'
 * IF                  := 'if'
-* ILLEGAL             := 'illegal'
+* ILLEGAL             := start=@ 'illegal' end=@
 * IMPORT              := 'import'
 * IN                  := 'in'
 * INEVITABLE          := 'inevitable'
@@ -257,6 +257,7 @@ export enum ASTKinds {
     expression_5 = "expression_5",
     expression_6 = "expression_6",
     expression_7 = "expression_7",
+    expression_8 = "expression_8",
     call_expression = "call_expression",
     arguments = "arguments",
     arguments_$0 = "arguments_$0",
@@ -611,10 +612,12 @@ export type declarative_statement_2 = guard;
 export type declarative_statement_3 = compound;
 export interface on {
     kind: ASTKinds.on;
+    start: PosInfo;
     blocking: Nullable<BLOCKING>;
     name: compound_name;
     parameters: Nullable<on_formals>;
     statement: imperative_statement;
+    end: PosInfo;
 }
 export interface on_formals {
     kind: ASTKinds.on_formals;
@@ -683,14 +686,15 @@ export interface variable_definition_$0 {
     kind: ASTKinds.variable_definition_$0;
     expression: expression;
 }
-export type expression = expression_1 | expression_2 | expression_3 | expression_4 | expression_5 | expression_6 | expression_7;
+export type expression = expression_1 | expression_2 | expression_3 | expression_4 | expression_5 | expression_6 | expression_7 | expression_8;
 export type expression_1 = binary_expression;
 export type expression_2 = property_expression;
 export type expression_3 = call_expression;
 export type expression_4 = dollars;
-export type expression_5 = identifier;
-export type expression_6 = numeric_literal;
-export type expression_7 = unary_expression;
+export type expression_5 = ILLEGAL;
+export type expression_6 = identifier;
+export type expression_7 = numeric_literal;
+export type expression_8 = unary_expression;
 export interface call_expression {
     kind: ASTKinds.call_expression;
     expression: expression;
@@ -804,7 +808,11 @@ export type EXTERN = string;
 export type EXTERNAL = string;
 export type FALSE = string;
 export type IF = string;
-export type ILLEGAL = string;
+export interface ILLEGAL {
+    kind: ASTKinds.ILLEGAL;
+    start: PosInfo;
+    end: PosInfo;
+}
 export type IMPORT = string;
 export type IN = string;
 export type INEVITABLE = string;
@@ -1818,12 +1826,15 @@ export class Parser {
     public matchon($$dpth: number, $$cr?: ErrorTracker): Nullable<on> {
         return this.run<on>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$blocking: Nullable<Nullable<BLOCKING>>;
                 let $scope$name: Nullable<compound_name>;
                 let $scope$parameters: Nullable<Nullable<on_formals>>;
                 let $scope$statement: Nullable<imperative_statement>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<on> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && (($scope$blocking = this.matchBLOCKING($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchON($$dpth + 1, $$cr) !== null
@@ -1835,8 +1846,9 @@ export class Parser {
                     && this.matchCOLON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on, blocking: $scope$blocking, name: $scope$name, parameters: $scope$parameters, statement: $scope$statement};
+                    $$res = {kind: ASTKinds.on, start: $scope$start, blocking: $scope$blocking, name: $scope$name, parameters: $scope$parameters, statement: $scope$statement, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2102,6 +2114,7 @@ export class Parser {
                 () => this.matchexpression_5($$dpth + 1, $$cr),
                 () => this.matchexpression_6($$dpth + 1, $$cr),
                 () => this.matchexpression_7($$dpth + 1, $$cr),
+                () => this.matchexpression_8($$dpth + 1, $$cr),
             ]);
         };
         const $scope$pos = this.mark();
@@ -2142,12 +2155,15 @@ export class Parser {
         return this.matchdollars($$dpth + 1, $$cr);
     }
     public matchexpression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_5> {
-        return this.matchidentifier($$dpth + 1, $$cr);
+        return this.matchILLEGAL($$dpth + 1, $$cr);
     }
     public matchexpression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_6> {
-        return this.matchnumeric_literal($$dpth + 1, $$cr);
+        return this.matchidentifier($$dpth + 1, $$cr);
     }
     public matchexpression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_7> {
+        return this.matchnumeric_literal($$dpth + 1, $$cr);
+    }
+    public matchexpression_8($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_8> {
         return this.matchunary_expression($$dpth + 1, $$cr);
     }
     public matchcall_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<call_expression> {
@@ -2555,7 +2571,20 @@ export class Parser {
         return this.regexAccept(String.raw`(?:if)`, $$dpth + 1, $$cr);
     }
     public matchILLEGAL($$dpth: number, $$cr?: ErrorTracker): Nullable<ILLEGAL> {
-        return this.regexAccept(String.raw`(?:illegal)`, $$dpth + 1, $$cr);
+        return this.run<ILLEGAL>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<ILLEGAL> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.regexAccept(String.raw`(?:illegal)`, $$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.ILLEGAL, start: $scope$start, end: $scope$end};
+                }
+                return $$res;
+            });
     }
     public matchIMPORT($$dpth: number, $$cr?: ErrorTracker): Nullable<IMPORT> {
         return this.regexAccept(String.raw`(?:import)`, $$dpth + 1, $$cr);

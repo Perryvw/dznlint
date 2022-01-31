@@ -11,7 +11,7 @@ export interface DznLintConfiguration {
     // };
     // Rule configuration
     dead_code: ConfigValue,
-    implicit_illegal: ConfigValueWithData<"always" | "never">,
+    implicit_illegal: ConfigValue,
     naming_convention: ConfigValueWithData<{
         component: string,
         enum: string,

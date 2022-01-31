@@ -104,13 +104,13 @@ type DiagnosticFactoryWithCode = DiagnosticFactory & { code: DiagnosticCode };
 export function createDiagnosticsFactory(): DiagnosticFactoryWithCode {
     const code = diagnosticsId++;
     const factory = (
-        level: DiagnosticSeverity,
+        severity: DiagnosticSeverity,
         message: string,
         source: InputSource,
         range: SourceRange
     ): Diagnostic => ({
         code: code as DiagnosticCode,
-        severity: level,
+        severity,
         message,
         source,
         range,

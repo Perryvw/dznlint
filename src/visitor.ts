@@ -193,6 +193,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.event]: stopVisiting,
     [parser.ASTKinds.formal]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
+    [parser.ASTKinds.ILLEGAL]: stopVisiting,
     [parser.ASTKinds.import_statement]: stopVisiting,
     [parser.ASTKinds.instance]: stopVisiting,
     [parser.ASTKinds.int]: stopVisiting,

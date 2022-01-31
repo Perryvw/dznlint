@@ -55,7 +55,7 @@ behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 
 declarative_statement := on | guard | compound
-  on := blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement
+  on := start=@ blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement end=@
     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
@@ -70,7 +70,7 @@ imperative_statement := variable_definition | assignment | expression_statement 
   expression_statement  := expression=expression SEMICOLON
   variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
 
-expression := binary_expression | property_expression | call_expression | dollars | identifier | numeric_literal | unary_expression
+expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
     arguments         := {_ expression=expression _ COMMA?}*
   dollars             := DOLLAR value='[^$]*' DOLLAR
@@ -127,7 +127,7 @@ EXTERN              := 'extern'
 EXTERNAL            := 'external'
 FALSE               := 'false'
 IF                  := 'if'
-ILLEGAL             := 'illegal'
+ILLEGAL             := start=@ 'illegal' end=@
 IMPORT              := 'import'
 IN                  := 'in'
 INEVITABLE          := 'inevitable'

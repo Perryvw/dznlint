@@ -14,6 +14,8 @@ interface HelloWorld {
             on hello: {
                 s = State.World;
             }
+
+            on world: illegal;
         }
 
         [s.World] {

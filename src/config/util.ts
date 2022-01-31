@@ -38,7 +38,7 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     }
 
     if (Array.isArray(value)) {
-        const [severity, config] = value as [ConfigSeverity, DznLintConfiguration[TRule][0]];
+        const [severity, config] = value as unknown as [ConfigSeverity, DznLintConfiguration[TRule][0]];
 
         return {
             isEnabled: true,

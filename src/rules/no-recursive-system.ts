@@ -25,7 +25,7 @@ export const no_recursive_system: RuleFactory = factoryContext => {
                         diagnostics.push(
                             recursiveSystem(
                                 config.severity,
-                                "Systems cannot contain instances of themself.",
+                                "Systems cannot contain instances of itself.",
                                 context.source,
                                 nodeToSourceRange(instance_or_binding.name)
                             )
