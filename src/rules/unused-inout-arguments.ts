@@ -1,1 +1,0 @@
-// Only assigning inout parameter should hint making it out-only parameter

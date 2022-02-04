@@ -43,11 +43,21 @@ test("component with event", () => {
     `);
 });
 
+test("on with multiple events", () => {
+    expectCanParseWithoutDiagnostics(`
+        interface MyInterface {
+            behavior {
+                on event1, event2: {}
+            }
+        }
+    `);
+});
+
 test("blocking on with assignment", () => {
     expectCanParseWithoutDiagnostics(`
         component MyComponent {
             behavior {
-                on event(outVar <- myData): {}
+                blocking on event(outVar <- myData): {}
             }
         }
     `);

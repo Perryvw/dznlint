@@ -46,18 +46,21 @@
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
 *         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 * declarative_statement := on | guard | compound
-*   on := start=@ blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement end=@
+*   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=imperative_statement end=@
+*     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
+*     on_trigger := name=compound_name _ parameters=on_formals?
 *     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
 *       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
 *         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
-*   guard := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
-* compound := blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE
+*   guard := start=@ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
+* compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
-* imperative_statement := variable_definition | assignment | expression_statement | compound
-*   assignment            := left=identifier _ ASSIGN _ right=expression _ SEMICOLON
-*   expression_statement  := expression=expression SEMICOLON
-*   variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
+* imperative_statement := variable_definition | assignment | return_statement | expression_statement | compound
+*   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
+*   expression_statement  := start=@ expression=expression SEMICOLON end=@
+*   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
+*   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
 * expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
 *   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
 *     arguments         := {_ expression=expression _ COMMA?}*
@@ -229,6 +232,9 @@ export enum ASTKinds {
     declarative_statement_2 = "declarative_statement_2",
     declarative_statement_3 = "declarative_statement_3",
     on = "on",
+    on_trigger_list = "on_trigger_list",
+    on_trigger_list_$0 = "on_trigger_list_$0",
+    on_trigger = "on_trigger",
     on_formals = "on_formals",
     on_formal_list = "on_formal_list",
     on_formal_list_$0 = "on_formal_list_$0",
@@ -246,10 +252,12 @@ export enum ASTKinds {
     imperative_statement_2 = "imperative_statement_2",
     imperative_statement_3 = "imperative_statement_3",
     imperative_statement_4 = "imperative_statement_4",
+    imperative_statement_5 = "imperative_statement_5",
     assignment = "assignment",
     expression_statement = "expression_statement",
     variable_definition = "variable_definition",
     variable_definition_$0 = "variable_definition_$0",
+    return_statement = "return_statement",
     expression_1 = "expression_1",
     expression_2 = "expression_2",
     expression_3 = "expression_3",
@@ -614,10 +622,23 @@ export interface on {
     kind: ASTKinds.on;
     start: PosInfo;
     blocking: Nullable<BLOCKING>;
-    name: compound_name;
-    parameters: Nullable<on_formals>;
+    on_trigger_list: on_trigger_list;
     statement: imperative_statement;
     end: PosInfo;
+}
+export interface on_trigger_list {
+    kind: ASTKinds.on_trigger_list;
+    head: Nullable<on_trigger>;
+    tail: on_trigger_list_$0[];
+}
+export interface on_trigger_list_$0 {
+    kind: ASTKinds.on_trigger_list_$0;
+    elem: on_trigger;
+}
+export interface on_trigger {
+    kind: ASTKinds.on_trigger;
+    name: compound_name;
+    parameters: Nullable<on_formals>;
 }
 export interface on_formals {
     kind: ASTKinds.on_formals;
@@ -643,16 +664,20 @@ export interface on_formal_$0 {
 }
 export interface guard {
     kind: ASTKinds.guard;
+    start: PosInfo;
     condition: Nullable<guard_$0>;
     statement: statement;
+    end: PosInfo;
 }
 export type guard_$0 = guard_$0_1 | guard_$0_2;
 export type guard_$0_1 = OTHERWISE;
 export type guard_$0_2 = expression;
 export interface compound {
     kind: ASTKinds.compound;
+    start: PosInfo;
     blocking: Nullable<BLOCKING>;
     statements: statements;
+    end: PosInfo;
 }
 export type statements = statements_$0[];
 export interface statements_$0 {
@@ -662,29 +687,42 @@ export interface statements_$0 {
 export type statement = statement_1 | statement_2;
 export type statement_1 = declarative_statement;
 export type statement_2 = imperative_statement;
-export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4;
+export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5;
 export type imperative_statement_1 = variable_definition;
 export type imperative_statement_2 = assignment;
-export type imperative_statement_3 = expression_statement;
-export type imperative_statement_4 = compound;
+export type imperative_statement_3 = return_statement;
+export type imperative_statement_4 = expression_statement;
+export type imperative_statement_5 = compound;
 export interface assignment {
     kind: ASTKinds.assignment;
+    start: PosInfo;
     left: identifier;
     right: expression;
+    end: PosInfo;
 }
 export interface expression_statement {
     kind: ASTKinds.expression_statement;
+    start: PosInfo;
     expression: expression;
+    end: PosInfo;
 }
 export interface variable_definition {
     kind: ASTKinds.variable_definition;
+    start: PosInfo;
     type_name: compound_name;
     name: identifier;
     initializer: Nullable<variable_definition_$0>;
+    end: PosInfo;
 }
 export interface variable_definition_$0 {
     kind: ASTKinds.variable_definition_$0;
     expression: expression;
+}
+export interface return_statement {
+    kind: ASTKinds.return_statement;
+    start: PosInfo;
+    expression: Nullable<expression>;
+    end: PosInfo;
 }
 export type expression = expression_1 | expression_2 | expression_3 | expression_4 | expression_5 | expression_6 | expression_7 | expression_8;
 export type expression_1 = binary_expression;
@@ -1828,8 +1866,7 @@ export class Parser {
             () => {
                 let $scope$start: Nullable<PosInfo>;
                 let $scope$blocking: Nullable<Nullable<BLOCKING>>;
-                let $scope$name: Nullable<compound_name>;
-                let $scope$parameters: Nullable<Nullable<on_formals>>;
+                let $scope$on_trigger_list: Nullable<on_trigger_list>;
                 let $scope$statement: Nullable<imperative_statement>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<on> = null;
@@ -1839,16 +1876,61 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$parameters = this.matchon_formals($$dpth + 1, $$cr)) || true)
+                    && ($scope$on_trigger_list = this.matchon_trigger_list($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOLON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on, start: $scope$start, blocking: $scope$blocking, name: $scope$name, parameters: $scope$parameters, statement: $scope$statement, end: $scope$end};
+                    $$res = {kind: ASTKinds.on, start: $scope$start, blocking: $scope$blocking, on_trigger_list: $scope$on_trigger_list, statement: $scope$statement, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchon_trigger_list($$dpth: number, $$cr?: ErrorTracker): Nullable<on_trigger_list> {
+        return this.run<on_trigger_list>($$dpth,
+            () => {
+                let $scope$head: Nullable<Nullable<on_trigger>>;
+                let $scope$tail: Nullable<on_trigger_list_$0[]>;
+                let $$res: Nullable<on_trigger_list> = null;
+                if (true
+                    && (($scope$head = this.matchon_trigger($$dpth + 1, $$cr)) || true)
+                    && ($scope$tail = this.loop<on_trigger_list_$0>(() => this.matchon_trigger_list_$0($$dpth + 1, $$cr), true)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.on_trigger_list, head: $scope$head, tail: $scope$tail};
+                }
+                return $$res;
+            });
+    }
+    public matchon_trigger_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<on_trigger_list_$0> {
+        return this.run<on_trigger_list_$0>($$dpth,
+            () => {
+                let $scope$elem: Nullable<on_trigger>;
+                let $$res: Nullable<on_trigger_list_$0> = null;
+                if (true
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchCOMMA($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$elem = this.matchon_trigger($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.on_trigger_list_$0, elem: $scope$elem};
+                }
+                return $$res;
+            });
+    }
+    public matchon_trigger($$dpth: number, $$cr?: ErrorTracker): Nullable<on_trigger> {
+        return this.run<on_trigger>($$dpth,
+            () => {
+                let $scope$name: Nullable<compound_name>;
+                let $scope$parameters: Nullable<Nullable<on_formals>>;
+                let $$res: Nullable<on_trigger> = null;
+                if (true
+                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && (($scope$parameters = this.matchon_formals($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.on_trigger, name: $scope$name, parameters: $scope$parameters};
                 }
                 return $$res;
             });
@@ -1935,10 +2017,13 @@ export class Parser {
     public matchguard($$dpth: number, $$cr?: ErrorTracker): Nullable<guard> {
         return this.run<guard>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$condition: Nullable<Nullable<guard_$0>>;
                 let $scope$statement: Nullable<statement>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<guard> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && this.matchBRACKET_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$condition = this.matchguard_$0($$dpth + 1, $$cr)) || true)
@@ -1946,8 +2031,9 @@ export class Parser {
                     && this.matchBRACKET_CLOSE($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$statement = this.matchstatement($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.guard, condition: $scope$condition, statement: $scope$statement};
+                    $$res = {kind: ASTKinds.guard, start: $scope$start, condition: $scope$condition, statement: $scope$statement, end: $scope$end};
                 }
                 return $$res;
             });
@@ -1967,10 +2053,13 @@ export class Parser {
     public matchcompound($$dpth: number, $$cr?: ErrorTracker): Nullable<compound> {
         return this.run<compound>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$blocking: Nullable<Nullable<BLOCKING>>;
                 let $scope$statements: Nullable<statements>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<compound> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && (($scope$blocking = this.matchBLOCKING($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
@@ -1978,8 +2067,9 @@ export class Parser {
                     && ($scope$statements = this.matchstatements($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_CLOSE($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.compound, blocking: $scope$blocking, statements: $scope$statements};
+                    $$res = {kind: ASTKinds.compound, start: $scope$start, blocking: $scope$blocking, statements: $scope$statements, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2020,6 +2110,7 @@ export class Parser {
             () => this.matchimperative_statement_2($$dpth + 1, $$cr),
             () => this.matchimperative_statement_3($$dpth + 1, $$cr),
             () => this.matchimperative_statement_4($$dpth + 1, $$cr),
+            () => this.matchimperative_statement_5($$dpth + 1, $$cr),
         ]);
     }
     public matchimperative_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_1> {
@@ -2029,18 +2120,24 @@ export class Parser {
         return this.matchassignment($$dpth + 1, $$cr);
     }
     public matchimperative_statement_3($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_3> {
-        return this.matchexpression_statement($$dpth + 1, $$cr);
+        return this.matchreturn_statement($$dpth + 1, $$cr);
     }
     public matchimperative_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_4> {
+        return this.matchexpression_statement($$dpth + 1, $$cr);
+    }
+    public matchimperative_statement_5($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_5> {
         return this.matchcompound($$dpth + 1, $$cr);
     }
     public matchassignment($$dpth: number, $$cr?: ErrorTracker): Nullable<assignment> {
         return this.run<assignment>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$left: Nullable<identifier>;
                 let $scope$right: Nullable<expression>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<assignment> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && ($scope$left = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchASSIGN($$dpth + 1, $$cr) !== null
@@ -2048,8 +2145,9 @@ export class Parser {
                     && ($scope$right = this.matchexpression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.assignment, left: $scope$left, right: $scope$right};
+                    $$res = {kind: ASTKinds.assignment, start: $scope$start, left: $scope$left, right: $scope$right, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2057,13 +2155,17 @@ export class Parser {
     public matchexpression_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_statement> {
         return this.run<expression_statement>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$expression: Nullable<expression>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<expression_statement> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.expression_statement, expression: $scope$expression};
+                    $$res = {kind: ASTKinds.expression_statement, start: $scope$start, expression: $scope$expression, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2071,19 +2173,23 @@ export class Parser {
     public matchvariable_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<variable_definition> {
         return this.run<variable_definition>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$type_name: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$initializer: Nullable<Nullable<variable_definition_$0>>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<variable_definition> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$initializer = this.matchvariable_definition_$0($$dpth + 1, $$cr)) || true)
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.variable_definition, type_name: $scope$type_name, name: $scope$name, initializer: $scope$initializer};
+                    $$res = {kind: ASTKinds.variable_definition, start: $scope$start, type_name: $scope$type_name, name: $scope$name, initializer: $scope$initializer, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2100,6 +2206,27 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.variable_definition_$0, expression: $scope$expression};
+                }
+                return $$res;
+            });
+    }
+    public matchreturn_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<return_statement> {
+        return this.run<return_statement>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$expression: Nullable<Nullable<expression>>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<return_statement> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.matchRETURN($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && (($scope$expression = this.matchexpression($$dpth + 1, $$cr)) || true)
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.return_statement, start: $scope$start, expression: $scope$expression, end: $scope$end};
                 }
                 return $$res;
             });

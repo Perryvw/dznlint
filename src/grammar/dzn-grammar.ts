@@ -1,5 +1,5 @@
-import { identifier } from "./parser";
 
+// WIP: Custom AST
 export enum SyntaxKind {
     SingleLineComment,
     MultiLineComment,
@@ -15,7 +15,7 @@ export enum SyntaxKind {
     Identifier,
 }
 
-interface AstNode<TKind extends SyntaxKind> {
+export interface AstNode<TKind extends SyntaxKind> {
     kind: TKind;
     precedingComments: CommentNode[];
 }
@@ -67,7 +67,7 @@ interface Block extends AstNode<SyntaxKind.Block> {
 
 
 
-type Expression = DollarLiteral | identifier;
+type Expression = DollarLiteral | Identifier;
 
 interface DollarLiteral extends AstNode<SyntaxKind.DollarLiteral> {
     text: string;

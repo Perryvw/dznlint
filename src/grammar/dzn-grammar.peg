@@ -55,20 +55,23 @@ behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 
 declarative_statement := on | guard | compound
-  on := start=@ blocking=BLOCKING? _ ON _ name=compound_name _ parameters=on_formals? _ COLON _ statement=imperative_statement end=@
+  on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=imperative_statement end=@
+    on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
+    on_trigger := name=compound_name _ parameters=on_formals?
     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
-  guard := BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement
+  guard := start=@ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
 
-compound := blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE
+compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
   statements  := {_ statement=statement _}*
   statement   := declarative_statement | imperative_statement
 
-imperative_statement := variable_definition | assignment | expression_statement | compound
-  assignment            := left=identifier _ ASSIGN _ right=expression _ SEMICOLON
-  expression_statement  := expression=expression SEMICOLON
-  variable_definition   := type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON
+imperative_statement := variable_definition | assignment | return_statement | expression_statement | compound
+  assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
+  expression_statement  := start=@ expression=expression SEMICOLON end=@
+  variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
+  return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
 
 expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE

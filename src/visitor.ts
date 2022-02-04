@@ -5,8 +5,18 @@ import { headTailToList } from "./util";
 
 const stopVisiting = () => {};
 
+type ScopeRoot =
+    | parser.behavior
+    | parser.component
+    | parser.compound
+    | parser.file
+    | parser.function_definition
+    | parser.interface_definition
+    | parser.namespace
+    | parser.system;
+
 interface Scope {
-    root: ASTNode;
+    root: ScopeRoot;
     variable_declarations: Record<string, parser.identifier>;
 }
 
@@ -15,7 +25,7 @@ export class VisitorContext {
 
     constructor(public source: InputSource) {}
 
-    pushScope(root: ASTNode): void {
+    pushScope(root: ScopeRoot): void {
         this.scopeStack.unshift({ root, variable_declarations: {} });
     }
 
@@ -107,7 +117,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
                 visit(parameter, context, cb);
             }
         }
+        context.pushScope(node);
         visit(node.body, context, cb);
+        context.popScope();
     },
     [parser.ASTKinds.guard]: (node: parser.guard, context: VisitorContext, cb: Callback) => {
         if (node.condition) {
@@ -145,11 +157,13 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.popScope();
     },
     [parser.ASTKinds.on]: (node: parser.on, context: VisitorContext, cb: Callback) => {
-        visit(node.name, context, cb);
+        for (const trigger of headTailToList(node.on_trigger_list)) {
+            visit(trigger.name, context, cb);
 
-        if (node.parameters?.formals) {
-            for (const parameter of headTailToList(node.parameters.formals)) {
-                context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
+            if (trigger.parameters?.formals) {
+                for (const parameter of headTailToList(trigger.parameters.formals)) {
+                    context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
+                }
             }
         }
 
@@ -160,6 +174,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: Callback
     ) => {
+        if (node.expression) {
+            visit(node.expression, context, cb);
+        }
+    },
+    [parser.ASTKinds.return_statement]: (node: parser.return_statement, context: VisitorContext, cb: Callback) => {
         if (node.expression) {
             visit(node.expression, context, cb);
         }

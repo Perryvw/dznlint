@@ -34,11 +34,13 @@ export const no_shadowing: RuleFactory = factoryContext => {
         factoryContext.registerRule<on>(ASTKinds.on, (node, context) => {
             const diagnostics = [];
 
-            if (node.parameters && node.parameters.formals) {
-                for (const param of headTailToList(node.parameters.formals)) {
-                    const previousDefinition = findDeclarationInUpperScope(param.name.text, context);
-                    if (previousDefinition) {
-                        diagnostics.push(...createDiagnostics(param.name, previousDefinition, context.source));
+            for (const trigger of headTailToList(node.on_trigger_list)) {
+                if (trigger.parameters && trigger.parameters.formals) {
+                    for (const param of headTailToList(trigger.parameters.formals)) {
+                        const previousDefinition = findDeclarationInUpperScope(param.name.text, context);
+                        if (previousDefinition) {
+                            diagnostics.push(...createDiagnostics(param.name, previousDefinition, context.source));
+                        }
                     }
                 }
             }
