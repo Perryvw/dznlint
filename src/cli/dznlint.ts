@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // This file is the CLI entry point
 
 import * as fs from "fs";

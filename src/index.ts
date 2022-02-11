@@ -5,6 +5,8 @@ import * as parser from "./grammar/parser";
 import { ASTNode, Linter, loadLinters } from "./linting-rule";
 import { visitFile } from "./visitor";
 
+export * from "./diagnostic";
+
 export function lintString(source: string, config?: DznLintUserConfiguration): Diagnostic[] {
     const sources = [{ fileContent: source }];
     return lint(sources, config);

@@ -38,6 +38,10 @@ component HelloWorld {
             on api.hello(): {
                 s = State.World;
             }
+
+            on api.hello(): {
+                s = State.World;
+            }
         }
 
         [s.World] {
@@ -47,7 +51,10 @@ component HelloWorld {
             }
         }
 
-        int myFunction(in int s) {}
+        int myFunction(in int s) {
+            return 4;
+            api.foo();
+        }
 
         int myOtherFunction(int t) {}
     }
