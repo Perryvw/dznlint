@@ -22,6 +22,7 @@ export interface DznLintConfiguration {
     }>;
     no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;
+    no_unknown_port_binding: ConfigValue;
     parameter_direction: ConfigValue;
 }
 

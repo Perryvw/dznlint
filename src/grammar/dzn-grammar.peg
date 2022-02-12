@@ -39,9 +39,9 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
       instances_and_bindings := {_{instance | binding}_}*
         instance := type=compound_name _ name=identifier _ SEMICOLON
         binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
-          end_point := name=expression _ {DOT ASTERISK}? | ASTERISK
+          end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
 
-  port := direction=port_direction __ qualifiers=port_qualifiers? name=compound_name _ arguments=formals? _ identifier _ SEMICOLON
+  port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE

@@ -67,6 +67,7 @@ component HelloWorldSystem {
     {
         HelloWorld helloWorld;
         api <=> helloWorld.api;
+        blabla <=> helloWorld.api;
 
         HelloWorldSystem recursiveSystem;
     }

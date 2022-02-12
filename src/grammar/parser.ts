@@ -33,8 +33,8 @@
 *       instances_and_bindings := {_{instance | binding}_}*
 *         instance := type=compound_name _ name=identifier _ SEMICOLON
 *         binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
-*           end_point := name=expression _ {DOT ASTERISK}? | ASTERISK
-*   port := direction=port_direction __ qualifiers=port_qualifiers? name=compound_name _ arguments=formals? _ identifier _ SEMICOLON
+*           end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
+*   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
 *     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
 *     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
@@ -539,6 +539,7 @@ export type end_point = end_point_1 | end_point_2;
 export interface end_point_1 {
     kind: ASTKinds.end_point_1;
     name: expression;
+    dot: Nullable<end_point_$0>;
 }
 export type end_point_2 = ASTERISK;
 export interface end_point_$0 {
@@ -548,8 +549,8 @@ export interface port {
     kind: ASTKinds.port;
     direction: port_direction;
     qualifiers: Nullable<port_qualifiers>;
-    name: compound_name;
-    arguments: Nullable<formals>;
+    type: compound_name;
+    name: identifier;
 }
 export type port_direction = port_direction_1 | port_direction_2;
 export type port_direction_1 = PROVIDES;
@@ -1565,13 +1566,14 @@ export class Parser {
         return this.run<end_point_1>($$dpth,
             () => {
                 let $scope$name: Nullable<expression>;
+                let $scope$dot: Nullable<Nullable<end_point_$0>>;
                 let $$res: Nullable<end_point_1> = null;
                 if (true
                     && ($scope$name = this.matchexpression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ((this.matchend_point_$0($$dpth + 1, $$cr)) || true)
+                    && (($scope$dot = this.matchend_point_$0($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.end_point_1, name: $scope$name};
+                    $$res = {kind: ASTKinds.end_point_1, name: $scope$name, dot: $scope$dot};
                 }
                 return $$res;
             });
@@ -1597,22 +1599,20 @@ export class Parser {
             () => {
                 let $scope$direction: Nullable<port_direction>;
                 let $scope$qualifiers: Nullable<Nullable<port_qualifiers>>;
-                let $scope$name: Nullable<compound_name>;
-                let $scope$arguments: Nullable<Nullable<formals>>;
+                let $scope$type: Nullable<compound_name>;
+                let $scope$name: Nullable<identifier>;
                 let $$res: Nullable<port> = null;
                 if (true
                     && ($scope$direction = this.matchport_direction($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && (($scope$qualifiers = this.matchport_qualifiers($$dpth + 1, $$cr)) || true)
-                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$arguments = this.matchformals($$dpth + 1, $$cr)) || true)
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchidentifier($$dpth + 1, $$cr) !== null
+                    && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.port, direction: $scope$direction, qualifiers: $scope$qualifiers, name: $scope$name, arguments: $scope$arguments};
+                    $$res = {kind: ASTKinds.port, direction: $scope$direction, qualifiers: $scope$qualifiers, type: $scope$type, name: $scope$name};
                 }
                 return $$res;
             });

@@ -169,6 +169,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 
         visit(node.statement, context, cb);
     },
+    [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext) => {
+        context.currentScope().variable_declarations[node.name.text] = node.name;
+    },
     [parser.ASTKinds.property_expression]: (
         node: parser.property_expression,
         context: VisitorContext,
@@ -217,7 +220,6 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.instance]: stopVisiting,
     [parser.ASTKinds.int]: stopVisiting,
     [parser.ASTKinds.member_identifier]: stopVisiting,
-    [parser.ASTKinds.port]: stopVisiting,
     [parser.ASTKinds.sl_comment]: stopVisiting,
 };
 
