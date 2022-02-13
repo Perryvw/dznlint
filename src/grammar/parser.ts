@@ -22,10 +22,10 @@
 *   namespace_root      := statements={_ statement=namespace_statement _}*
 *   namespace_statement := type | namespace | interface_definition | component
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
-*     event := direction=direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
+*     event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
 *     event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
-*       direction := IN | OUT
+*       event_direction := IN | OUT
 *       param_direction := INOUT | IN | OUT
 * component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
 *   body := behavior | system
@@ -39,7 +39,7 @@
 *     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
 *     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
 *       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
-*       formal := start=@ direction={direction=direction __}? type_name=compound_name __ name=identifier end=@
+*       formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
@@ -183,8 +183,8 @@ export enum ASTKinds {
     event_params_$0 = "event_params_$0",
     event_parameter = "event_parameter",
     event_parameter_$0 = "event_parameter_$0",
-    direction_1 = "direction_1",
-    direction_2 = "direction_2",
+    event_direction_1 = "event_direction_1",
+    event_direction_2 = "event_direction_2",
     param_direction_1 = "param_direction_1",
     param_direction_2 = "param_direction_2",
     param_direction_3 = "param_direction_3",
@@ -458,7 +458,7 @@ export type interface_definition_$0_$0_1 = type;
 export type interface_definition_$0_$0_2 = event;
 export interface event {
     kind: ASTKinds.event;
-    direction: direction;
+    direction: event_direction;
     type_name: compound_name;
     event_name: identifier;
     event_params: Nullable<event_params>;
@@ -482,9 +482,9 @@ export interface event_parameter_$0 {
     kind: ASTKinds.event_parameter_$0;
     direction: param_direction;
 }
-export type direction = direction_1 | direction_2;
-export type direction_1 = IN;
-export type direction_2 = OUT;
+export type event_direction = event_direction_1 | event_direction_2;
+export type event_direction_1 = IN;
+export type event_direction_2 = OUT;
 export type param_direction = param_direction_1 | param_direction_2 | param_direction_3;
 export type param_direction_1 = INOUT;
 export type param_direction_2 = IN;
@@ -585,7 +585,7 @@ export interface formal {
 }
 export interface formal_$0 {
     kind: ASTKinds.formal_$0;
-    direction: direction;
+    direction: param_direction;
 }
 export interface behavior {
     kind: ASTKinds.behavior;
@@ -1270,13 +1270,13 @@ export class Parser {
     public matchevent($$dpth: number, $$cr?: ErrorTracker): Nullable<event> {
         return this.run<event>($$dpth,
             () => {
-                let $scope$direction: Nullable<direction>;
+                let $scope$direction: Nullable<event_direction>;
                 let $scope$type_name: Nullable<compound_name>;
                 let $scope$event_name: Nullable<identifier>;
                 let $scope$event_params: Nullable<Nullable<event_params>>;
                 let $$res: Nullable<event> = null;
                 if (true
-                    && ($scope$direction = this.matchdirection($$dpth + 1, $$cr)) !== null
+                    && ($scope$direction = this.matchevent_direction($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
@@ -1358,16 +1358,16 @@ export class Parser {
                 return $$res;
             });
     }
-    public matchdirection($$dpth: number, $$cr?: ErrorTracker): Nullable<direction> {
-        return this.choice<direction>([
-            () => this.matchdirection_1($$dpth + 1, $$cr),
-            () => this.matchdirection_2($$dpth + 1, $$cr),
+    public matchevent_direction($$dpth: number, $$cr?: ErrorTracker): Nullable<event_direction> {
+        return this.choice<event_direction>([
+            () => this.matchevent_direction_1($$dpth + 1, $$cr),
+            () => this.matchevent_direction_2($$dpth + 1, $$cr),
         ]);
     }
-    public matchdirection_1($$dpth: number, $$cr?: ErrorTracker): Nullable<direction_1> {
+    public matchevent_direction_1($$dpth: number, $$cr?: ErrorTracker): Nullable<event_direction_1> {
         return this.matchIN($$dpth + 1, $$cr);
     }
-    public matchdirection_2($$dpth: number, $$cr?: ErrorTracker): Nullable<direction_2> {
+    public matchevent_direction_2($$dpth: number, $$cr?: ErrorTracker): Nullable<event_direction_2> {
         return this.matchOUT($$dpth + 1, $$cr);
     }
     public matchparam_direction($$dpth: number, $$cr?: ErrorTracker): Nullable<param_direction> {
@@ -1731,10 +1731,10 @@ export class Parser {
     public matchformal_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<formal_$0> {
         return this.run<formal_$0>($$dpth,
             () => {
-                let $scope$direction: Nullable<direction>;
+                let $scope$direction: Nullable<param_direction>;
                 let $$res: Nullable<formal_$0> = null;
                 if (true
-                    && ($scope$direction = this.matchdirection($$dpth + 1, $$cr)) !== null
+                    && ($scope$direction = this.matchparam_direction($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.formal_$0, direction: $scope$direction};
