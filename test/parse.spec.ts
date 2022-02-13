@@ -1,10 +1,13 @@
 import * as path from "path";
 import { formatDiagnostic } from "../src/diagnostic";
 import { lintFiles, lintString } from "../src";
+import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
+
+const parseOnlyConfiguration: DznLintUserConfiguration = { naming_convention: false, no_unused_parameters: false };
 
 test.each(["component.dzn", "interface.dzn", "system.dzn"])("can parse file without diagnostics (%p)", fileName => {
     const filePath = path.join(__dirname, "files", fileName);
-    const result = lintFiles([filePath], { naming_convention: false });
+    const result = lintFiles([filePath], parseOnlyConfiguration);
     for (const diagnostic of result) {
         console.log(formatDiagnostic(diagnostic));
     }
@@ -120,7 +123,7 @@ test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", comparison 
 });
 
 function expectCanParseWithoutDiagnostics(dzn: string) {
-    const result = lintString(dzn, { naming_convention: false });
+    const result = lintString(dzn, parseOnlyConfiguration);
     for (const diagnostic of result) {
         console.log(formatDiagnostic(diagnostic));
     }
