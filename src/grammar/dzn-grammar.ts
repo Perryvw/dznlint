@@ -1,4 +1,3 @@
-
 // WIP: Custom AST
 export enum SyntaxKind {
     SingleLineComment,
@@ -22,10 +21,7 @@ export interface AstNode<TKind extends SyntaxKind> {
 
 export type DznFile = Statement[];
 
-
 export type Statement = CommentNode | Declaration;
-
-
 
 export type CommentNode = SingleLineComment | MultiLineComment;
 
@@ -36,8 +32,6 @@ export interface SingleLineComment extends AstNode<SyntaxKind.SingleLineComment>
 export interface MultiLineComment extends AstNode<SyntaxKind.MultiLineComment> {
     text: string;
 }
-
-
 
 type Declaration = ComponentDeclaration | InterfaceDeclaration | ExternDeclaration | VariableDeclaration;
 
@@ -64,8 +58,6 @@ interface VariableDeclaration extends AstNode<SyntaxKind.VariableDeclaration> {
 interface Block extends AstNode<SyntaxKind.Block> {
     statements: Statement[];
 }
-
-
 
 type Expression = DollarLiteral | Identifier;
 

@@ -9,14 +9,17 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
 
     dead_code: "error",
     implicit_illegal: "warning",
-    naming_convention: ["hint", {
-        component: "[A-Z][a-zA-Z0-9]*",
-        enum: "[A-Z][a-zA-Z0-9]*",
-        enum_member: "[A-Z][a-zA-Z0-9]*",
-        interface: "I[A-Z][a-zA-Z0-9]*",
-        local: "[a-z_][a-zA-Z0-9]*",
-        type: "[A-Z][a-zA-Z0-9]*"
-    }],
+    naming_convention: [
+        "hint",
+        {
+            component: "[A-Z][a-zA-Z0-9]*",
+            enum: "[A-Z][a-zA-Z0-9]*",
+            enum_member: "[A-Z][a-zA-Z0-9]*",
+            interface: "I[A-Z][a-zA-Z0-9]*",
+            local: "[a-z_][a-zA-Z0-9]*",
+            type: "[A-Z][a-zA-Z0-9]*",
+        },
+    ],
     no_recursive_system: "error",
     no_shadowing: "error",
     no_unknown_port_binding: "error",

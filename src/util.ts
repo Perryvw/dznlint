@@ -1,22 +1,22 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
 import { PosInfo } from "./grammar/parser";
 
-export function nodeToSourceRange(node: { start: PosInfo, end: PosInfo }): SourceRange {
+export function nodeToSourceRange(node: { start: PosInfo; end: PosInfo }): SourceRange {
     return {
         from: posInfoToSourcePosition(node.start),
         to: posInfoToSourcePosition(node.end),
-    }
+    };
 }
 
 export function posInfoToSourcePosition(pos: PosInfo): SourcePosition {
     return {
         index: pos.overallPos,
         line: pos.line,
-        column: pos.offset
+        column: pos.offset,
     };
 }
 
-export function headTailToList<T>(obj: { head?: T, tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
+export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
     const result = [];
     if (obj.head) {
         result.push(obj.head as NonNullable<T>);

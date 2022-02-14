@@ -53,7 +53,7 @@ export class VisitorContext {
 
 export enum VisitResult {
     Continue,
-    StopVisiting
+    StopVisiting,
 }
 export type VisitorCallback = (node: ASTNode, context: VisitorContext) => VisitResult | void;
 
@@ -79,7 +79,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         }
         context.popScope();
     },
-    [parser.ASTKinds.binary_expression]: (node: parser.binary_expression, context: VisitorContext, cb: VisitorCallback) => {
+    [parser.ASTKinds.binary_expression]: (
+        node: parser.binary_expression,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
         context.visit(node.left, cb);
         context.visit(node.right, cb);
     },
@@ -198,7 +202,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             context.visit(node.expression, cb);
         }
     },
-    [parser.ASTKinds.return_statement]: (node: parser.return_statement, context: VisitorContext, cb: VisitorCallback) => {
+    [parser.ASTKinds.return_statement]: (
+        node: parser.return_statement,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
         if (node.expression) {
             context.visit(node.expression, cb);
         }
@@ -220,7 +228,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             context.visit(node.initializer.expression, cb);
         }
     },
-    [parser.ASTKinds.unary_expression]: (node: parser.unary_expression, context: VisitorContext, cb: VisitorCallback) => {
+    [parser.ASTKinds.unary_expression]: (
+        node: parser.unary_expression,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
         context.visit(node.expression, cb);
     },
 

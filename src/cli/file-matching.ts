@@ -57,15 +57,21 @@ function findFilesFromPatternRecursive(pathParts: string[], currentDirectory: st
         const directoryContent = host.readDir(currentDirectory);
         const nestedResults = directoryContent
             .filter(e => e.isDirectory())
-            .flatMap(subDir => findFilesFromPatternRecursive(pathParts, path.join(currentDirectory, subDir.name), host));
-        const directoryFiles = directoryContent.filter(e => e.name.endsWith(".dzn")).map(f => path.join(currentDirectory, f.name));
+            .flatMap(subDir =>
+                findFilesFromPatternRecursive(pathParts, path.join(currentDirectory, subDir.name), host)
+            );
+        const directoryFiles = directoryContent
+            .filter(e => e.name.endsWith(".dzn"))
+            .map(f => path.join(currentDirectory, f.name));
 
         return [...directoryFiles, ...nestedResults];
     } else {
         const result = host
             .readDir(currentDirectory)
             .filter(e => e.isDirectory())
-            .flatMap(subDir => findFilesFromPatternRecursive(pathParts, path.join(currentDirectory, subDir.name), host));
+            .flatMap(subDir =>
+                findFilesFromPatternRecursive(pathParts, path.join(currentDirectory, subDir.name), host)
+            );
 
         const currentPath = path.join(currentDirectory, pathParts[0]);
         if (host.exists(currentPath)) {

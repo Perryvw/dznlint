@@ -10,15 +10,15 @@ export interface DznLintConfiguration {
     //     braces: "same-line" | "next-line"
     // };
     // Rule configuration
-    dead_code: ConfigValue,
-    implicit_illegal: ConfigValue,
+    dead_code: ConfigValue;
+    implicit_illegal: ConfigValue;
     naming_convention: ConfigValueWithData<{
-        component: string,
-        enum: string,
-        enum_member: string,
-        interface: string,
-        local: string,
-        type: string
+        component: string;
+        enum: string;
+        enum_member: string;
+        interface: string;
+        local: string;
+        type: string;
     }>;
     no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;

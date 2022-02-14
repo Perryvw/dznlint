@@ -12,7 +12,9 @@ const config: DznLintUserConfiguration = { no_unused_parameters: false };
 test("has default severity unless specified otherwise", () => {
     const diagnostics = lintString(codeWithDiagnostic, config);
     expect(diagnostics).toHaveLength(1);
-    expect(DiagnosticSeverity[diagnostics[0].severity].toLowerCase()).toEqual(DEFAULT_DZNLINT_CONFIG.parameter_direction);
+    expect(DiagnosticSeverity[diagnostics[0].severity].toLowerCase()).toEqual(
+        DEFAULT_DZNLINT_CONFIG.parameter_direction
+    );
 });
 
 test.each(["error", "warning", "hint"])("diagnostic severity can be configured (%p)", severity => {
