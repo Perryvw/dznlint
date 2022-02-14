@@ -1,5 +1,7 @@
 import type { DznLintConfiguration } from "./dznlint-configuration";
 
+export const DEFAULT_DZNLINT_CONFIG_FILE = "dznlint.config.json";
+
 export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
     // format: {
     //     indent: "spaces",

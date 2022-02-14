@@ -1,6 +1,6 @@
+import { InputSource } from "../api";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { InputSource } from "..";
 import {
     ASTKinds,
     component,

@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { parseCommandLineArguments } from "./argument-parsing";
 import { resolveInputFiles } from "./file-matching";
 import { DiagnosticSeverity, formatDiagnostic } from "../diagnostic";
-import { lintFiles } from "..";
+import { DEFAULT_DZNLINT_CONFIG_FILE, lintFiles } from "..";
 import { validateConfiguration } from "../config/validate";
 
 const [, , ...args] = process.argv;
@@ -47,8 +47,8 @@ if (cliArguments.arguments.configFile) {
         process.exit(1);
     }
 } else {
-    if (fsHost.exists("dznlint.config.json")) {
-        configuration = JSON.parse(fs.readFileSync("dznlint.config.json").toString());
+    if (fsHost.exists(DEFAULT_DZNLINT_CONFIG_FILE)) {
+        configuration = JSON.parse(fs.readFileSync(DEFAULT_DZNLINT_CONFIG_FILE).toString());
     }
 }
 

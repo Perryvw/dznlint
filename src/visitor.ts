@@ -1,4 +1,4 @@
-import { InputSource } from ".";
+import { InputSource } from "./api";
 import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 import { headTailToList } from "./util";
