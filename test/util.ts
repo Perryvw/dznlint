@@ -1,6 +1,7 @@
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { Diagnostic, DiagnosticCode, formatDiagnostic } from "../src/diagnostic";
-import { failedToFullyParseFile, lintString } from "../src";
+import { lintString } from "../src";
+import { failedToFullyParseFile } from "../src/parse";
 
 interface LintTest {
     diagnostic: DiagnosticCode;
