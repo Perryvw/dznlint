@@ -122,6 +122,45 @@ test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", comparison 
     `);
 });
 
+test("if statement", () => {
+    expectCanParseWithoutDiagnostics(`component MyComponent {
+        behavior {
+            on event(mydata): {
+                if (mydata) {
+                }
+            }
+        }
+    }`);
+});
+
+test("if-else statement", () => {
+    expectCanParseWithoutDiagnostics(`component MyComponent {
+        behavior {
+            on event(mydata): {
+                if (mydata) {
+                }
+                else {
+                }
+            }
+        }
+    }`);
+});
+
+test("if-elseif-else statement", () => {
+    expectCanParseWithoutDiagnostics(`component MyComponent {
+        behavior {
+            on event(mydata): {
+                if (mydata) {
+                }
+                else if (mydata) {
+                }
+                else {
+                }
+            }
+        }
+    }`);
+});
+
 function expectCanParseWithoutDiagnostics(dzn: string) {
     const result = lintString(dzn, parseOnlyConfiguration);
     for (const diagnostic of result) {

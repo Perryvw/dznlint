@@ -153,6 +153,17 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             context.visit(node.statement, cb);
         }
     },
+    [parser.ASTKinds.if_statement]: (node: parser.if_statement, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.expression, cb);
+        context.visit(node.block, cb);
+
+        for (const { elseif, block } of node.else_statements) {
+            if (elseif) {
+                context.visit(elseif.expression, cb);
+            }
+            context.visit(block, cb);
+        }
+    },
     [parser.ASTKinds.interface_definition]: (
         node: parser.interface_definition,
         context: VisitorContext,

@@ -56,9 +56,11 @@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
-* imperative_statement := variable_definition | assignment | return_statement | expression_statement | compound
+* imperative_statement := variable_definition | if_statement | assignment | return_statement | expression_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
+*   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ block=compound _ else_statements=else_statement* end=@
+*     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ block=compound _
 *   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
 *   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
 * expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
@@ -253,8 +255,12 @@ export enum ASTKinds {
     imperative_statement_3 = "imperative_statement_3",
     imperative_statement_4 = "imperative_statement_4",
     imperative_statement_5 = "imperative_statement_5",
+    imperative_statement_6 = "imperative_statement_6",
     assignment = "assignment",
     expression_statement = "expression_statement",
+    if_statement = "if_statement",
+    else_statement = "else_statement",
+    else_statement_$0 = "else_statement_$0",
     variable_definition = "variable_definition",
     variable_definition_$0 = "variable_definition_$0",
     return_statement = "return_statement",
@@ -688,12 +694,13 @@ export interface statements_$0 {
 export type statement = statement_1 | statement_2;
 export type statement_1 = declarative_statement;
 export type statement_2 = imperative_statement;
-export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5;
+export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5 | imperative_statement_6;
 export type imperative_statement_1 = variable_definition;
-export type imperative_statement_2 = assignment;
-export type imperative_statement_3 = return_statement;
-export type imperative_statement_4 = expression_statement;
-export type imperative_statement_5 = compound;
+export type imperative_statement_2 = if_statement;
+export type imperative_statement_3 = assignment;
+export type imperative_statement_4 = return_statement;
+export type imperative_statement_5 = expression_statement;
+export type imperative_statement_6 = compound;
 export interface assignment {
     kind: ASTKinds.assignment;
     start: PosInfo;
@@ -706,6 +713,23 @@ export interface expression_statement {
     start: PosInfo;
     expression: expression;
     end: PosInfo;
+}
+export interface if_statement {
+    kind: ASTKinds.if_statement;
+    start: PosInfo;
+    expression: expression;
+    block: compound;
+    else_statements: else_statement[];
+    end: PosInfo;
+}
+export interface else_statement {
+    kind: ASTKinds.else_statement;
+    elseif: Nullable<else_statement_$0>;
+    block: compound;
+}
+export interface else_statement_$0 {
+    kind: ASTKinds.else_statement_$0;
+    expression: expression;
 }
 export interface variable_definition {
     kind: ASTKinds.variable_definition;
@@ -2111,21 +2135,25 @@ export class Parser {
             () => this.matchimperative_statement_3($$dpth + 1, $$cr),
             () => this.matchimperative_statement_4($$dpth + 1, $$cr),
             () => this.matchimperative_statement_5($$dpth + 1, $$cr),
+            () => this.matchimperative_statement_6($$dpth + 1, $$cr),
         ]);
     }
     public matchimperative_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_1> {
         return this.matchvariable_definition($$dpth + 1, $$cr);
     }
     public matchimperative_statement_2($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_2> {
-        return this.matchassignment($$dpth + 1, $$cr);
+        return this.matchif_statement($$dpth + 1, $$cr);
     }
     public matchimperative_statement_3($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_3> {
-        return this.matchreturn_statement($$dpth + 1, $$cr);
+        return this.matchassignment($$dpth + 1, $$cr);
     }
     public matchimperative_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_4> {
-        return this.matchexpression_statement($$dpth + 1, $$cr);
+        return this.matchreturn_statement($$dpth + 1, $$cr);
     }
     public matchimperative_statement_5($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_5> {
+        return this.matchexpression_statement($$dpth + 1, $$cr);
+    }
+    public matchimperative_statement_6($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_6> {
         return this.matchcompound($$dpth + 1, $$cr);
     }
     public matchassignment($$dpth: number, $$cr?: ErrorTracker): Nullable<assignment> {
@@ -2166,6 +2194,73 @@ export class Parser {
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.expression_statement, start: $scope$start, expression: $scope$expression, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchif_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<if_statement> {
+        return this.run<if_statement>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$expression: Nullable<expression>;
+                let $scope$block: Nullable<compound>;
+                let $scope$else_statements: Nullable<else_statement[]>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<if_statement> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.matchIF($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$block = this.matchcompound($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$else_statements = this.loop<else_statement>(() => this.matchelse_statement($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.if_statement, start: $scope$start, expression: $scope$expression, block: $scope$block, else_statements: $scope$else_statements, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchelse_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<else_statement> {
+        return this.run<else_statement>($$dpth,
+            () => {
+                let $scope$elseif: Nullable<Nullable<else_statement_$0>>;
+                let $scope$block: Nullable<compound>;
+                let $$res: Nullable<else_statement> = null;
+                if (true
+                    && this.matchELSE($$dpth + 1, $$cr) !== null
+                    && (($scope$elseif = this.matchelse_statement_$0($$dpth + 1, $$cr)) || true)
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$block = this.matchcompound($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.else_statement, elseif: $scope$elseif, block: $scope$block};
+                }
+                return $$res;
+            });
+    }
+    public matchelse_statement_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<else_statement_$0> {
+        return this.run<else_statement_$0>($$dpth,
+            () => {
+                let $scope$expression: Nullable<expression>;
+                let $$res: Nullable<else_statement_$0> = null;
+                if (true
+                    && this.match__($$dpth + 1, $$cr) !== null
+                    && this.matchIF($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.else_statement_$0, expression: $scope$expression};
                 }
                 return $$res;
             });
