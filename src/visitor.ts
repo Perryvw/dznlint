@@ -13,6 +13,7 @@ type ScopeRoot =
     | parser.function_definition
     | parser.interface_definition
     | parser.namespace
+    | parser.on
     | parser.system;
 
 interface Scope {
@@ -189,6 +190,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.popScope();
     },
     [parser.ASTKinds.on]: (node: parser.on, context: VisitorContext, cb: VisitorCallback) => {
+        context.pushScope(node);
+
         for (const trigger of headTailToList(node.on_trigger_list)) {
             context.visit(trigger.name, cb);
 
@@ -200,6 +203,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         }
 
         context.visit(node.statement, cb);
+
+        context.popScope();
     },
     [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;

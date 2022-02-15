@@ -69,7 +69,7 @@ function findUnusedParameters(
             diagnostics.push(
                 unusedParameter(
                     severity,
-                    "This parameter is not referenced anywhere.",
+                    `This parameter is not referenced anywhere. You can discard it by renaming to _${node.text}.`,
                     context.source,
                     nodeToSourceRange(node)
                 )
