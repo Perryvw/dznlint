@@ -1,7 +1,7 @@
 import { unknownInstanceBinding } from "../src/rules/no-unknown-instance-binding";
 import { testdznlint } from "./util";
 
-test.only("no unknown instance bindings left", () => {
+test("no unknown instance bindings left", () => {
     testdznlint({
         diagnostic: unknownInstanceBinding.code,
         pass: `component A {
@@ -25,7 +25,7 @@ test.only("no unknown instance bindings left", () => {
     });
 });
 
-test.only("no unknown instance bindings right", () => {
+test("no unknown instance bindings right", () => {
     testdznlint({
         diagnostic: unknownInstanceBinding.code,
         pass: `component A {

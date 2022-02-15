@@ -1,7 +1,7 @@
 import { implicitIllegal } from "../src/rules/implicit-illegal";
 import { testdznlint } from "./util";
 
-test.only("implicit illegal", () => {
+test("implicit illegal", () => {
     testdznlint({
         diagnostic: implicitIllegal.code,
         pass: `

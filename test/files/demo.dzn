@@ -51,7 +51,7 @@ component HelloWorld {
             }
         }
 
-        int myFunction(in int s) {
+        int myFunction(in int s, in bool t, in bool t) {
             return 4;
             api.foo();
         }

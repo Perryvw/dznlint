@@ -1,7 +1,7 @@
 import { deadCode } from "../src/rules/dead-code";
 import { testdznlint } from "./util";
 
-test.only("dead code", () => {
+test("dead code", () => {
     testdznlint({
         diagnostic: deadCode.code,
         pass: `

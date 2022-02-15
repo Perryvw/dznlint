@@ -205,6 +205,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             if (trigger.parameters?.formals) {
                 for (const parameter of headTailToList(trigger.parameters.formals)) {
                     context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
+                    context.visit(parameter.name, cb);
+                    if (parameter.assignment)
+                    {
+                        context.visit(parameter.assignment.name, cb);
+                    }
                 }
             }
         }

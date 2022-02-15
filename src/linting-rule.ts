@@ -18,6 +18,7 @@ import implicit_illegal from "./rules/implicit-illegal";
 import naming_convention from "./rules/naming-convention";
 import no_recursive_system from "./rules/no-recursive-system";
 import no_shadowing from "./rules/no-shadowing";
+import no_duplicate_parameters from "./rules/no-duplicate-parameters";
 import no_unknown_instance_binding from "./rules/no-unknown-instance-binding";
 import no_unknown_port_binding from "./rules/no-unknown-port-binding";
 import no_unused_parameters from "./rules/no-unused-parameter";
@@ -28,6 +29,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         dead_code,
         implicit_illegal,
         naming_convention,
+        no_duplicate_parameters,
         no_recursive_system,
         no_shadowing,
         no_unknown_instance_binding,
