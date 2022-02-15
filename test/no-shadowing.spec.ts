@@ -103,6 +103,26 @@ test("shadowing allows parameters with same name in different functions", () => 
     });
 });
 
+test("shadowing does not have issue with return statements", () => {
+    testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                void something(bool myParam) {
+                    return myParam;
+                }
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                bool myParam;
+                void something(bool myParam) {
+                }
+            }
+        }`,
+    });
+});
+
 test("function name shadowing variable", () => {
     testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,

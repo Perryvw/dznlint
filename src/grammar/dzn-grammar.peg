@@ -67,7 +67,7 @@ compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BR
   statements  := {_ statement=statement _}*
   statement   := declarative_statement | imperative_statement
 
-imperative_statement := variable_definition | if_statement | assignment | return_statement | expression_statement | compound
+imperative_statement :=  if_statement | return_statement | variable_definition | assignment | expression_statement | compound
   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ block=compound _ else_statements=else_statement* end=@

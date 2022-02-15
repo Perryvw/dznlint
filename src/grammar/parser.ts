@@ -56,7 +56,7 @@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
-* imperative_statement := variable_definition | if_statement | assignment | return_statement | expression_statement | compound
+* imperative_statement :=  if_statement | return_statement | variable_definition | assignment | expression_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ block=compound _ else_statements=else_statement* end=@
@@ -695,10 +695,10 @@ export type statement = statement_1 | statement_2;
 export type statement_1 = declarative_statement;
 export type statement_2 = imperative_statement;
 export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5 | imperative_statement_6;
-export type imperative_statement_1 = variable_definition;
-export type imperative_statement_2 = if_statement;
-export type imperative_statement_3 = assignment;
-export type imperative_statement_4 = return_statement;
+export type imperative_statement_1 = if_statement;
+export type imperative_statement_2 = return_statement;
+export type imperative_statement_3 = variable_definition;
+export type imperative_statement_4 = assignment;
 export type imperative_statement_5 = expression_statement;
 export type imperative_statement_6 = compound;
 export interface assignment {
@@ -2139,16 +2139,16 @@ export class Parser {
         ]);
     }
     public matchimperative_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_1> {
-        return this.matchvariable_definition($$dpth + 1, $$cr);
-    }
-    public matchimperative_statement_2($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_2> {
         return this.matchif_statement($$dpth + 1, $$cr);
     }
+    public matchimperative_statement_2($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_2> {
+        return this.matchreturn_statement($$dpth + 1, $$cr);
+    }
     public matchimperative_statement_3($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_3> {
-        return this.matchassignment($$dpth + 1, $$cr);
+        return this.matchvariable_definition($$dpth + 1, $$cr);
     }
     public matchimperative_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_4> {
-        return this.matchreturn_statement($$dpth + 1, $$cr);
+        return this.matchassignment($$dpth + 1, $$cr);
     }
     public matchimperative_statement_5($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_5> {
         return this.matchexpression_statement($$dpth + 1, $$cr);
