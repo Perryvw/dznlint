@@ -33,6 +33,22 @@ test("no unused parameters in event trigger", () => {
     });
 });
 
+test("parameter with <- assignment is not unused", () => {
+    testdznlint({
+        diagnostic: unusedParameter.code,
+        pass: `component A {
+            behavior {
+                on port.event(a <- b): {}
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                on port.event(a): {}
+            }
+        }`,
+    });
+});
+
 test("no unused parameters in multiple event trigger", () => {
     testdznlint({
         diagnostic: unusedParameter.code,

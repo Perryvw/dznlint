@@ -27,8 +27,11 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
             const parameterIdentifiers = [];
             for (const { parameters } of headTailToList(node.on_trigger_list)) {
                 if (parameters?.formals) {
-                    for (const { name } of headTailToList(parameters.formals)) {
-                        parameterIdentifiers.push(name);
+                    for (const { name, assignment } of headTailToList(parameters.formals)) {
+                        // Skip parameters with <- assignment
+                        if (!assignment) {
+                            parameterIdentifiers.push(name);
+                        }
                     }
                 }
             }
