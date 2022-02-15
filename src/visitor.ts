@@ -11,6 +11,7 @@ type ScopeRoot =
     | parser.compound
     | parser.file
     | parser.function_definition
+    | parser.if_statement_short
     | parser.interface_definition
     | parser.namespace
     | parser.on
@@ -164,6 +165,12 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             }
             context.visit(block, cb);
         }
+    },
+    [parser.ASTKinds.if_statement_short]: (node: parser.if_statement_short, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.expression, cb);
+        context.pushScope(node);
+        context.visit(node.statement, cb);
+        context.popScope();
     },
     [parser.ASTKinds.interface_definition]: (
         node: parser.interface_definition,
