@@ -133,6 +133,16 @@ test("if statement", () => {
     }`);
 });
 
+test("if short form", () => {
+    expectCanParseWithoutDiagnostics(`component MyComponent {
+        behavior {
+            on event(mydata): {
+                if (mydata) return;
+            }
+        }
+    }`);
+});
+
 test("if-else statement", () => {
     expectCanParseWithoutDiagnostics(`component MyComponent {
         behavior {
@@ -156,6 +166,16 @@ test("if-elseif-else statement", () => {
                 }
                 else {
                 }
+            }
+        }
+    }`);
+});
+
+test.each(["+", "-", "&&", "||"])("binary statement (%p)", operator => {
+    expectCanParseWithoutDiagnostics(`component MyComponent {
+        behavior {
+            on event(mydata): {
+                a = b ${operator} c;
             }
         }
     }`);

@@ -80,7 +80,7 @@ expression := binary_expression | property_expression | call_expression | dollar
     arguments         := {_ expression=expression _ COMMA?}*
   dollars             := DOLLAR value='[^$]*' DOLLAR
   binary_expression   := left=expression _ operator=binary_operator _ right=expression
-    binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER
+    binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
   numeric_literal     := text=NUMBER
   property_expression := expression=expression? DOT access_name=member_identifier
   unary_expression    := operator=unary_operator _ expression=expression

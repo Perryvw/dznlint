@@ -68,7 +68,7 @@
 *     arguments         := {_ expression=expression _ COMMA?}*
 *   dollars             := DOLLAR value='[^$]*' DOLLAR
 *   binary_expression   := left=expression _ operator=binary_operator _ right=expression
-*     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER
+*     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
 *   numeric_literal     := text=NUMBER
 *   property_expression := expression=expression? DOT access_name=member_identifier
 *   unary_expression    := operator=unary_operator _ expression=expression
@@ -285,6 +285,8 @@ export enum ASTKinds {
     binary_operator_6 = "binary_operator_6",
     binary_operator_7 = "binary_operator_7",
     binary_operator_8 = "binary_operator_8",
+    binary_operator_9 = "binary_operator_9",
+    binary_operator_10 = "binary_operator_10",
     numeric_literal = "numeric_literal",
     property_expression = "property_expression",
     unary_expression = "unary_expression",
@@ -778,7 +780,7 @@ export interface binary_expression {
     operator: binary_operator;
     right: expression;
 }
-export type binary_operator = binary_operator_1 | binary_operator_2 | binary_operator_3 | binary_operator_4 | binary_operator_5 | binary_operator_6 | binary_operator_7 | binary_operator_8;
+export type binary_operator = binary_operator_1 | binary_operator_2 | binary_operator_3 | binary_operator_4 | binary_operator_5 | binary_operator_6 | binary_operator_7 | binary_operator_8 | binary_operator_9 | binary_operator_10;
 export type binary_operator_1 = AND;
 export type binary_operator_2 = OR;
 export type binary_operator_3 = EQUAL;
@@ -787,6 +789,8 @@ export type binary_operator_5 = LESS_EQUAL;
 export type binary_operator_6 = LESS;
 export type binary_operator_7 = GREATER_EQUAL;
 export type binary_operator_8 = GREATER;
+export type binary_operator_9 = PLUS;
+export type binary_operator_10 = MINUS;
 export interface numeric_literal {
     kind: ASTKinds.numeric_literal;
     text: NUMBER;
@@ -2469,6 +2473,8 @@ export class Parser {
             () => this.matchbinary_operator_6($$dpth + 1, $$cr),
             () => this.matchbinary_operator_7($$dpth + 1, $$cr),
             () => this.matchbinary_operator_8($$dpth + 1, $$cr),
+            () => this.matchbinary_operator_9($$dpth + 1, $$cr),
+            () => this.matchbinary_operator_10($$dpth + 1, $$cr),
         ]);
     }
     public matchbinary_operator_1($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_1> {
@@ -2494,6 +2500,12 @@ export class Parser {
     }
     public matchbinary_operator_8($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_8> {
         return this.matchGREATER($$dpth + 1, $$cr);
+    }
+    public matchbinary_operator_9($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_9> {
+        return this.matchPLUS($$dpth + 1, $$cr);
+    }
+    public matchbinary_operator_10($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_10> {
+        return this.matchMINUS($$dpth + 1, $$cr);
     }
     public matchnumeric_literal($$dpth: number, $$cr?: ErrorTracker): Nullable<numeric_literal> {
         return this.run<numeric_literal>($$dpth,
