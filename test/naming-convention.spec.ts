@@ -16,3 +16,13 @@ test("interface naming convention", () => {
         fail: `interface MyInterface {}`,
     });
 });
+
+test("can deal with trailing comma in enum", () => {
+    testdznlint({
+        diagnostic: nameDoesNotMatchConvention.code,
+        pass: `enum MyEnum {
+            EnumValue1,
+            EnumValue2,
+        };`,
+    });
+});

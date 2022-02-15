@@ -71,14 +71,7 @@ test("shadowing allows parameters with same name in different on statements", ()
                 on port.something2(myParam): {
                 }
             }
-        }`,
-        fail: `component A {
-            behavior {
-                bool myParam;
-                on port.something(myParam): {
-                }
-            }
-        }`,
+        }`
     });
 });
 
@@ -93,13 +86,6 @@ test("shadowing allows parameters with same name in different functions", () => 
                 }
             }
         }`,
-        fail: `component A {
-            behavior {
-                bool myParam;
-                void something(bool myParam) {
-                }
-            }
-        }`,
     });
 });
 
@@ -110,13 +96,6 @@ test("shadowing does not have issue with return statements", () => {
             behavior {
                 void something(bool myParam) {
                     return myParam;
-                }
-            }
-        }`,
-        fail: `component A {
-            behavior {
-                bool myParam;
-                void something(bool myParam) {
                 }
             }
         }`,

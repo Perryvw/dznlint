@@ -15,7 +15,7 @@
 *   file_name := '[^;]+'
 * type := enum_definition | int | extern_definition
 *   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
-*     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier}*
+*     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier?}*
 *   int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
 * namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
@@ -75,7 +75,7 @@
 *     unary_operator    := NOT
 * compound_name := {compound=compound_name? DOT name=member_identifier} | identifier
 * identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
-* member_identifier   := start=@ text='[a-zA-Z0-9_]*' end=@
+* member_identifier   := start=@ text='[a-zA-Z0-9_]+' end=@
 * NUMBER              := MINUS? '[0-9]+'
 * ASTERISK            := '\*'
 * DOLLAR              := '\$'
@@ -419,7 +419,7 @@ export interface fields {
 }
 export interface fields_$0 {
     kind: ASTKinds.fields_$0;
-    elem: member_identifier;
+    elem: Nullable<member_identifier>;
 }
 export interface int {
     kind: ASTKinds.int;
@@ -1116,13 +1116,13 @@ export class Parser {
     public matchfields_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<fields_$0> {
         return this.run<fields_$0>($$dpth,
             () => {
-                let $scope$elem: Nullable<member_identifier>;
+                let $scope$elem: Nullable<Nullable<member_identifier>>;
                 let $$res: Nullable<fields_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$elem = this.matchmember_identifier($$dpth + 1, $$cr)) !== null
+                    && (($scope$elem = this.matchmember_identifier($$dpth + 1, $$cr)) || true)
                 ) {
                     $$res = {kind: ASTKinds.fields_$0, elem: $scope$elem};
                 }
@@ -2623,7 +2623,7 @@ export class Parser {
                 let $$res: Nullable<member_identifier> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z0-9_]*)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z0-9_]+)`, $$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.member_identifier, start: $scope$start, text: $scope$text, end: $scope$end};

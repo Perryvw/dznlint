@@ -47,7 +47,7 @@ export const naming_convention: RuleFactory = factoryContext => {
             }
 
             for (const name of headTailToList(node.fields)) {
-                if (!identifierMatches(name, convention.enum_member)) {
+                if (name && !identifierMatches(name, convention.enum_member)) {
                     diagnostics.push(fail(name, "Enum member", convention.enum_member, context.source));
                 }
             }

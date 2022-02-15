@@ -5,31 +5,38 @@ import { failedToFullyParseFile } from "../src/parse";
 
 interface LintTest {
     diagnostic: DiagnosticCode;
-    pass: string;
-    fail: string;
+    pass?: string;
+    fail?: string;
     config?: DznLintUserConfiguration;
     debug?: boolean;
 }
 
 export function testdznlint(test: LintTest) {
-    const passResult = lintString(test.pass, test.config);
-    const failResult = lintString(test.fail, test.config);
+    if (test.pass) {
+        const passResult = lintString(test.pass, test.config);
 
-    if (test.debug) {
-        for (const d of passResult) {
-            console.log("pass.dzn " + formatDiagnostic(d));
+        if (test.debug) {
+            for (const d of passResult) {
+                console.log("pass.dzn " + formatDiagnostic(d));
+            }
         }
 
-        for (const d of failResult) {
-            console.log("fail.dzn " + formatDiagnostic(d));
-        }
+        expectNoDiagnosticOfType(passResult, failedToFullyParseFile.code);
+        expectNoDiagnosticOfType(passResult, test.diagnostic);
     }
 
-    expectNoDiagnosticOfType(passResult, failedToFullyParseFile.code);
-    expectNoDiagnosticOfType(failResult, failedToFullyParseFile.code);
+    if (test.fail) {
+        const failResult = lintString(test.fail, test.config);
 
-    expectDiagnosticOfType(failResult, test.diagnostic);
-    expectNoDiagnosticOfType(passResult, test.diagnostic);
+        if (test.debug) {
+            for (const d of failResult) {
+                console.log("fail.dzn " + formatDiagnostic(d));
+            }
+        }
+
+        expectNoDiagnosticOfType(failResult, failedToFullyParseFile.code);
+        expectDiagnosticOfType(failResult, test.diagnostic);
+    }
 }
 
 function expectDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {

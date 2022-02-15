@@ -41,11 +41,6 @@ test("parameter with <- assignment is not unused", () => {
                 on port.event(a <- b): {}
             }
         }`,
-        fail: `component A {
-            behavior {
-                on port.event(a): {}
-            }
-        }`,
     });
 });
 
