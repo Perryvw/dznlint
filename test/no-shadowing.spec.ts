@@ -61,7 +61,7 @@ test("variable shadowing other variable", () => {
     });
 });
 
-test("shadowing allows parameters with same name in different functions", () => {
+test("shadowing allows parameters with same name in different on statements", () => {
     testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
@@ -76,6 +76,27 @@ test("shadowing allows parameters with same name in different functions", () => 
             behavior {
                 bool myParam;
                 on port.something(myParam): {
+                }
+            }
+        }`,
+    });
+});
+
+test("shadowing allows parameters with same name in different functions", () => {
+    testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                void something(bool myParam) {
+                }
+                void something2(bool myParam) {
+                }
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                bool myParam;
+                void something(bool myParam) {
                 }
             }
         }`,

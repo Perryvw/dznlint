@@ -133,13 +133,13 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         cb: VisitorCallback
     ) => {
         context.visit(node.name, cb);
+        context.pushScope(node);
         if (node.parameters.formals) {
             for (const parameter of headTailToList(node.parameters.formals)) {
                 context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
                 context.visit(parameter, cb);
             }
         }
-        context.pushScope(node);
         context.visit(node.body, cb);
         context.popScope();
     },
