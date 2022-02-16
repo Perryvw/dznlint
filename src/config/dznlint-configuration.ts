@@ -25,6 +25,7 @@ export interface DznLintConfiguration {
     no_shadowing: ConfigValue;
     no_unknown_port_binding: ConfigValue;
     no_unused_parameters: ConfigValue;
+    no_unused_ports: ConfigValue;
     parameter_direction: ConfigValue;
 }
 

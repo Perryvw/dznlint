@@ -62,11 +62,12 @@ component HelloWorld {
 
 component HelloWorldSystem {
     provides IHelloWorld api;
+    requires IFooBar foobar;
 
     system
     {
         HelloWorld helloWorld;
-        api <=> helloWorld.api;
+        api <=> helloWold.api;
         blabla <=> helloWorld.api;
 
         HelloWorldSystem recursiveSystem;

@@ -27,5 +27,6 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
     no_shadowing: "error",
     no_unknown_port_binding: "error",
     no_unused_parameters: "warning",
+    no_unused_ports: "warning",
     parameter_direction: "warning",
 };
