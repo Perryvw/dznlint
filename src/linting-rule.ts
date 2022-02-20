@@ -23,6 +23,7 @@ import no_duplicate_parameters from "./rules/no-duplicate-parameters";
 import no_unknown_instance_binding from "./rules/no-unknown-instance-binding";
 import no_unknown_port_binding from "./rules/no-unknown-port-binding";
 import no_unused_parameters from "./rules/no-unused-parameter";
+import no_unused_variables from "./rules/no-unused-variables";
 import no_unused_ports from "./rules/no-unused-ports";
 import parameter_direction from "./rules/parameter-direction";
 
@@ -39,6 +40,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         no_unknown_port_binding,
         no_unused_parameters,
         no_unused_ports,
+        no_unused_variables,
         parameter_direction,
     ];
 

@@ -1,7 +1,4 @@
-// Type var = bla();
-// if (var) {
-//
-// can be replaced with if (bla()) {
+// No variables that are never used
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
@@ -10,29 +7,27 @@ import { RuleFactory } from "../linting-rule";
 import { isIdentifier, nodeToSourceRange } from "../util";
 import { VisitResult } from "../visitor";
 
-export const variableCanBeInlined = createDiagnosticsFactory();
+export const unusedVariable = createDiagnosticsFactory();
 
-export const inline_temporary_variables: RuleFactory = factoryContext => {
-    const config = getRuleConfig("inline_temporary_variables", factoryContext.userConfig);
+export const no_unused_variables: RuleFactory = factoryContext => {
+    const config = getRuleConfig("no_unused_variables", factoryContext.userConfig);
 
     if (config.isEnabled) {
         factoryContext.registerRule<variable_definition>(ASTKinds.variable_definition, (node, context) => {
             const name = node.name.text;
-            let count = 0;
+            let found = false;
             context.visit(context.currentScope().root, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
-                    count++;
-                    if (count > 1) {
-                        return VisitResult.StopVisiting;
-                    }
+                    found = true;
+                    return VisitResult.StopVisiting;
                 }
             });
 
-            if (count === 1) {
+            if (!found) {
                 return [
-                    variableCanBeInlined(
+                    unusedVariable(
                         config.severity,
-                        "This variable is only used once and can be inlined.",
+                        "This variable is never used.",
                         context.source,
                         nodeToSourceRange(node.name)
                     ),
@@ -44,4 +39,4 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
     }
 };
 
-export default inline_temporary_variables;
+export default no_unused_variables;

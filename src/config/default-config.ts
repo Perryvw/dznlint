@@ -27,7 +27,9 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
     no_recursive_system: "error",
     no_shadowing: "error",
     no_unknown_port_binding: "error",
+    no_unused_instances: "warning",
     no_unused_parameters: "warning",
     no_unused_ports: "warning",
+    no_unused_variables: "warning",
     parameter_direction: "warning",
 };
