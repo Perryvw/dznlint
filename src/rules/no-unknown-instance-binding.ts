@@ -3,9 +3,9 @@
 import { Diagnostic } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, binding, end_point, identifier, instance, system } from "../grammar/parser";
+import { ASTKinds, end_point, identifier, system } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { nodeToSourceRange } from "../util";
+import { nodeToSourceRange, systemBindings, systemInstances } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownInstanceBinding = createDiagnosticsFactory();
@@ -25,9 +25,9 @@ export const no_unknown_instance_binding: RuleFactory = factoryContext => {
         factoryContext.registerRule<system>(ASTKinds.system, (node, context) => {
             const diagnostics: Diagnostic[] = [];
 
-            const instanceNames = new Set(instances(node).map(i => i.name.text));
+            const instanceNames = new Set(systemInstances(node).map(i => i.name.text));
 
-            for (const binding of bindings(node)) {
+            for (const binding of systemBindings(node)) {
                 if (isPropertyExpressionBinding(binding.left)) {
                     if (!instanceNames.has(binding.left.name.expression.text)) {
                         diagnostics.push(createDiagnostic(binding.left.name.expression, context));
@@ -47,18 +47,6 @@ export const no_unknown_instance_binding: RuleFactory = factoryContext => {
 };
 
 export default no_unknown_instance_binding;
-
-function instances(system: system): instance[] {
-    return system.instances_and_bindings
-        .map(e => e.instance_or_binding)
-        .filter(e => e.kind === ASTKinds.instance) as instance[];
-}
-
-function bindings(system: system): binding[] {
-    return system.instances_and_bindings
-        .map(e => e.instance_or_binding)
-        .filter(e => e.kind === ASTKinds.binding) as binding[];
-}
 
 function isPropertyExpressionBinding(
     endpoint: end_point

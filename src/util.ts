@@ -1,5 +1,5 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
-import { ASTKinds, identifier, PosInfo } from "./grammar/parser";
+import { ASTKinds, binding, identifier, instance, system, PosInfo } from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
 export function nodeToSourceRange(node: { start: PosInfo; end: PosInfo }): SourceRange {
@@ -30,4 +30,16 @@ export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): 
 
 export function isIdentifier(node: ASTNode): node is identifier {
     return node.kind === ASTKinds.identifier;
+}
+
+export function systemInstances(system: system): instance[] {
+    return system.instances_and_bindings
+        .map(e => e.instance_or_binding)
+        .filter(e => e.kind === ASTKinds.instance) as instance[];
+}
+
+export function systemBindings(system: system): binding[] {
+    return system.instances_and_bindings
+        .map(e => e.instance_or_binding)
+        .filter(e => e.kind === ASTKinds.binding) as binding[];
 }

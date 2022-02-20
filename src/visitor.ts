@@ -166,7 +166,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             context.visit(block, cb);
         }
     },
-    [parser.ASTKinds.if_statement_short]: (node: parser.if_statement_short, context: VisitorContext, cb: VisitorCallback) => {
+    [parser.ASTKinds.if_statement_short]: (
+        node: parser.if_statement_short,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
         context.visit(node.expression, cb);
         context.pushScope(node);
         context.visit(node.statement, cb);
@@ -206,8 +210,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
                 for (const parameter of headTailToList(trigger.parameters.formals)) {
                     context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
                     context.visit(parameter.name, cb);
-                    if (parameter.assignment)
-                    {
+                    if (parameter.assignment) {
                         context.visit(parameter.assignment.name, cb);
                     }
                 }

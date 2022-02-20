@@ -71,7 +71,7 @@ test("shadowing allows parameters with same name in different on statements", ()
                 on port.something2(myParam): {
                 }
             }
-        }`
+        }`,
     });
 });
 

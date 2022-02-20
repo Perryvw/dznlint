@@ -4,7 +4,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTKinds, component, port } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier, nodeToSourceRange } from "../util";
+import { isIdentifier, nodeToSourceRange, systemBindings } from "../util";
 
 export const unusedPort = createDiagnosticsFactory();
 
@@ -21,14 +21,12 @@ export const no_unused_ports: RuleFactory = factoryContext => {
                     seenPorts.set(port.name.text, { port, seen: false });
                 }
 
-                for (const { instance_or_binding } of system.instances_and_bindings) {
-                    if (instance_or_binding.kind === ASTKinds.binding) {
-                        context.visit(instance_or_binding, node => {
-                            if (isIdentifier(node) && seenPorts.has(node.text)) {
-                                seenPorts.get(node.text)!.seen = true;
-                            }
-                        });
-                    }
+                for (const binding of systemBindings(system)) {
+                    context.visit(binding, node => {
+                        if (isIdentifier(node) && seenPorts.has(node.text)) {
+                            seenPorts.get(node.text)!.seen = true;
+                        }
+                    });
                 }
 
                 const diagnostics = [];
