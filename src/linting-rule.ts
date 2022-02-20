@@ -15,6 +15,7 @@ export interface RuleFactoryContext {
 
 import dead_code from "./rules/dead-code";
 import implicit_illegal from "./rules/implicit-illegal";
+import inline_temporary_variables from "./rules/inline-temporary-variables";
 import naming_convention from "./rules/naming-convention";
 import no_recursive_system from "./rules/no-recursive-system";
 import no_shadowing from "./rules/no-shadowing";
@@ -29,6 +30,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
         dead_code,
         implicit_illegal,
+        inline_temporary_variables,
         naming_convention,
         no_duplicate_parameters,
         no_recursive_system,

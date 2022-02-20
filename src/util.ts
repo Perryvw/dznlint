@@ -1,5 +1,6 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
-import { PosInfo } from "./grammar/parser";
+import { ASTKinds, identifier, PosInfo } from "./grammar/parser";
+import { ASTNode } from "./linting-rule";
 
 export function nodeToSourceRange(node: { start: PosInfo; end: PosInfo }): SourceRange {
     return {
@@ -25,4 +26,8 @@ export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): 
         result.push(elem as NonNullable<T>);
     }
     return result;
+}
+
+export function isIdentifier(node: ASTNode): node is identifier {
+    return node.kind === ASTKinds.identifier;
 }

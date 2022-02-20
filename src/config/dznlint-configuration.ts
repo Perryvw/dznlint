@@ -12,6 +12,7 @@ export interface DznLintConfiguration {
     // Rule configuration
     dead_code: ConfigValue;
     implicit_illegal: ConfigValue;
+    inline_temporary_variables: ConfigValue;
     naming_convention: ConfigValueWithData<{
         component: string;
         enum: string;

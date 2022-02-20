@@ -11,6 +11,7 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
 
     dead_code: "error",
     implicit_illegal: "warning",
+    inline_temporary_variables: "hint",
     naming_convention: [
         "hint",
         {

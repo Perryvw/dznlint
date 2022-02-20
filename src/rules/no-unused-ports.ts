@@ -2,9 +2,9 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, component, identifier, port } from "../grammar/parser";
-import { ASTNode, RuleFactory } from "../linting-rule";
-import { nodeToSourceRange } from "../util";
+import { ASTKinds, component, port } from "../grammar/parser";
+import { RuleFactory } from "../linting-rule";
+import { isIdentifier, nodeToSourceRange } from "../util";
 
 export const unusedPort = createDiagnosticsFactory();
 
@@ -53,9 +53,5 @@ export const no_unused_ports: RuleFactory = factoryContext => {
         });
     }
 };
-
-function isIdentifier(node: ASTNode): node is identifier {
-    return node.kind === ASTKinds.identifier;
-}
 
 export default no_unused_ports;

@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTKinds, function_definition, identifier, on } from "../grammar/parser";
 import { ASTNode, RuleFactory } from "../linting-rule";
-import { headTailToList, nodeToSourceRange } from "../util";
+import { headTailToList, isIdentifier, nodeToSourceRange } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unusedParameter = createDiagnosticsFactory();
@@ -81,10 +81,6 @@ function findUnusedParameters(
     }
 
     return diagnostics;
-}
-
-function isIdentifier(node: ASTNode): node is identifier {
-    return node.kind === ASTKinds.identifier;
 }
 
 export default no_unused_parameters;
