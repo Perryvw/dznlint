@@ -64,13 +64,14 @@
 *   if_statement_short    := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=statement end=@
 *   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
 *   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
-* expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
+* expression := parenthesized_expression | binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
 *   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
 *     arguments         := {_ expression=expression _ COMMA?}*
 *   dollars             := DOLLAR value='[^$]*' DOLLAR
 *   binary_expression   := left=expression _ operator=binary_operator _ right=expression
 *     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
 *   numeric_literal     := text=NUMBER
+*   parenthesized_expression := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
 *   property_expression := expression=expression? DOT access_name=member_identifier
 *   unary_expression    := operator=unary_operator _ expression=expression
 *     unary_operator    := NOT
@@ -275,6 +276,7 @@ export enum ASTKinds {
     expression_6 = "expression_6",
     expression_7 = "expression_7",
     expression_8 = "expression_8",
+    expression_9 = "expression_9",
     call_expression = "call_expression",
     arguments = "arguments",
     arguments_$0 = "arguments_$0",
@@ -291,6 +293,7 @@ export enum ASTKinds {
     binary_operator_9 = "binary_operator_9",
     binary_operator_10 = "binary_operator_10",
     numeric_literal = "numeric_literal",
+    parenthesized_expression = "parenthesized_expression",
     property_expression = "property_expression",
     unary_expression = "unary_expression",
     unary_operator = "unary_operator",
@@ -762,15 +765,16 @@ export interface return_statement {
     expression: Nullable<expression>;
     end: PosInfo;
 }
-export type expression = expression_1 | expression_2 | expression_3 | expression_4 | expression_5 | expression_6 | expression_7 | expression_8;
-export type expression_1 = binary_expression;
-export type expression_2 = property_expression;
-export type expression_3 = call_expression;
-export type expression_4 = dollars;
-export type expression_5 = ILLEGAL;
-export type expression_6 = identifier;
-export type expression_7 = numeric_literal;
-export type expression_8 = unary_expression;
+export type expression = expression_1 | expression_2 | expression_3 | expression_4 | expression_5 | expression_6 | expression_7 | expression_8 | expression_9;
+export type expression_1 = parenthesized_expression;
+export type expression_2 = binary_expression;
+export type expression_3 = property_expression;
+export type expression_4 = call_expression;
+export type expression_5 = dollars;
+export type expression_6 = ILLEGAL;
+export type expression_7 = identifier;
+export type expression_8 = numeric_literal;
+export type expression_9 = unary_expression;
 export interface call_expression {
     kind: ASTKinds.call_expression;
     expression: expression;
@@ -805,6 +809,10 @@ export type binary_operator_10 = MINUS;
 export interface numeric_literal {
     kind: ASTKinds.numeric_literal;
     text: NUMBER;
+}
+export interface parenthesized_expression {
+    kind: ASTKinds.parenthesized_expression;
+    expression: expression;
 }
 export interface property_expression {
     kind: ASTKinds.property_expression;
@@ -2382,6 +2390,7 @@ export class Parser {
                 () => this.matchexpression_6($$dpth + 1, $$cr),
                 () => this.matchexpression_7($$dpth + 1, $$cr),
                 () => this.matchexpression_8($$dpth + 1, $$cr),
+                () => this.matchexpression_9($$dpth + 1, $$cr),
             ]);
         };
         const $scope$pos = this.mark();
@@ -2410,27 +2419,30 @@ export class Parser {
         return lastRes;
     }
     public matchexpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_1> {
-        return this.matchbinary_expression($$dpth + 1, $$cr);
+        return this.matchparenthesized_expression($$dpth + 1, $$cr);
     }
     public matchexpression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_2> {
-        return this.matchproperty_expression($$dpth + 1, $$cr);
+        return this.matchbinary_expression($$dpth + 1, $$cr);
     }
     public matchexpression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_3> {
-        return this.matchcall_expression($$dpth + 1, $$cr);
+        return this.matchproperty_expression($$dpth + 1, $$cr);
     }
     public matchexpression_4($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_4> {
-        return this.matchdollars($$dpth + 1, $$cr);
+        return this.matchcall_expression($$dpth + 1, $$cr);
     }
     public matchexpression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_5> {
-        return this.matchILLEGAL($$dpth + 1, $$cr);
+        return this.matchdollars($$dpth + 1, $$cr);
     }
     public matchexpression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_6> {
-        return this.matchidentifier($$dpth + 1, $$cr);
+        return this.matchILLEGAL($$dpth + 1, $$cr);
     }
     public matchexpression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_7> {
-        return this.matchnumeric_literal($$dpth + 1, $$cr);
+        return this.matchidentifier($$dpth + 1, $$cr);
     }
     public matchexpression_8($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_8> {
+        return this.matchnumeric_literal($$dpth + 1, $$cr);
+    }
+    public matchexpression_9($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_9> {
         return this.matchunary_expression($$dpth + 1, $$cr);
     }
     public matchcall_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<call_expression> {
@@ -2557,6 +2569,23 @@ export class Parser {
                     && ($scope$text = this.matchNUMBER($$dpth + 1, $$cr)) !== null
                 ) {
                     $$res = {kind: ASTKinds.numeric_literal, text: $scope$text};
+                }
+                return $$res;
+            });
+    }
+    public matchparenthesized_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<parenthesized_expression> {
+        return this.run<parenthesized_expression>($$dpth,
+            () => {
+                let $scope$expression: Nullable<expression>;
+                let $$res: Nullable<parenthesized_expression> = null;
+                if (true
+                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.parenthesized_expression, expression: $scope$expression};
                 }
                 return $$res;
             });

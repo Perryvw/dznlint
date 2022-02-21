@@ -41,6 +41,7 @@ component HelloWorld {
 
             on api.hello(): {
                 s = State.World;
+                Result r = doSomething();
             }
         }
 
@@ -67,6 +68,7 @@ component HelloWorldSystem {
     system
     {
         HelloWorld helloWorld;
+        MyType myinstance;
         api <=> helloWold.api;
         blabla <=> helloWorld.api;
 

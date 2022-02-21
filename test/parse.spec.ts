@@ -83,6 +83,22 @@ test("comment inside statement", () => {
     `);
 });
 
+test("parenthesized expression", () => {
+    expectCanParseWithoutDiagnostics(`
+        component MyComponent
+        {
+            behavior
+            {
+                bool foo = (bar == baz);
+                void f() {
+                    if ((((a == ((b + c)))))) {
+                    }
+                }
+            }
+        }
+    `);
+});
+
 test.each(["component", "interface"])("empty %s", type => {
     expectCanParseWithoutDiagnostics(`${type} abc{}`);
 });

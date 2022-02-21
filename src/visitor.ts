@@ -221,6 +221,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 
         context.popScope();
     },
+    [parser.ASTKinds.parenthesized_expression]: (node: parser.parenthesized_expression, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.expression, cb);
+    },
     [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
     },

@@ -76,13 +76,14 @@ imperative_statement :=  if_statement | if_statement_short | return_statement | 
   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
 
-expression := binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
+expression := parenthesized_expression | binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
     arguments         := {_ expression=expression _ COMMA?}*
   dollars             := DOLLAR value='[^$]*' DOLLAR
   binary_expression   := left=expression _ operator=binary_operator _ right=expression
     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
   numeric_literal     := text=NUMBER
+  parenthesized_expression := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
   property_expression := expression=expression? DOT access_name=member_identifier
   unary_expression    := operator=unary_operator _ expression=expression
     unary_operator    := NOT
