@@ -20,7 +20,15 @@ if (!cliArguments.success) {
 
 // If help was requested, display and exit
 if (cliArguments.arguments.help) {
-    console.log("Help!");
+    let helpstring = "dznlint - Code analysis for Dezyne files. \n\n";
+
+    helpstring += "Usage: dznlint <options> [...files]\n";
+    helpstring += "Multiple files can be supplied at once, glob patterns are supported.\n\n";
+
+    helpstring += "Available options:\n";
+    helpstring += "  --config-file <file>       Specify a dznlint configuration file. (Default: dznlint.config.json)\n";
+    helpstring += "  --help                     Display this help string.\n";
+    console.log(helpstring);
     process.exit(0);
 }
 
