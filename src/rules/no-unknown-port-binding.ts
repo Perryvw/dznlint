@@ -3,9 +3,9 @@
 import { Diagnostic } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, binding, end_point, identifier } from "../grammar/parser";
+import { ASTKinds, binding, identifier } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { nodeToSourceRange } from "../util";
+import { isIdentifierEndpoint, nodeToSourceRange } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownPortBinding = createDiagnosticsFactory();
@@ -45,7 +45,3 @@ export const no_unknown_port_binding: RuleFactory = factoryContext => {
 };
 
 export default no_unknown_port_binding;
-
-function isIdentifierEndpoint(endpoint: end_point): endpoint is end_point & { name: identifier } {
-    return typeof endpoint !== "string" && !endpoint.dot && endpoint.name.kind === ASTKinds.identifier;
-}

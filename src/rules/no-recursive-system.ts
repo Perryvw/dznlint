@@ -18,6 +18,7 @@ export const no_recursive_system: RuleFactory = factoryContext => {
             const component = context.scopeStack.find(s => s.root.kind === ASTKinds.component)!.root as component;
             const componentName = component.name.text;
 
+            // Check if the type of any of the instances of the system is the same system
             for (const instance of systemInstances(node)) {
                 const instanceType = instance.type;
                 if (instanceType.kind === ASTKinds.identifier && instanceType.text === componentName) {

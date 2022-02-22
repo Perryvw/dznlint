@@ -46,6 +46,7 @@ For example:
 Default values are indicated in bold.
 
 ## dead_code
+
 No code allowed after return statements in functions.
 
 **Possible values:** "hint" | "warning" | **"error"**
@@ -53,6 +54,7 @@ No code allowed after return statements in functions.
 ---
 
 ## implicit_illegal
+
 Do not mark events explicitly illegal. As of Dezyne 2.14, events not mentioned are implicitly assumed to be illegal.
 
 **Possible values:** "hint" | **"warning"** | "error"
@@ -60,6 +62,7 @@ Do not mark events explicitly illegal. As of Dezyne 2.14, events not mentioned a
 ---
 
 ## inline_temporary_variables
+
 Temporary variables that are only referred to once should be inlined.
 
 **Possible values:** **"hint"** | "warning" | "error"
@@ -67,30 +70,42 @@ Temporary variables that are only referred to once should be inlined.
 ---
 
 ## naming_convention
+
 Naming convention for various different variables.
 
 **Default value:**
+
 ```json
 {
-    component: "[A-Z][a-zA-Z0-9]*",
-    enum: "[A-Z][a-zA-Z0-9]*",
-    enum_member: "[A-Z][a-zA-Z0-9]*",
-    interface: "I[A-Z][a-zA-Z0-9]*",
-    local: "[a-z_][a-zA-Z0-9]*",
-    type: "[A-Z][a-zA-Z0-9]*",
+    "component": "[A-Z][a-zA-Z0-9]*",
+    "enum": "[A-Z][a-zA-Z0-9]*",
+    "enum_member": "[A-Z][a-zA-Z0-9]*",
+    "interface": "I[A-Z][a-zA-Z0-9]*",
+    "local": "[a-z_][a-zA-Z0-9]*",
+    "type": "[A-Z][a-zA-Z0-9]*"
 }
 ```
 
 ---
 
 ## no_duplicate_parameters
+
 Parameters should have distinct names.
 
 **Possible values:** "hint" | "warning" | **"error"**
 
 ---
 
+## no_duplicate_port_binding
+
+Ports cannot be bound more than once.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## no_recursive_system
+
 Systems cannot contain instances of themself.
 
 **Possible values:** "hint" | "warning" | **"error"**
@@ -98,6 +113,7 @@ Systems cannot contain instances of themself.
 ---
 
 ## no_shadowing
+
 Parameters and variables should not shadow (re-define) variables that already exist in scope.
 
 **Possible values:** "hint" | "warning" | **"error"**
@@ -105,6 +121,7 @@ Parameters and variables should not shadow (re-define) variables that already ex
 ---
 
 ## no_unknown_port_binding
+
 Bindings cannot bind to unknown ports.
 
 **Possible values:** "hint" | "warning" | **"error"**
@@ -112,6 +129,7 @@ Bindings cannot bind to unknown ports.
 ---
 
 ## no_unused_instances
+
 Defined instances should be used in at least one binding.
 
 **Possible values:** "hint" | **"warning"** | "error"
@@ -119,6 +137,7 @@ Defined instances should be used in at least one binding.
 ---
 
 ## no_unused_parameters
+
 Parameters should be referenced at least once, or escaped by prefixing (or replacing with) `_`.
 
 **Possible values:** "hint" | **"warning"**| "error"
@@ -126,6 +145,7 @@ Parameters should be referenced at least once, or escaped by prefixing (or repla
 ---
 
 ## no_unused_ports
+
 System ports should be used in at least one binding.
 
 **Possible values:** "hint" | **"warning"** | "error"
@@ -133,6 +153,7 @@ System ports should be used in at least one binding.
 ---
 
 ## no_unused_variables
+
 Defined variables should be referenced at least once.
 
 **Possible values:** "hint" | **"warning"** | "error"
@@ -140,6 +161,7 @@ Defined variables should be referenced at least once.
 ---
 
 ## parameter_direction
+
 Parameter direction (in/out/inout) should always be specified.
 
 **Possible values:** "hint" | **"warning"** | "error"
