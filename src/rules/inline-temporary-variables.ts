@@ -17,8 +17,20 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         factoryContext.registerRule<variable_definition>(ASTKinds.variable_definition, (node, context) => {
+            if (!node.initializer) {
+                // Don't hint to inline variables without value initializer
+                return [];
+            }
+
+            if (context.currentScope().root.kind === ASTKinds.behavior) {
+                // Don't hint to inline variables in behavior root
+                return [];
+            }
+
+            // Count number of references to this variable
             const name = node.name.text;
             let count = 0;
+
             context.visit(context.currentScope().root, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
                     count++;
@@ -29,6 +41,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
             });
 
             if (count === 1) {
+                // If exactly one reference, add diagnostic
                 return [
                     variableCanBeInlined(
                         config.severity,

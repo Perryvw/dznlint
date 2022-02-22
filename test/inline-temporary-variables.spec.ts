@@ -50,3 +50,31 @@ test("temporary variable in function", () => {
         }`,
     });
 });
+
+test("no inline suggestion on variables outside functions or event triggers", () => {
+    testdznlint({
+        diagnostic: variableCanBeInlined.code,
+        pass: `component A {
+            behavior {
+                string g_mystring = $"bla"$;
+                void foo() {
+                    log(g_mystring);
+                }
+            }
+        }`,
+    });
+});
+
+test("no inline suggestion on out variables", () => {
+    testdznlint({
+        diagnostic: variableCanBeInlined.code,
+        pass: `component A {
+            behavior {
+                void foo() {
+                    bool outBool;
+                    funcWithOut(outBool);
+                }
+            }
+        }`,
+    });
+});
