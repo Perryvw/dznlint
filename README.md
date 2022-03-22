@@ -88,6 +88,14 @@ Naming convention for various different variables.
 
 ---
 
+## no_bool_out_parameters
+
+Out parameters of type `bool` are not allowed by Dezyne and will lead to a well-formedness error.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## no_duplicate_parameters
 
 Parameters should have distinct names.
