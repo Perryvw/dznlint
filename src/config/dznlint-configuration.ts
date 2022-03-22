@@ -21,6 +21,7 @@ export interface DznLintConfiguration {
         local: string;
         type: string;
     }>;
+    no_bool_out_parameters: ConfigValue;
     no_duplicate_parameters: ConfigValue;
     no_duplicate_port_binding: ConfigValue;
     no_recursive_system: ConfigValue;

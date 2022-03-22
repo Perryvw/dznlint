@@ -89,7 +89,7 @@ expression := parenthesized_expression | binary_expression | property_expression
     unary_operator    := NOT
 
 
-compound_name := {compound=compound_name? DOT name=member_identifier} | identifier
+compound_name := {start=@ compound=compound_name? DOT name=member_identifier end=@} | identifier
 
 identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 member_identifier   := start=@ text='[a-zA-Z0-9_]+' end=@

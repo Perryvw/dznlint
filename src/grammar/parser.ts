@@ -75,7 +75,7 @@
 *   property_expression := expression=expression? DOT access_name=member_identifier
 *   unary_expression    := operator=unary_operator _ expression=expression
 *     unary_operator    := NOT
-* compound_name := {compound=compound_name? DOT name=member_identifier} | identifier
+* compound_name := {start=@ compound=compound_name? DOT name=member_identifier end=@} | identifier
 * identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 * member_identifier   := start=@ text='[a-zA-Z0-9_]+' end=@
 * NUMBER              := MINUS? '[0-9]+'
@@ -830,8 +830,10 @@ export type compound_name_1 = compound_name_$0;
 export type compound_name_2 = identifier;
 export interface compound_name_$0 {
     kind: ASTKinds.compound_name_$0;
+    start: PosInfo;
     compound: Nullable<compound_name>;
     name: member_identifier;
+    end: PosInfo;
 }
 export interface identifier {
     kind: ASTKinds.identifier;
@@ -2666,15 +2668,19 @@ export class Parser {
     public matchcompound_name_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<compound_name_$0> {
         return this.run<compound_name_$0>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$compound: Nullable<Nullable<compound_name>>;
                 let $scope$name: Nullable<member_identifier>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<compound_name_$0> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && (($scope$compound = this.matchcompound_name($$dpth + 1, $$cr)) || true)
                     && this.matchDOT($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchmember_identifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.compound_name_$0, compound: $scope$compound, name: $scope$name};
+                    $$res = {kind: ASTKinds.compound_name_$0, start: $scope$start, compound: $scope$compound, name: $scope$name, end: $scope$end};
                 }
                 return $$res;
             });

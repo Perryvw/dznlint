@@ -19,6 +19,7 @@ import inline_temporary_variables from "./rules/inline-temporary-variables";
 import naming_convention from "./rules/naming-convention";
 import no_recursive_system from "./rules/no-recursive-system";
 import no_shadowing from "./rules/no-shadowing";
+import no_bool_out_parameters from "./rules/no-bool-out-parameters";
 import no_duplicate_parameters from "./rules/no-duplicate-parameters";
 import no_duplicate_port_binding from "./rules/no-duplicate-port-binding";
 import no_unknown_instance_binding from "./rules/no-unknown-instance-binding";
@@ -35,6 +36,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         implicit_illegal,
         inline_temporary_variables,
         naming_convention,
+        no_bool_out_parameters,
         no_duplicate_parameters,
         no_duplicate_port_binding,
         no_recursive_system,
