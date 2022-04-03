@@ -3,7 +3,7 @@ import { Diagnostic } from "./diagnostic";
 import { VisitorContext } from "./visitor";
 import * as parser from "./grammar/parser";
 
-export type ASTNode = { kind: parser.ASTKinds };
+export type ASTNode = { kind: parser.ASTKinds; parent?: ASTNode };
 export type Linter<T extends ASTNode> = (node: T, context: VisitorContext) => Diagnostic[];
 
 export type RuleFactory = (context: RuleFactoryContext) => void;

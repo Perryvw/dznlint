@@ -6,7 +6,7 @@
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTKinds, variable_definition } from "../grammar/parser";
-import { RuleFactory } from "../linting-rule";
+import { ASTNode, RuleFactory } from "../linting-rule";
 import { isIdentifier, nodeToSourceRange } from "../util";
 import { VisitResult } from "../visitor";
 
@@ -31,16 +31,19 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
             const name = node.name.text;
             let count = 0;
 
+            let singleUsage: ASTNode | undefined;
+
             context.visit(context.currentScope().root, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
                     count++;
+                    singleUsage = subNode;
                     if (count > 1) {
                         return VisitResult.StopVisiting;
                     }
                 }
             });
 
-            if (count === 1) {
+            if (count === 1 && singleUsage && canInlineAtLocation(singleUsage)) {
                 // If exactly one reference, add diagnostic
                 return [
                     variableCanBeInlined(
@@ -56,5 +59,11 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
         });
     }
 };
+
+function canInlineAtLocation(node: ASTNode): boolean {
+    if (!node.parent) return true;
+
+    return node.parent.kind !== ASTKinds.return_statement && node.parent.kind !== ASTKinds.call_expression;
+}
 
 export default inline_temporary_variables;

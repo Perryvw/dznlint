@@ -71,7 +71,35 @@ test("no inline suggestion on out variables", () => {
         pass: `component A {
             behavior {
                 void foo() {
-                    bool outBool;
+                    bool outBool = true;
+                    funcWithOut(outBool);
+                }
+            }
+        }`,
+    });
+});
+
+test("no inline suggestion on return expressions", () => {
+    testdznlint({
+        diagnostic: variableCanBeInlined.code,
+        pass: `component A {
+            behavior {
+                void foo() {
+                    bool outBool = true;
+                    return outBool;
+                }
+            }
+        }`,
+    });
+});
+
+test("no inline suggestion on function arguments", () => {
+    testdznlint({
+        diagnostic: variableCanBeInlined.code,
+        pass: `component A {
+            behavior {
+                void foo() {
+                    bool outBool = true;
                     funcWithOut(outBool);
                 }
             }

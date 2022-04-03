@@ -65,18 +65,23 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.file]: (node: parser.file, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
         for (const { statement } of node.statements) {
+            setParent(statement, node);
             context.visit(statement, cb);
         }
         context.popScope();
     },
 
     [parser.ASTKinds.assignment]: (node: parser.assignment, context: VisitorContext, cb: VisitorCallback) => {
+        setParent(node.left, node);
+        setParent(node.right, node);
+
         context.visit(node.left, cb);
         context.visit(node.right, cb);
     },
     [parser.ASTKinds.behavior]: (node: parser.behavior, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
         for (const { statement } of node.block.statements) {
+            setParent(statement, node);
             context.visit(statement, cb);
         }
         context.popScope();
@@ -86,30 +91,38 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        setParent(node.left, node);
+        setParent(node.right, node);
+
         context.visit(node.left, cb);
         context.visit(node.right, cb);
     },
     [parser.ASTKinds.binding]: (node: parser.binding, context: VisitorContext, cb: VisitorCallback) => {
         if (typeof node.left !== "string") {
+            setParent(node.left, node);
             context.visit(node.left.name, cb);
         }
         if (typeof node.right !== "string") {
+            setParent(node.right, node);
             context.visit(node.right.name, cb);
         }
     },
     [parser.ASTKinds.call_expression]: (node: parser.call_expression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.expression, cb);
         for (const { expression } of node.arguments) {
+            setParent(expression, node);
             context.visit(expression, cb);
         }
     },
     [parser.ASTKinds.component]: (node: parser.component, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
         for (const { port } of node.ports) {
+            setParent(port, node);
             context.visit(port, cb);
         }
 
         if (node.body) {
+            setParent(node.body, node);
             context.visit(node.body, cb);
         }
         context.popScope();
@@ -117,6 +130,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.compound]: (node: parser.compound, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
         for (const { statement } of node.statements) {
+            setParent(statement, node);
             context.visit(statement, cb);
         }
         context.popScope();
@@ -126,6 +140,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        setParent(node.expression, node);
         context.visit(node.expression, cb);
     },
     [parser.ASTKinds.function_definition]: (
@@ -133,10 +148,14 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        setParent(node.body, node);
+        setParent(node.name, node);
+
         context.visit(node.name, cb);
         context.pushScope(node);
         if (node.parameters.formals) {
             for (const parameter of headTailToList(node.parameters.formals)) {
+                setParent(parameter, node);
                 context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
                 context.visit(parameter, cb);
             }
@@ -147,22 +166,31 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.guard]: (node: parser.guard, context: VisitorContext, cb: VisitorCallback) => {
         if (node.condition) {
             if (typeof node.condition !== "string") {
+                setParent(node.condition, node);
                 context.visit(node.condition, cb);
             }
         }
 
         if (node.statement) {
+            setParent(node.statement, node);
             context.visit(node.statement, cb);
         }
     },
     [parser.ASTKinds.if_statement]: (node: parser.if_statement, context: VisitorContext, cb: VisitorCallback) => {
+        setParent(node.expression, node);
+        setParent(node.block, node);
+
         context.visit(node.expression, cb);
         context.visit(node.block, cb);
 
-        for (const { elseif, block } of node.else_statements) {
+        for (const elseStatement of node.else_statements) {
+            setParent(elseStatement, node);
+            const { elseif, block } = elseStatement;
             if (elseif) {
+                setParent(elseif.expression, elseStatement);
                 context.visit(elseif.expression, cb);
             }
+            setParent(block, elseStatement);
             context.visit(block, cb);
         }
     },
@@ -171,6 +199,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        setParent(node.expression, node);
+        setParent(node.statement, node);
+
         context.visit(node.expression, cb);
         context.pushScope(node);
         context.visit(node.statement, cb);
@@ -183,11 +214,13 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     ) => {
         context.pushScope(node);
         for (const { type_or_event } of node.body) {
+            setParent(type_or_event, node);
             context.visit(type_or_event, cb);
         }
 
         if (node.behavior) {
             for (const { statement } of node.behavior.block.statements) {
+                setParent(statement, node);
                 context.visit(statement, cb);
             }
         }
@@ -196,6 +229,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.namespace]: (node: parser.namespace, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
         for (const { statement } of node.root.statements) {
+            setParent(statement, node);
             context.visit(statement, cb);
         }
         context.popScope();
@@ -204,28 +238,42 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.pushScope(node);
 
         for (const trigger of headTailToList(node.on_trigger_list)) {
-            context.visit(trigger.name, cb);
-
-            if (trigger.parameters?.formals) {
-                for (const parameter of headTailToList(trigger.parameters.formals)) {
-                    context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
-                    context.visit(parameter.name, cb);
-                    if (parameter.assignment) {
-                        context.visit(parameter.assignment.name, cb);
-                    }
-                }
-            }
+            setParent(trigger, node);
+            context.visit(trigger, cb);
         }
 
+        setParent(node.statement, node);
         context.visit(node.statement, cb);
 
         context.popScope();
+    },
+    [parser.ASTKinds.on_formal]: (node: parser.on_formal, context: VisitorContext, cb: VisitorCallback) => {
+        context.currentScope().variable_declarations[node.name.text] = node.name;
+        setParent(node.name, node);
+        context.visit(node.name, cb);
+
+        if (node.assignment) {
+            setParent(node.assignment.name, node);
+            context.visit(node.assignment.name, cb);
+        }
+    },
+    [parser.ASTKinds.on_trigger]: (node: parser.on_trigger, context: VisitorContext, cb: VisitorCallback) => {
+        setParent(node.name, node);
+        context.visit(node.name, cb);
+
+        if (node.parameters?.formals) {
+            for (const parameter of headTailToList(node.parameters.formals)) {
+                setParent(parameter, node);
+                context.visit(parameter, cb);
+            }
+        }
     },
     [parser.ASTKinds.parenthesized_expression]: (
         node: parser.parenthesized_expression,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        setParent(node.expression, node);
         context.visit(node.expression, cb);
     },
     [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext) => {
@@ -237,6 +285,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         cb: VisitorCallback
     ) => {
         if (node.expression) {
+            setParent(node.expression, node);
             context.visit(node.expression, cb);
         }
     },
@@ -246,12 +295,14 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         cb: VisitorCallback
     ) => {
         if (node.expression) {
+            setParent(node.expression, node);
             context.visit(node.expression, cb);
         }
     },
     [parser.ASTKinds.system]: (node: parser.system, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
         for (const { instance_or_binding } of node.instances_and_bindings) {
+            setParent(instance_or_binding, node);
             context.visit(instance_or_binding, cb);
         }
         context.popScope();
@@ -263,6 +314,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     ) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
         if (node.initializer) {
+            setParent(node.initializer.expression, node);
             context.visit(node.initializer.expression, cb);
         }
     },
@@ -271,6 +323,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        setParent(node.expression, node);
         context.visit(node.expression, cb);
     },
 
@@ -294,4 +347,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback) {
     const context = new VisitorContext(source);
     context.visit(file, callback);
+}
+
+function setParent(node: ASTNode, parent: ASTNode) {
+    node.parent = parent;
 }
