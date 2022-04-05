@@ -36,7 +36,7 @@
 *           end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
 *   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
-*     port_qualifiers := {_{EXTERNAL | INJECTED} __}*
+*     port_qualifiers := {_{EXTERNAL | INJECTED | BLOCKING} __}*
 *     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
 *       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
 *       formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
@@ -64,17 +64,18 @@
 *   if_statement_short    := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=statement end=@
 *   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
 *   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
-* expression := parenthesized_expression | binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
-*   call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
-*     arguments         := {_ expression=expression _ COMMA?}*
-*   dollars             := DOLLAR value='[^$]*' DOLLAR
-*   binary_expression   := left=expression _ operator=binary_operator _ right=expression
+* expression := binary_expression | unary_expression
+*   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
 *     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
-*   numeric_literal     := text=NUMBER
-*   parenthesized_expression := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
-*   property_expression := expression=expression? DOT access_name=member_identifier
-*   unary_expression    := operator=unary_operator _ expression=expression
-*     unary_operator    := NOT
+* unary_expression := parenthesized_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_operator_expression
+*   call_expression             := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
+*     arguments                 := {_ expression=expression _ COMMA?}*
+*   dollars                     := DOLLAR value='[^$]*' DOLLAR
+*   numeric_literal             := text=NUMBER
+*   parenthesized_expression    := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
+*   property_expression         := expression=expression? DOT access_name=member_identifier
+*   unary_operator_expression   := operator=unary_operator _ expression=expression
+*     unary_operator            := NOT
 * compound_name := {start=@ compound=compound_name? DOT name=member_identifier end=@} | identifier
 * identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 * member_identifier   := start=@ text='[a-zA-Z0-9_]+' end=@
@@ -216,6 +217,7 @@ export enum ASTKinds {
     port_qualifiers_$0 = "port_qualifiers_$0",
     port_qualifiers_$0_$0_1 = "port_qualifiers_$0_$0_1",
     port_qualifiers_$0_$0_2 = "port_qualifiers_$0_$0_2",
+    port_qualifiers_$0_$0_3 = "port_qualifiers_$0_$0_3",
     formals = "formals",
     formal_list = "formal_list",
     formal_list_$0 = "formal_list_$0",
@@ -270,17 +272,6 @@ export enum ASTKinds {
     return_statement = "return_statement",
     expression_1 = "expression_1",
     expression_2 = "expression_2",
-    expression_3 = "expression_3",
-    expression_4 = "expression_4",
-    expression_5 = "expression_5",
-    expression_6 = "expression_6",
-    expression_7 = "expression_7",
-    expression_8 = "expression_8",
-    expression_9 = "expression_9",
-    call_expression = "call_expression",
-    arguments = "arguments",
-    arguments_$0 = "arguments_$0",
-    dollars = "dollars",
     binary_expression = "binary_expression",
     binary_operator_1 = "binary_operator_1",
     binary_operator_2 = "binary_operator_2",
@@ -292,10 +283,22 @@ export enum ASTKinds {
     binary_operator_8 = "binary_operator_8",
     binary_operator_9 = "binary_operator_9",
     binary_operator_10 = "binary_operator_10",
+    unary_expression_1 = "unary_expression_1",
+    unary_expression_2 = "unary_expression_2",
+    unary_expression_3 = "unary_expression_3",
+    unary_expression_4 = "unary_expression_4",
+    unary_expression_5 = "unary_expression_5",
+    unary_expression_6 = "unary_expression_6",
+    unary_expression_7 = "unary_expression_7",
+    unary_expression_8 = "unary_expression_8",
+    call_expression = "call_expression",
+    arguments = "arguments",
+    arguments_$0 = "arguments_$0",
+    dollars = "dollars",
     numeric_literal = "numeric_literal",
     parenthesized_expression = "parenthesized_expression",
     property_expression = "property_expression",
-    unary_expression = "unary_expression",
+    unary_operator_expression = "unary_operator_expression",
     unary_operator = "unary_operator",
     compound_name_1 = "compound_name_1",
     compound_name_2 = "compound_name_2",
@@ -573,9 +576,10 @@ export type port_qualifiers = port_qualifiers_$0[];
 export interface port_qualifiers_$0 {
     kind: ASTKinds.port_qualifiers_$0;
 }
-export type port_qualifiers_$0_$0 = port_qualifiers_$0_$0_1 | port_qualifiers_$0_$0_2;
+export type port_qualifiers_$0_$0 = port_qualifiers_$0_$0_1 | port_qualifiers_$0_$0_2 | port_qualifiers_$0_$0_3;
 export type port_qualifiers_$0_$0_1 = EXTERNAL;
 export type port_qualifiers_$0_$0_2 = INJECTED;
+export type port_qualifiers_$0_$0_3 = BLOCKING;
 export interface formals {
     kind: ASTKinds.formals;
     formals: Nullable<formal_list>;
@@ -765,33 +769,12 @@ export interface return_statement {
     expression: Nullable<expression>;
     end: PosInfo;
 }
-export type expression = expression_1 | expression_2 | expression_3 | expression_4 | expression_5 | expression_6 | expression_7 | expression_8 | expression_9;
-export type expression_1 = parenthesized_expression;
-export type expression_2 = binary_expression;
-export type expression_3 = property_expression;
-export type expression_4 = call_expression;
-export type expression_5 = dollars;
-export type expression_6 = ILLEGAL;
-export type expression_7 = identifier;
-export type expression_8 = numeric_literal;
-export type expression_9 = unary_expression;
-export interface call_expression {
-    kind: ASTKinds.call_expression;
-    expression: expression;
-    arguments: arguments;
-}
-export type arguments = arguments_$0[];
-export interface arguments_$0 {
-    kind: ASTKinds.arguments_$0;
-    expression: expression;
-}
-export interface dollars {
-    kind: ASTKinds.dollars;
-    value: string;
-}
+export type expression = expression_1 | expression_2;
+export type expression_1 = binary_expression;
+export type expression_2 = unary_expression;
 export interface binary_expression {
     kind: ASTKinds.binary_expression;
-    left: expression;
+    left: unary_expression;
     operator: binary_operator;
     right: expression;
 }
@@ -806,6 +789,29 @@ export type binary_operator_7 = GREATER_EQUAL;
 export type binary_operator_8 = GREATER;
 export type binary_operator_9 = PLUS;
 export type binary_operator_10 = MINUS;
+export type unary_expression = unary_expression_1 | unary_expression_2 | unary_expression_3 | unary_expression_4 | unary_expression_5 | unary_expression_6 | unary_expression_7 | unary_expression_8;
+export type unary_expression_1 = parenthesized_expression;
+export type unary_expression_2 = property_expression;
+export type unary_expression_3 = call_expression;
+export type unary_expression_4 = dollars;
+export type unary_expression_5 = ILLEGAL;
+export type unary_expression_6 = identifier;
+export type unary_expression_7 = numeric_literal;
+export type unary_expression_8 = unary_operator_expression;
+export interface call_expression {
+    kind: ASTKinds.call_expression;
+    expression: expression;
+    arguments: arguments;
+}
+export type arguments = arguments_$0[];
+export interface arguments_$0 {
+    kind: ASTKinds.arguments_$0;
+    expression: expression;
+}
+export interface dollars {
+    kind: ASTKinds.dollars;
+    value: string;
+}
 export interface numeric_literal {
     kind: ASTKinds.numeric_literal;
     text: NUMBER;
@@ -819,8 +825,8 @@ export interface property_expression {
     expression: Nullable<expression>;
     access_name: member_identifier;
 }
-export interface unary_expression {
-    kind: ASTKinds.unary_expression;
+export interface unary_operator_expression {
+    kind: ASTKinds.unary_operator_expression;
     operator: unary_operator;
     expression: expression;
 }
@@ -1699,6 +1705,7 @@ export class Parser {
         return this.choice<port_qualifiers_$0_$0>([
             () => this.matchport_qualifiers_$0_$0_1($$dpth + 1, $$cr),
             () => this.matchport_qualifiers_$0_$0_2($$dpth + 1, $$cr),
+            () => this.matchport_qualifiers_$0_$0_3($$dpth + 1, $$cr),
         ]);
     }
     public matchport_qualifiers_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers_$0_$0_1> {
@@ -1706,6 +1713,9 @@ export class Parser {
     }
     public matchport_qualifiers_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers_$0_$0_2> {
         return this.matchINJECTED($$dpth + 1, $$cr);
+    }
+    public matchport_qualifiers_$0_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers_$0_$0_3> {
+        return this.matchBLOCKING($$dpth + 1, $$cr);
     }
     public matchformals($$dpth: number, $$cr?: ErrorTracker): Nullable<formals> {
         return this.run<formals>($$dpth,
@@ -2386,13 +2396,6 @@ export class Parser {
             return this.choice<expression>([
                 () => this.matchexpression_1($$dpth + 1, $$cr),
                 () => this.matchexpression_2($$dpth + 1, $$cr),
-                () => this.matchexpression_3($$dpth + 1, $$cr),
-                () => this.matchexpression_4($$dpth + 1, $$cr),
-                () => this.matchexpression_5($$dpth + 1, $$cr),
-                () => this.matchexpression_6($$dpth + 1, $$cr),
-                () => this.matchexpression_7($$dpth + 1, $$cr),
-                () => this.matchexpression_8($$dpth + 1, $$cr),
-                () => this.matchexpression_9($$dpth + 1, $$cr),
             ]);
         };
         const $scope$pos = this.mark();
@@ -2421,93 +2424,20 @@ export class Parser {
         return lastRes;
     }
     public matchexpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_1> {
-        return this.matchparenthesized_expression($$dpth + 1, $$cr);
-    }
-    public matchexpression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_2> {
         return this.matchbinary_expression($$dpth + 1, $$cr);
     }
-    public matchexpression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_3> {
-        return this.matchproperty_expression($$dpth + 1, $$cr);
-    }
-    public matchexpression_4($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_4> {
-        return this.matchcall_expression($$dpth + 1, $$cr);
-    }
-    public matchexpression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_5> {
-        return this.matchdollars($$dpth + 1, $$cr);
-    }
-    public matchexpression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_6> {
-        return this.matchILLEGAL($$dpth + 1, $$cr);
-    }
-    public matchexpression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_7> {
-        return this.matchidentifier($$dpth + 1, $$cr);
-    }
-    public matchexpression_8($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_8> {
-        return this.matchnumeric_literal($$dpth + 1, $$cr);
-    }
-    public matchexpression_9($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_9> {
+    public matchexpression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<expression_2> {
         return this.matchunary_expression($$dpth + 1, $$cr);
-    }
-    public matchcall_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<call_expression> {
-        return this.run<call_expression>($$dpth,
-            () => {
-                let $scope$expression: Nullable<expression>;
-                let $scope$arguments: Nullable<arguments>;
-                let $$res: Nullable<call_expression> = null;
-                if (true
-                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
-                    && ($scope$arguments = this.matcharguments($$dpth + 1, $$cr)) !== null
-                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
-                ) {
-                    $$res = {kind: ASTKinds.call_expression, expression: $scope$expression, arguments: $scope$arguments};
-                }
-                return $$res;
-            });
-    }
-    public matcharguments($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments> {
-        return this.loop<arguments_$0>(() => this.matcharguments_$0($$dpth + 1, $$cr), true);
-    }
-    public matcharguments_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments_$0> {
-        return this.run<arguments_$0>($$dpth,
-            () => {
-                let $scope$expression: Nullable<expression>;
-                let $$res: Nullable<arguments_$0> = null;
-                if (true
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && ((this.matchCOMMA($$dpth + 1, $$cr)) || true)
-                ) {
-                    $$res = {kind: ASTKinds.arguments_$0, expression: $scope$expression};
-                }
-                return $$res;
-            });
-    }
-    public matchdollars($$dpth: number, $$cr?: ErrorTracker): Nullable<dollars> {
-        return this.run<dollars>($$dpth,
-            () => {
-                let $scope$value: Nullable<string>;
-                let $$res: Nullable<dollars> = null;
-                if (true
-                    && this.matchDOLLAR($$dpth + 1, $$cr) !== null
-                    && ($scope$value = this.regexAccept(String.raw`(?:[^$]*)`, $$dpth + 1, $$cr)) !== null
-                    && this.matchDOLLAR($$dpth + 1, $$cr) !== null
-                ) {
-                    $$res = {kind: ASTKinds.dollars, value: $scope$value};
-                }
-                return $$res;
-            });
     }
     public matchbinary_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_expression> {
         return this.run<binary_expression>($$dpth,
             () => {
-                let $scope$left: Nullable<expression>;
+                let $scope$left: Nullable<unary_expression>;
                 let $scope$operator: Nullable<binary_operator>;
                 let $scope$right: Nullable<expression>;
                 let $$res: Nullable<binary_expression> = null;
                 if (true
-                    && ($scope$left = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && ($scope$left = this.matchunary_expression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$operator = this.matchbinary_operator($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -2562,6 +2492,94 @@ export class Parser {
     public matchbinary_operator_10($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_10> {
         return this.matchMINUS($$dpth + 1, $$cr);
     }
+    public matchunary_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression> {
+        return this.choice<unary_expression>([
+            () => this.matchunary_expression_1($$dpth + 1, $$cr),
+            () => this.matchunary_expression_2($$dpth + 1, $$cr),
+            () => this.matchunary_expression_3($$dpth + 1, $$cr),
+            () => this.matchunary_expression_4($$dpth + 1, $$cr),
+            () => this.matchunary_expression_5($$dpth + 1, $$cr),
+            () => this.matchunary_expression_6($$dpth + 1, $$cr),
+            () => this.matchunary_expression_7($$dpth + 1, $$cr),
+            () => this.matchunary_expression_8($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchunary_expression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_1> {
+        return this.matchparenthesized_expression($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_2> {
+        return this.matchproperty_expression($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_3> {
+        return this.matchcall_expression($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_4($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_4> {
+        return this.matchdollars($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_5> {
+        return this.matchILLEGAL($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_6> {
+        return this.matchidentifier($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_7> {
+        return this.matchnumeric_literal($$dpth + 1, $$cr);
+    }
+    public matchunary_expression_8($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_8> {
+        return this.matchunary_operator_expression($$dpth + 1, $$cr);
+    }
+    public matchcall_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<call_expression> {
+        return this.run<call_expression>($$dpth,
+            () => {
+                let $scope$expression: Nullable<expression>;
+                let $scope$arguments: Nullable<arguments>;
+                let $$res: Nullable<call_expression> = null;
+                if (true
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
+                    && ($scope$arguments = this.matcharguments($$dpth + 1, $$cr)) !== null
+                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.call_expression, expression: $scope$expression, arguments: $scope$arguments};
+                }
+                return $$res;
+            });
+    }
+    public matcharguments($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments> {
+        return this.loop<arguments_$0>(() => this.matcharguments_$0($$dpth + 1, $$cr), true);
+    }
+    public matcharguments_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments_$0> {
+        return this.run<arguments_$0>($$dpth,
+            () => {
+                let $scope$expression: Nullable<expression>;
+                let $$res: Nullable<arguments_$0> = null;
+                if (true
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ((this.matchCOMMA($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.arguments_$0, expression: $scope$expression};
+                }
+                return $$res;
+            });
+    }
+    public matchdollars($$dpth: number, $$cr?: ErrorTracker): Nullable<dollars> {
+        return this.run<dollars>($$dpth,
+            () => {
+                let $scope$value: Nullable<string>;
+                let $$res: Nullable<dollars> = null;
+                if (true
+                    && this.matchDOLLAR($$dpth + 1, $$cr) !== null
+                    && ($scope$value = this.regexAccept(String.raw`(?:[^$]*)`, $$dpth + 1, $$cr)) !== null
+                    && this.matchDOLLAR($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.dollars, value: $scope$value};
+                }
+                return $$res;
+            });
+    }
     public matchnumeric_literal($$dpth: number, $$cr?: ErrorTracker): Nullable<numeric_literal> {
         return this.run<numeric_literal>($$dpth,
             () => {
@@ -2608,18 +2626,18 @@ export class Parser {
                 return $$res;
             });
     }
-    public matchunary_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression> {
-        return this.run<unary_expression>($$dpth,
+    public matchunary_operator_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_operator_expression> {
+        return this.run<unary_operator_expression>($$dpth,
             () => {
                 let $scope$operator: Nullable<unary_operator>;
                 let $scope$expression: Nullable<expression>;
-                let $$res: Nullable<unary_expression> = null;
+                let $$res: Nullable<unary_operator_expression> = null;
                 if (true
                     && ($scope$operator = this.matchunary_operator($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.unary_expression, operator: $scope$operator, expression: $scope$expression};
+                    $$res = {kind: ASTKinds.unary_operator_expression, operator: $scope$operator, expression: $scope$expression};
                 }
                 return $$res;
             });

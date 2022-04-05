@@ -318,8 +318,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             context.visit(node.initializer.expression, cb);
         }
     },
-    [parser.ASTKinds.unary_expression]: (
-        node: parser.unary_expression,
+    [parser.ASTKinds.unary_operator_expression]: (
+        node: parser.unary_operator_expression,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {

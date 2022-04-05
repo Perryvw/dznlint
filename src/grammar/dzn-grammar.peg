@@ -43,7 +43,7 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
 
   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
-    port_qualifiers := {_{EXTERNAL | INJECTED} __}*
+    port_qualifiers := {_{EXTERNAL | INJECTED | BLOCKING} __}*
     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
       formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
@@ -76,17 +76,19 @@ imperative_statement :=  if_statement | if_statement_short | return_statement | 
   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
 
-expression := parenthesized_expression | binary_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_expression
-  call_expression     := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
-    arguments         := {_ expression=expression _ COMMA?}*
-  dollars             := DOLLAR value='[^$]*' DOLLAR
-  binary_expression   := left=expression _ operator=binary_operator _ right=expression
+expression := binary_expression | unary_expression
+  binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
-  numeric_literal     := text=NUMBER
-  parenthesized_expression := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
-  property_expression := expression=expression? DOT access_name=member_identifier
-  unary_expression    := operator=unary_operator _ expression=expression
-    unary_operator    := NOT
+
+unary_expression := parenthesized_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_operator_expression
+  call_expression             := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
+    arguments                 := {_ expression=expression _ COMMA?}*
+  dollars                     := DOLLAR value='[^$]*' DOLLAR
+  numeric_literal             := text=NUMBER
+  parenthesized_expression    := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
+  property_expression         := expression=expression? DOT access_name=member_identifier
+  unary_operator_expression   := operator=unary_operator _ expression=expression
+    unary_operator            := NOT
 
 
 compound_name := {start=@ compound=compound_name? DOT name=member_identifier end=@} | identifier

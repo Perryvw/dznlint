@@ -202,6 +202,31 @@ test.each(["+", "-", "&&", "||"])("binary statement (%p)", operator => {
     }`);
 });
 
+test("complex if statement", () => {
+    expectCanParseWithoutDiagnostics(`
+        component MyComponent {
+            behavior {
+                on event(mydata): {
+                    if ((a != b) && (c == d)) {
+
+                    }
+                }
+            }
+        }
+    `);
+});
+
+test("2.15 blocking ports", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+            provides IPort2 port2;
+            requires IPort3 port3;
+            requires blocking IPort4 port4;
+        }
+    `);
+});
+
 function expectCanParseWithoutDiagnostics(dzn: string) {
     const result = lintString(dzn, parseOnlyConfiguration);
     for (const diagnostic of result) {
