@@ -207,7 +207,7 @@ test("complex if statement", () => {
         component MyComponent {
             behavior {
                 on event(mydata): {
-                    if ((a != b) && (c == d)) {
+                    if ((a != b) && (c == d) && ((f > g) || (g <= i))) {
 
                     }
                 }
