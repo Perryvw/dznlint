@@ -88,6 +88,14 @@ Naming convention for various different variables.
 
 ---
 
+## never_legal_event
+
+If an `in` event in an interface is always illegal it is not useful, and often indicates the programmer forgot something.
+
+**Possible values:** "hint" | **"warning"** | "error"
+
+---
+
 ## no_bool_out_parameters
 
 Out parameters of type `bool` are not allowed by Dezyne and will lead to a well-formedness error.

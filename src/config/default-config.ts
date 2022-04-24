@@ -23,6 +23,7 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
             type: "[A-Z][a-zA-Z0-9]*",
         },
     ],
+    never_legal_event: "warning",
     no_bool_out_parameters: "error",
     no_duplicate_parameters: "error",
     no_duplicate_port_binding: "error",

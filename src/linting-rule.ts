@@ -17,6 +17,7 @@ import dead_code from "./rules/dead-code";
 import implicit_illegal from "./rules/implicit-illegal";
 import inline_temporary_variables from "./rules/inline-temporary-variables";
 import naming_convention from "./rules/naming-convention";
+import { never_legal_event } from "./rules/never-legal-event";
 import no_recursive_system from "./rules/no-recursive-system";
 import no_shadowing from "./rules/no-shadowing";
 import no_bool_out_parameters from "./rules/no-bool-out-parameters";
@@ -36,6 +37,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         implicit_illegal,
         inline_temporary_variables,
         naming_convention,
+        never_legal_event,
         no_bool_out_parameters,
         no_duplicate_parameters,
         no_duplicate_port_binding,
