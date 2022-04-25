@@ -21,6 +21,7 @@ export interface DznLintConfiguration {
         local: string;
         type: string;
     }>;
+    never_fired_event: ConfigValue;
     never_legal_event: ConfigValue;
     no_bool_out_parameters: ConfigValue;
     no_duplicate_parameters: ConfigValue;

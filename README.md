@@ -88,6 +88,14 @@ Naming convention for various different variables.
 
 ---
 
+## never_fired_event
+
+If an `out` event in an interface is never fired it is not useful, and often indicates the programmer forgot something.
+
+**Possible values:** "hint" | **"warning"** | "error"
+
+---
+
 ## never_legal_event
 
 If an `in` event in an interface is always illegal it is not useful, and often indicates the programmer forgot something.

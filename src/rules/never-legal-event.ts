@@ -17,8 +17,8 @@ export const never_legal_event: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             if (node.behavior) {
+                // Find all in-events to check
                 const inEvents = node.body.map(e => e.type_or_event).filter(isInEvent);
-
                 const unSeenEvents = new Map(inEvents.map(e => [e.event_name.text, e]));
 
                 context.visit(node.behavior, subNode => {
@@ -43,7 +43,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
                     diagnostics.push(
                         neverLegalEvent(
                             config.severity,
-                            "This event is never legal in interface behavior",
+                            "This event is never legal in the interface behavior",
                             context.source,
                             nodeToSourceRange(event.event_name)
                         )
@@ -56,7 +56,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
     }
 };
 
-function isIllegal(node: imperative_statement): boolean {
+export function isIllegal(node: imperative_statement): boolean {
     return isExpressionStatement(node) && node.expression.kind === ASTKinds.ILLEGAL;
 }
 

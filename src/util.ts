@@ -9,6 +9,9 @@ import {
     end_point,
     on,
     expression_statement,
+    behavior_statement,
+    function_definition,
+    call_expression,
 } from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
@@ -42,8 +45,16 @@ export function isIdentifier(node: ASTNode): node is identifier {
     return node.kind === ASTKinds.identifier;
 }
 
+export function isCallExpression(node: ASTNode): node is call_expression {
+    return node.kind === ASTKinds.call_expression;
+}
+
 export function isExpressionStatement(node: ASTNode): node is expression_statement {
     return node.kind === ASTKinds.expression_statement;
+}
+
+export function isFunctionDefinition(statement: behavior_statement): statement is function_definition {
+    return statement.kind === ASTKinds.function_definition;
 }
 
 export function isOnEvent(node: ASTNode): node is on {
