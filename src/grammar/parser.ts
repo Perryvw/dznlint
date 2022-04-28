@@ -36,7 +36,7 @@
 *           end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
 *   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
-*     port_qualifiers := {_{EXTERNAL | INJECTED | BLOCKING} __}*
+*     port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
 *     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
 *       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
 *       formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
@@ -575,6 +575,7 @@ export type port_direction_2 = REQUIRES;
 export type port_qualifiers = port_qualifiers_$0[];
 export interface port_qualifiers_$0 {
     kind: ASTKinds.port_qualifiers_$0;
+    qualifier: port_qualifiers_$0_$0;
 }
 export type port_qualifiers_$0_$0 = port_qualifiers_$0_$0_1 | port_qualifiers_$0_$0_2 | port_qualifiers_$0_$0_3;
 export type port_qualifiers_$0_$0_1 = EXTERNAL;
@@ -1690,13 +1691,14 @@ export class Parser {
     public matchport_qualifiers_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers_$0> {
         return this.run<port_qualifiers_$0>($$dpth,
             () => {
+                let $scope$qualifier: Nullable<port_qualifiers_$0_$0>;
                 let $$res: Nullable<port_qualifiers_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchport_qualifiers_$0_$0($$dpth + 1, $$cr) !== null
+                    && ($scope$qualifier = this.matchport_qualifiers_$0_$0($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.port_qualifiers_$0, };
+                    $$res = {kind: ASTKinds.port_qualifiers_$0, qualifier: $scope$qualifier};
                 }
                 return $$res;
             });

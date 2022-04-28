@@ -10,16 +10,25 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     | {
           isEnabled: true;
           severity: DiagnosticSeverity;
-          config: DznLintConfiguration[TRule][1];
+          config: DznLintConfiguration[TRule] extends [ConfigSeverity, infer TData] ? TData : undefined;
       } {
     const value = config[name];
+    const defaultConfig = DEFAULT_DZNLINT_CONFIG[name];
+    const [defaultSeverity, defaultValue] = Array.isArray(defaultConfig)
+        ? defaultConfig
+        : [defaultConfig === false ? "warning" : defaultConfig, undefined];
 
     if (value === undefined) {
-        const ruleConfig = DEFAULT_DZNLINT_CONFIG[name];
+        if (!defaultConfig) {
+            return { isEnabled: false };
+        }
+
         return {
             isEnabled: true,
-            severity: stringToDiagnosticLevel(Array.isArray(ruleConfig) ? ruleConfig[0] : ruleConfig),
-            config: ruleConfig[1],
+            severity: stringToDiagnosticLevel(defaultSeverity),
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            config: defaultValue,
         };
     }
 
@@ -28,28 +37,38 @@ export function getRuleConfig<TRule extends keyof DznLintConfiguration>(
     }
 
     if (value === "error") {
-        return { isEnabled: true, severity: DiagnosticSeverity.Error, config: DEFAULT_DZNLINT_CONFIG[name][1] };
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return { isEnabled: true, severity: DiagnosticSeverity.Error, config: defaultValue };
     }
     if (value === "warning") {
-        return { isEnabled: true, severity: DiagnosticSeverity.Warning, config: DEFAULT_DZNLINT_CONFIG[name][1] };
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return { isEnabled: true, severity: DiagnosticSeverity.Warning, config: defaultValue };
     }
     if (value === "hint") {
-        return { isEnabled: true, severity: DiagnosticSeverity.Hint, config: DEFAULT_DZNLINT_CONFIG[name][1] };
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return { isEnabled: true, severity: DiagnosticSeverity.Hint, config: defaultValue };
     }
 
     if (Array.isArray(value)) {
-        const [severity, config] = value as unknown as [ConfigSeverity, DznLintConfiguration[TRule][0]];
+        const [severity, config] = value;
 
         return {
             isEnabled: true,
             severity: stringToDiagnosticLevel(severity),
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             config: config,
         };
     } else {
         return {
             isEnabled: true,
-            severity: stringToDiagnosticLevel(DEFAULT_DZNLINT_CONFIG[name][0]),
-            config: value as DznLintConfiguration[TRule][1],
+            severity: stringToDiagnosticLevel(defaultSeverity),
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            config: value,
         };
     }
 }

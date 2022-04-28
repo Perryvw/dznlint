@@ -2,7 +2,11 @@ import type { DznLintConfiguration } from "./dznlint-configuration";
 
 export const DEFAULT_DZNLINT_CONFIG_FILE = "dznlint.config.json";
 
-export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
+type DefaultDznLintConfig = {
+    [K in keyof DznLintConfiguration]: false | DznLintConfiguration[K]
+}
+
+export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     // format: {
     //     indent: "spaces",
     //     indentWidth: 4,
@@ -36,4 +40,5 @@ export const DEFAULT_DZNLINT_CONFIG: DznLintConfiguration = {
     no_unused_ports: "warning",
     no_unused_variables: "warning",
     parameter_direction: "warning",
+    port_missing_redundant_blocking: false,
 };

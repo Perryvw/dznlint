@@ -189,3 +189,9 @@ Defined variables should be referenced at least once.
 Parameter direction (in/out/inout) should always be specified.
 
 **Possible values:** "hint" | **"warning"** | "error"
+
+## port_missing_redundant_blocking
+
+As of Dezyne 2.15, a provided port should be marked blocking if any of its calls is implemented using the `blocking` keyword. On the other hand, if no `blocking` is used in the behavior for this port, it should **not** be marked as blocking.
+
+**Possible values:** "hint" | "warning" | "error" (Default: disabled for backwards compatibility)

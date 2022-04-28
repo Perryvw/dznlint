@@ -34,6 +34,7 @@ export interface DznLintConfiguration {
     no_unused_ports: ConfigValue;
     no_unused_variables: ConfigValue;
     parameter_direction: ConfigValue;
+    port_missing_redundant_blocking: ConfigValue;
 }
 
 export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =

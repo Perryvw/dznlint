@@ -43,7 +43,7 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
 
   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
-    port_qualifiers := {_{EXTERNAL | INJECTED | BLOCKING} __}*
+    port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
       formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@

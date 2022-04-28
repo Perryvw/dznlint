@@ -12,6 +12,7 @@ import {
     behavior_statement,
     function_definition,
     call_expression,
+    compound,
 } from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
@@ -47,6 +48,10 @@ export function isIdentifier(node: ASTNode): node is identifier {
 
 export function isCallExpression(node: ASTNode): node is call_expression {
     return node.kind === ASTKinds.call_expression;
+}
+
+export function isCompound(node: ASTNode): node is compound {
+    return node.kind === ASTKinds.compound;
 }
 
 export function isExpressionStatement(node: ASTNode): node is expression_statement {
