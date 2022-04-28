@@ -3,8 +3,8 @@ import type { DznLintConfiguration } from "./dznlint-configuration";
 export const DEFAULT_DZNLINT_CONFIG_FILE = "dznlint.config.json";
 
 type DefaultDznLintConfig = {
-    [K in keyof DznLintConfiguration]: false | DznLintConfiguration[K]
-}
+    [K in keyof DznLintConfiguration]: false | DznLintConfiguration[K];
+};
 
 export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     // format: {

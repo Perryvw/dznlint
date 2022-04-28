@@ -53,7 +53,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         no_unused_ports,
         no_unused_variables,
         parameter_direction,
-        port_missing_redundant_blocking
+        port_missing_redundant_blocking,
     ];
 
     const linters = new Map<parser.ASTKinds, Linter<ASTNode>[]>();
