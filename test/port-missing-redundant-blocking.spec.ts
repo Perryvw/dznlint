@@ -98,3 +98,35 @@ test("also considers blocking statements", () => {
         config: { port_missing_redundant_blocking: "error" },
     });
 });
+
+test("should only complain about provides ports", () => {
+    testdznlint({
+        diagnostic: portRedundantBlocking.code,
+        pass: `
+            component C {
+                provides blocking IApi api;
+                requires blocking IRequired req;
+
+                behavior {
+                    on api.Foo(): reply(req.Bar());
+                }
+            }`,
+        config: { port_missing_redundant_blocking: "error" },
+    });
+});
+
+test("blocking missing if provided port not blocking but required port is", () => {
+    testdznlint({
+        diagnostic: portMissingBlocking.code,
+        fail: `
+            component C {
+                provides IApi api;
+                requires blocking IRequired req;
+
+                behavior {
+                    on api.Foo(): reply(req.Bar());
+                }
+            }`,
+        config: { port_missing_redundant_blocking: "error" },
+    });
+});
