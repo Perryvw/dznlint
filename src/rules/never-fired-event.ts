@@ -36,11 +36,11 @@ export const never_fired_event: RuleFactory = factoryContext => {
             });
 
             // All events left in the unseen events set result in a diagnostic
-            for (const [, event] of unSeenEvents) {
+            for (const event of unSeenEvents.values()) {
                 diagnostics.push(
                     neverFiredEvent(
                         config.severity,
-                        "This event is fired in the interface behavior",
+                        "This event is never fired in the interface behavior",
                         context.source,
                         nodeToSourceRange(event.event_name)
                     )
