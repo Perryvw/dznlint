@@ -130,3 +130,18 @@ test("blocking missing if provided port not blocking but required port is", () =
         config: { port_missing_redundant_blocking: "error" },
     });
 });
+
+test("no blocking rule on system components", () => {
+    testdznlint({
+        diagnostic: portMissingBlocking.code,
+        pass: `
+            component C {
+                provides IApi api;
+                requires blocking IRequired req;
+
+                system {
+                }
+            }`,
+        config: { port_missing_redundant_blocking: "error" },
+    });
+});

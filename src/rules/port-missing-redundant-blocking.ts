@@ -14,7 +14,7 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         factoryContext.registerRule<component>(ASTKinds.component, (node, context) => {
-            if (!node.body) {
+            if (!node.body || node.body.kind === ASTKinds.system) {
                 return [];
             }
 
