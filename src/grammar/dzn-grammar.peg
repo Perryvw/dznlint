@@ -61,7 +61,7 @@ declarative_statement := on | guard | compound
     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
-  guard := start=@ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
+  guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
 
 compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
   statements  := {_ statement=statement _}*

@@ -227,6 +227,18 @@ test("2.15 blocking ports", () => {
     `);
 });
 
+test("blocking with guard", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                blocking [someExpression] on port.foo(): {}
+            }
+        }
+    `);
+})
+
 function expectCanParseWithoutDiagnostics(dzn: string) {
     const result = lintString(dzn, parseOnlyConfiguration);
     for (const diagnostic of result) {

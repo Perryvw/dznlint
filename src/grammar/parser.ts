@@ -52,7 +52,7 @@
 *     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
 *       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
 *         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
-*   guard := start=@ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
+*   guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
@@ -685,6 +685,7 @@ export interface on_formal_$0 {
 export interface guard {
     kind: ASTKinds.guard;
     start: PosInfo;
+    blocking: Nullable<BLOCKING>;
     condition: Nullable<guard_$0>;
     statement: statement;
     end: PosInfo;
@@ -2079,12 +2080,15 @@ export class Parser {
         return this.run<guard>($$dpth,
             () => {
                 let $scope$start: Nullable<PosInfo>;
+                let $scope$blocking: Nullable<Nullable<BLOCKING>>;
                 let $scope$condition: Nullable<Nullable<guard_$0>>;
                 let $scope$statement: Nullable<statement>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<guard> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
+                    && (($scope$blocking = this.matchBLOCKING($$dpth + 1, $$cr)) || true)
+                    && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACKET_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$condition = this.matchguard_$0($$dpth + 1, $$cr)) || true)
@@ -2094,7 +2098,7 @@ export class Parser {
                     && ($scope$statement = this.matchstatement($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.guard, start: $scope$start, condition: $scope$condition, statement: $scope$statement, end: $scope$end};
+                    $$res = {kind: ASTKinds.guard, start: $scope$start, blocking: $scope$blocking, condition: $scope$condition, statement: $scope$statement, end: $scope$end};
                 }
                 return $$res;
             });
