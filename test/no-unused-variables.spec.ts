@@ -42,3 +42,28 @@ test("unused variable in function", () => {
         }`,
     });
 });
+
+test("unused variable in defer", () => {
+    testdznlint({
+        diagnostic: unusedVariable.code,
+        pass: `component A {
+            behavior {
+                void foo() {
+                    defer {
+                        Result r = doSomething();
+                        return r;
+                    }
+                }
+            }
+        }`,
+        fail: `component A {
+            behavior {
+                void foo() {
+                    defer {
+                        Result r = doSomething();
+                    }
+                }
+            }
+        }`,
+    });
+});

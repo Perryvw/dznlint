@@ -56,8 +56,10 @@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
-* imperative_statement :=  if_statement | if_statement_short | return_statement | variable_definition | assignment | expression_statement | compound
+* imperative_statement :=  if_statement | if_statement_short | return_statement | variable_definition | assignment | defer_statement | expression_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
+*   defer_statement       := start=@ DEFER _ arguments=defer_arguments? _ statement=imperative_statement end=@
+*     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ block=compound _ else_statements=else_statement* end=@
 *     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ block=compound _
@@ -112,6 +114,7 @@
 * BLOCKING            := 'blocking'
 * BOOL                := 'bool'
 * COMPONENT           := 'component'
+* DEFER               := 'defer'
 * ELSE                := 'else'
 * ENUM                := 'enum'
 * EXTERN              := 'extern'
@@ -261,7 +264,10 @@ export enum ASTKinds {
     imperative_statement_5 = "imperative_statement_5",
     imperative_statement_6 = "imperative_statement_6",
     imperative_statement_7 = "imperative_statement_7",
+    imperative_statement_8 = "imperative_statement_8",
     assignment = "assignment",
+    defer_statement = "defer_statement",
+    defer_arguments = "defer_arguments",
     expression_statement = "expression_statement",
     if_statement = "if_statement",
     else_statement = "else_statement",
@@ -344,6 +350,7 @@ export enum ASTKinds {
     BLOCKING = "BLOCKING",
     BOOL = "BOOL",
     COMPONENT = "COMPONENT",
+    DEFER = "DEFER",
     ELSE = "ELSE",
     ENUM = "ENUM",
     EXTERN = "EXTERN",
@@ -708,20 +715,32 @@ export interface statements_$0 {
 export type statement = statement_1 | statement_2;
 export type statement_1 = declarative_statement;
 export type statement_2 = imperative_statement;
-export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5 | imperative_statement_6 | imperative_statement_7;
+export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5 | imperative_statement_6 | imperative_statement_7 | imperative_statement_8;
 export type imperative_statement_1 = if_statement;
 export type imperative_statement_2 = if_statement_short;
 export type imperative_statement_3 = return_statement;
 export type imperative_statement_4 = variable_definition;
 export type imperative_statement_5 = assignment;
-export type imperative_statement_6 = expression_statement;
-export type imperative_statement_7 = compound;
+export type imperative_statement_6 = defer_statement;
+export type imperative_statement_7 = expression_statement;
+export type imperative_statement_8 = compound;
 export interface assignment {
     kind: ASTKinds.assignment;
     start: PosInfo;
     left: identifier;
     right: expression;
     end: PosInfo;
+}
+export interface defer_statement {
+    kind: ASTKinds.defer_statement;
+    start: PosInfo;
+    arguments: Nullable<defer_arguments>;
+    statement: imperative_statement;
+    end: PosInfo;
+}
+export interface defer_arguments {
+    kind: ASTKinds.defer_arguments;
+    arguments: arguments;
 }
 export interface expression_statement {
     kind: ASTKinds.expression_statement;
@@ -898,6 +917,7 @@ export type BEHAVIOR_2 = string;
 export type BLOCKING = string;
 export type BOOL = string;
 export type COMPONENT = string;
+export type DEFER = string;
 export type ELSE = string;
 export type ENUM = string;
 export type EXTERN = string;
@@ -2178,6 +2198,7 @@ export class Parser {
             () => this.matchimperative_statement_5($$dpth + 1, $$cr),
             () => this.matchimperative_statement_6($$dpth + 1, $$cr),
             () => this.matchimperative_statement_7($$dpth + 1, $$cr),
+            () => this.matchimperative_statement_8($$dpth + 1, $$cr),
         ]);
     }
     public matchimperative_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_1> {
@@ -2196,9 +2217,12 @@ export class Parser {
         return this.matchassignment($$dpth + 1, $$cr);
     }
     public matchimperative_statement_6($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_6> {
-        return this.matchexpression_statement($$dpth + 1, $$cr);
+        return this.matchdefer_statement($$dpth + 1, $$cr);
     }
     public matchimperative_statement_7($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_7> {
+        return this.matchexpression_statement($$dpth + 1, $$cr);
+    }
+    public matchimperative_statement_8($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_8> {
         return this.matchcompound($$dpth + 1, $$cr);
     }
     public matchassignment($$dpth: number, $$cr?: ErrorTracker): Nullable<assignment> {
@@ -2221,6 +2245,43 @@ export class Parser {
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.assignment, start: $scope$start, left: $scope$left, right: $scope$right, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchdefer_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_statement> {
+        return this.run<defer_statement>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$arguments: Nullable<Nullable<defer_arguments>>;
+                let $scope$statement: Nullable<imperative_statement>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<defer_statement> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.matchDEFER($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && (($scope$arguments = this.matchdefer_arguments($$dpth + 1, $$cr)) || true)
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.defer_statement, start: $scope$start, arguments: $scope$arguments, statement: $scope$statement, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchdefer_arguments($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_arguments> {
+        return this.run<defer_arguments>($$dpth,
+            () => {
+                let $scope$arguments: Nullable<arguments>;
+                let $$res: Nullable<defer_arguments> = null;
+                if (true
+                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
+                    && ($scope$arguments = this.matcharguments($$dpth + 1, $$cr)) !== null
+                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.defer_arguments, arguments: $scope$arguments};
                 }
                 return $$res;
             });
@@ -2885,6 +2946,9 @@ export class Parser {
     }
     public matchCOMPONENT($$dpth: number, $$cr?: ErrorTracker): Nullable<COMPONENT> {
         return this.regexAccept(String.raw`(?:component)`, $$dpth + 1, $$cr);
+    }
+    public matchDEFER($$dpth: number, $$cr?: ErrorTracker): Nullable<DEFER> {
+        return this.regexAccept(String.raw`(?:defer)`, $$dpth + 1, $$cr);
     }
     public matchELSE($$dpth: number, $$cr?: ErrorTracker): Nullable<ELSE> {
         return this.regexAccept(String.raw`(?:else)`, $$dpth + 1, $$cr);

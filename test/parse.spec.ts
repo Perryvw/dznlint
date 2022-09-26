@@ -237,7 +237,66 @@ test("blocking with guard", () => {
             }
         }
     `);
-})
+});
+
+test("defer statement", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                blocking [someExpression] on port.foo(): {
+                    defer port.bla();
+                }
+            }
+        }
+    `);
+});
+
+test("defer with empty capture", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                blocking [someExpression] on port.foo(): {
+                    defer() port.bla();
+                }
+            }
+        }
+    `);
+});
+
+test("defer with capture", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                blocking [someExpression] on port.foo(): {
+                    defer(a,b, c) port.bla();
+                }
+            }
+        }
+    `);
+});
+
+test("defer block", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                blocking [someExpression] on port.foo(): {
+                    defer {
+                        port.bla();
+                        port.foo();
+                    }
+                }
+            }
+        }
+    `);
+});
 
 function expectCanParseWithoutDiagnostics(dzn: string) {
     const result = lintString(dzn, parseOnlyConfiguration);
