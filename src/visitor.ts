@@ -138,8 +138,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.defer_statement]: (node: parser.defer_statement, context: VisitorContext, cb: VisitorCallback) => {
         if (node.arguments) {
             for (const argument of node.arguments.arguments) {
-                setParent(argument, node);
-                context.visit(argument, cb);
+                setParent(argument.expression, node);
+                context.visit(argument.expression, cb);
             }
         }
         setParent(node.statement, node);
@@ -200,6 +200,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
                 setParent(elseif.expression, elseStatement);
                 context.visit(elseif.expression, cb);
             }
+
             setParent(block, elseStatement);
             context.visit(block, cb);
         }
@@ -217,6 +218,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.visit(node.statement, cb);
         context.popScope();
     },
+    [parser.ASTKinds.else_block_2]: stopVisiting,
     [parser.ASTKinds.interface_definition]: (
         node: parser.interface_definition,
         context: VisitorContext,

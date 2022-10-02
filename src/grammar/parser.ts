@@ -62,7 +62,8 @@
 *     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ block=compound _ else_statements=else_statement* end=@
-*     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ block=compound _
+*     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ block=else_block _
+*     else_block          := compound | ILLEGAL SEMICOLON
 *   if_statement_short    := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=statement end=@
 *   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
 *   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
@@ -272,6 +273,8 @@ export enum ASTKinds {
     if_statement = "if_statement",
     else_statement = "else_statement",
     else_statement_$0 = "else_statement_$0",
+    else_block_1 = "else_block_1",
+    else_block_2 = "else_block_2",
     if_statement_short = "if_statement_short",
     variable_definition = "variable_definition",
     variable_definition_$0 = "variable_definition_$0",
@@ -759,11 +762,16 @@ export interface if_statement {
 export interface else_statement {
     kind: ASTKinds.else_statement;
     elseif: Nullable<else_statement_$0>;
-    block: compound;
+    block: else_block;
 }
 export interface else_statement_$0 {
     kind: ASTKinds.else_statement_$0;
     expression: expression;
+}
+export type else_block = else_block_1 | else_block_2;
+export type else_block_1 = compound;
+export interface else_block_2 {
+    kind: ASTKinds.else_block_2;
 }
 export interface if_statement_short {
     kind: ASTKinds.if_statement_short;
@@ -2337,13 +2345,13 @@ export class Parser {
         return this.run<else_statement>($$dpth,
             () => {
                 let $scope$elseif: Nullable<Nullable<else_statement_$0>>;
-                let $scope$block: Nullable<compound>;
+                let $scope$block: Nullable<else_block>;
                 let $$res: Nullable<else_statement> = null;
                 if (true
                     && this.matchELSE($$dpth + 1, $$cr) !== null
                     && (($scope$elseif = this.matchelse_statement_$0($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$block = this.matchcompound($$dpth + 1, $$cr)) !== null
+                    && ($scope$block = this.matchelse_block($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.else_statement, elseif: $scope$elseif, block: $scope$block};
@@ -2367,6 +2375,28 @@ export class Parser {
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.else_statement_$0, expression: $scope$expression};
+                }
+                return $$res;
+            });
+    }
+    public matchelse_block($$dpth: number, $$cr?: ErrorTracker): Nullable<else_block> {
+        return this.choice<else_block>([
+            () => this.matchelse_block_1($$dpth + 1, $$cr),
+            () => this.matchelse_block_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchelse_block_1($$dpth: number, $$cr?: ErrorTracker): Nullable<else_block_1> {
+        return this.matchcompound($$dpth + 1, $$cr);
+    }
+    public matchelse_block_2($$dpth: number, $$cr?: ErrorTracker): Nullable<else_block_2> {
+        return this.run<else_block_2>($$dpth,
+            () => {
+                let $$res: Nullable<else_block_2> = null;
+                if (true
+                    && this.matchILLEGAL($$dpth + 1, $$cr) !== null
+                    && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.else_block_2, };
                 }
                 return $$res;
             });

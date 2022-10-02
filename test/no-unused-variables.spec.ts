@@ -67,3 +67,19 @@ test("unused variable in defer", () => {
         }`,
     });
 });
+
+test("illegal is not unused variable", () => {
+    testdznlint({
+        diagnostic: unusedVariable.code,
+        pass: `component A {
+            behavior {
+                void foo() {
+                    if (true) {
+
+                    }
+                    else illegal;
+                }
+            }
+        }`,
+    });
+});
