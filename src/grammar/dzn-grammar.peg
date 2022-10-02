@@ -73,7 +73,8 @@ imperative_statement :=  if_statement | if_statement_short | return_statement | 
     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ block=compound _ else_statements=else_statement* end=@
-    else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ block=compound _
+    else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ block=else_block _
+    else_block          := compound | ILLEGAL SEMICOLON
   if_statement_short    := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=statement end=@
   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
