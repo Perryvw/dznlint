@@ -11,7 +11,8 @@ type ScopeRoot =
     | parser.compound
     | parser.file
     | parser.function_definition
-    | parser.if_statement_short
+    | parser.if_statement
+    | parser.else_statement
     | parser.interface_definition
     | parser.namespace
     | parser.on
@@ -188,37 +189,27 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
     [parser.ASTKinds.if_statement]: (node: parser.if_statement, context: VisitorContext, cb: VisitorCallback) => {
         setParent(node.expression, node);
-        setParent(node.block, node);
-
-        context.visit(node.expression, cb);
-        context.visit(node.block, cb);
-
-        for (const elseStatement of node.else_statements) {
-            setParent(elseStatement, node);
-            const { elseif, block } = elseStatement;
-            if (elseif) {
-                setParent(elseif.expression, elseStatement);
-                context.visit(elseif.expression, cb);
-            }
-
-            setParent(block, elseStatement);
-            context.visit(block, cb);
-        }
-    },
-    [parser.ASTKinds.if_statement_short]: (
-        node: parser.if_statement_short,
-        context: VisitorContext,
-        cb: VisitorCallback
-    ) => {
-        setParent(node.expression, node);
         setParent(node.statement, node);
 
         context.visit(node.expression, cb);
         context.pushScope(node);
         context.visit(node.statement, cb);
         context.popScope();
+
+        for (const elseStatement of node.else_statements) {
+            setParent(elseStatement, node);
+            const { elseif, statement } = elseStatement;
+            if (elseif) {
+                setParent(elseif.expression, elseStatement);
+                context.visit(elseif.expression, cb);
+            }
+
+            setParent(statement, elseStatement);
+            context.pushScope(elseStatement);
+            context.visit(statement, cb);
+            context.popScope();
+        }
     },
-    [parser.ASTKinds.else_block_2]: stopVisiting,
     [parser.ASTKinds.interface_definition]: (
         node: parser.interface_definition,
         context: VisitorContext,

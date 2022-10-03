@@ -298,6 +298,40 @@ test("defer block", () => {
     `);
 });
 
+// https://github.com/Perryvw/dznlint/issues/2
+test("if without braces (#2)", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                on port.foo(): {
+                    if (a) return b;
+                    else if (c) return d;
+                    else illegal;
+                }
+            }
+        }
+    `);
+});
+
+// https://github.com/Perryvw/dznlint/issues/2
+test("if mixed with without braces (#2)", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            provides blocking IPort port;
+
+            behavior {
+                on port.foo(): {
+                    if (a) return b;
+                    else if (c) { return d; }
+                    else illegal;
+                }
+            }
+        }
+    `);
+});
+
 function expectCanParseWithoutDiagnostics(dzn: string) {
     const result = lintString(dzn, parseOnlyConfiguration);
     for (const diagnostic of result) {
