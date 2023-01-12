@@ -67,10 +67,11 @@ compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BR
   statements  := {_ statement=statement _}*
   statement   := declarative_statement | imperative_statement
 
-imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | compound
+imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
   defer_statement       := start=@ DEFER _ arguments=defer_arguments? _ statement=imperative_statement end=@
     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
+  dollar_statement      := start=@ expression=dollars end=@
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _

@@ -56,10 +56,11 @@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
-* imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | compound
+* imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
 *   defer_statement       := start=@ DEFER _ arguments=defer_arguments? _ statement=imperative_statement end=@
 *     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
+*   dollar_statement      := start=@ expression=dollars end=@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
 *     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _
@@ -263,9 +264,11 @@ export enum ASTKinds {
     imperative_statement_5 = "imperative_statement_5",
     imperative_statement_6 = "imperative_statement_6",
     imperative_statement_7 = "imperative_statement_7",
+    imperative_statement_8 = "imperative_statement_8",
     assignment = "assignment",
     defer_statement = "defer_statement",
     defer_arguments = "defer_arguments",
+    dollar_statement = "dollar_statement",
     expression_statement = "expression_statement",
     if_statement = "if_statement",
     else_statement = "else_statement",
@@ -712,14 +715,15 @@ export interface statements_$0 {
 export type statement = statement_1 | statement_2;
 export type statement_1 = declarative_statement;
 export type statement_2 = imperative_statement;
-export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5 | imperative_statement_6 | imperative_statement_7;
+export type imperative_statement = imperative_statement_1 | imperative_statement_2 | imperative_statement_3 | imperative_statement_4 | imperative_statement_5 | imperative_statement_6 | imperative_statement_7 | imperative_statement_8;
 export type imperative_statement_1 = if_statement;
 export type imperative_statement_2 = return_statement;
 export type imperative_statement_3 = variable_definition;
 export type imperative_statement_4 = assignment;
 export type imperative_statement_5 = defer_statement;
 export type imperative_statement_6 = expression_statement;
-export type imperative_statement_7 = compound;
+export type imperative_statement_7 = dollar_statement;
+export type imperative_statement_8 = compound;
 export interface assignment {
     kind: ASTKinds.assignment;
     start: PosInfo;
@@ -737,6 +741,12 @@ export interface defer_statement {
 export interface defer_arguments {
     kind: ASTKinds.defer_arguments;
     arguments: arguments;
+}
+export interface dollar_statement {
+    kind: ASTKinds.dollar_statement;
+    start: PosInfo;
+    expression: dollars;
+    end: PosInfo;
 }
 export interface expression_statement {
     kind: ASTKinds.expression_statement;
@@ -2187,6 +2197,7 @@ export class Parser {
             () => this.matchimperative_statement_5($$dpth + 1, $$cr),
             () => this.matchimperative_statement_6($$dpth + 1, $$cr),
             () => this.matchimperative_statement_7($$dpth + 1, $$cr),
+            () => this.matchimperative_statement_8($$dpth + 1, $$cr),
         ]);
     }
     public matchimperative_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_1> {
@@ -2208,6 +2219,9 @@ export class Parser {
         return this.matchexpression_statement($$dpth + 1, $$cr);
     }
     public matchimperative_statement_7($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_7> {
+        return this.matchdollar_statement($$dpth + 1, $$cr);
+    }
+    public matchimperative_statement_8($$dpth: number, $$cr?: ErrorTracker): Nullable<imperative_statement_8> {
         return this.matchcompound($$dpth + 1, $$cr);
     }
     public matchassignment($$dpth: number, $$cr?: ErrorTracker): Nullable<assignment> {
@@ -2267,6 +2281,23 @@ export class Parser {
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.defer_arguments, arguments: $scope$arguments};
+                }
+                return $$res;
+            });
+    }
+    public matchdollar_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<dollar_statement> {
+        return this.run<dollar_statement>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$expression: Nullable<dollars>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<dollar_statement> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && ($scope$expression = this.matchdollars($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.dollar_statement, start: $scope$start, expression: $scope$expression, end: $scope$end};
                 }
                 return $$res;
             });

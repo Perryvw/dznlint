@@ -332,6 +332,16 @@ test("if mixed with without braces (#2)", () => {
     `);
 });
 
+test("dollars statement", () => {
+    expectCanParseWithoutDiagnostics(`
+        import abc.dzn;
+
+        $#include "myHeader.h"$
+
+        interface myInterface {}
+    `);
+});
+
 function expectCanParseWithoutDiagnostics(dzn: string) {
     const result = lintString(dzn, parseOnlyConfiguration);
     for (const diagnostic of result) {

@@ -146,6 +146,14 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         setParent(node.statement, node);
         context.visit(node.statement, cb);
     },
+    [parser.ASTKinds.dollar_statement]: (
+        node: parser.dollar_statement,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        setParent(node.expression, node);
+        context.visit(node.expression, cb);
+    },
     [parser.ASTKinds.expression_statement]: (
         node: parser.expression_statement,
         context: VisitorContext,
