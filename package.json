@@ -13,7 +13,7 @@
         "dznlint": "dist/cli/dznlint.js"
     },
     "scripts": {
-        "generate-parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts",
+        "generate-parser": "ts-node src/grammar/preprocess-grammar.ts && tspeg src/grammar/dzn-grammar.gen.peg src/grammar/parser.ts",
         "build": "npm run generate-parser && tsc",
         "lint": "eslint . --ext .ts",
         "test": "jest",

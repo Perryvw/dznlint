@@ -1,2 +1,4 @@
 dist/
 node_modules/
+src/grammar/dzn-grammar.gen.peg
+src/grammar/parser.ts
