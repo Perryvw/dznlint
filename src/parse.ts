@@ -13,7 +13,7 @@ export function parseDznSource(source: InputSource): { ast?: parser.file; diagno
     const diagnostics = [];
     for (const err of errs) {
         diagnostics.push(
-            failedToFullyParseFile(DiagnosticSeverity.Error, err.toString(), source, {
+            failedToFullyParseFile(DiagnosticSeverity.Error, err.toString() + "\n At: " + source.fileContent.substring(err.pos.overallPos, source.fileContent.indexOf("\n", err.pos.overallPos + 1)), source, {
                 from: { index: err.pos.overallPos, line: err.pos.line, column: err.pos.offset },
                 to: { index: err.pos.overallPos + 1, line: err.pos.line, column: err.pos.offset + 1 },
             })

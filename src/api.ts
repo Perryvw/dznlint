@@ -33,13 +33,11 @@ function lintSource(source: InputSource, rules: Map<ASTKinds, Linter<ASTNode>[]>
     diagnostics.push(...parseDiagnostics);
 
     if (ast) {
-        if (ast) {
-            visitFile(ast, source, (node, context) => {
-                for (const linter of rules.get(node.kind) ?? []) {
-                    diagnostics.push(...linter(node, context));
-                }
-            });
-        }
+        visitFile(ast, source, (node, context) => {
+            for (const linter of rules.get(node.kind) ?? []) {
+                diagnostics.push(...linter(node, context));
+            }
+        });
     }
 
     return diagnostics;

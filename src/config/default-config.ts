@@ -7,11 +7,11 @@ type DefaultDznLintConfig = {
 };
 
 export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
-    // format: {
-    //     indent: "spaces",
-    //     indentWidth: 4,
-    //     braces:  "next-line"
-    // },
+    format: ["hint", {
+        indent: "spaces",
+        indentWidth: 4,
+        braces:  "same-line"
+    }],
 
     dead_code: "error",
     implicit_illegal: "warning",

@@ -1,7 +1,10 @@
 template WithPosition<inner> start=@ $inner end=@
 template KeepComments<inner> leading_comments=leading_comments _ $inner _ trailing_comment=sl_comment?
 
-file := _ statements={_ statement=root_statement _}* _ $
+file := _ statements={_ KeepComments<statement=root_statement> _}* _ $
+
+leading_comments := _ comments={_ comment=comment_or_whiteline _}*
+comment_or_whiteline := sl_comment | ml_comment
 
 root_statement :=
   namespace
@@ -10,7 +13,6 @@ root_statement :=
   | import_statement
   | interface_definition
   | component
-  | sl_comment
   | statement
 
 extern_definition := EXTERN __ type=identifier __ literal=dollars _ SEMICOLON
@@ -29,20 +31,19 @@ namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BR
   namespace_root      := statements={_ statement=namespace_statement _}*
   namespace_statement := type | namespace | interface_definition | component
 
-interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
+interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ KeepComments< type_or_event={type | event} > _}* _ behavior=behavior? _ BRACE_CLOSE
     event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
     event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
       event_direction := IN | OUT
       param_direction := INOUT | IN | OUT
 
-component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
+component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ KeepComments< port=port > _}* c4=_ body=body? c5=_ BRACE_CLOSE
   body := behavior | system
-    system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
-      instances_and_bindings := {_{instance | binding}_}*
-        instance := type=compound_name _ name=identifier _ SEMICOLON
-        binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
-          end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
+    system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ KeepComments< instance_or_binding={instance | binding} > _}* _ BRACE_CLOSE
+      instance := type=compound_name _ name=identifier _ SEMICOLON
+      binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
+        end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
 
   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
@@ -53,8 +54,8 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
 
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
-    behavior_statements := {_ statement=behavior_statement _}*
-      behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
+    behavior_statements := {_ KeepComments< statement=behavior_statement > _}*
+      behavior_statement := port | function_definition | variable_definition | declarative_statement | type
         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 
 declarative_statement := on | guard | compound
@@ -66,9 +67,12 @@ declarative_statement := on | guard | compound
         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
   guard := WithPosition< blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement >
 
+statement   := declarative_statement
+  | imperative_statement
+  | comment_or_whiteline
+
 compound := WithPosition< blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE >
   statements  := {_ statement=statement _}*
-  statement   := declarative_statement | imperative_statement
 
 imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
   assignment            := WithPosition< left=identifier _ ASSIGN _ right=expression _ SEMICOLON >
@@ -165,8 +169,8 @@ VOID                := 'void'
 NEWLINE             := '\n'
 
 
-sl_comment          := text='//[^\n]*\n'
-ml_comment          := '/\*' text={!ml_comment_end '.'}* ml_comment_end
+sl_comment          := WithPosition< text='//[^\n]*\n' >
+ml_comment          := WithPosition< '/\*' text={!ml_comment_end '.'}* ml_comment_end >
   ml_comment_end    := '\*' '/'
-_                   := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s*'
-__                  := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s+'
+_                   := '\s*'
+__                  := '\s+'

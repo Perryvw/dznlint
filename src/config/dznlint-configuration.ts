@@ -4,11 +4,11 @@ export type ConfigValueWithData<T> = [ConfigSeverity, T];
 
 export interface DznLintConfiguration {
     // Format configuration
-    // format: {
-    //     indent: "tabs" | "spaces",
-    //     indentWidth: number,
-    //     braces: "same-line" | "next-line"
-    // };
+    format: ConfigValueWithData<{
+        indent: "tabs" | "spaces",
+        indentWidth: number,
+        braces: "same-line" | "next-line"
+    }>;
     // Rule configuration
     dead_code: ConfigValue;
     implicit_illegal: ConfigValue;
