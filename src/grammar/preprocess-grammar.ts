@@ -42,16 +42,22 @@ function removeTemplateDefinitions(content: string): string {
 
 function substituteTemplates(content: string, templates: Template[]): string
 {
-    for (const template of templates)
+    let replaced = true;
+    while (replaced)
     {
-        content = content.replace(new RegExp(`${template.name}<[^>]*>`, "gm"), match => {
-            const argumentMatch = /<([^>]*)/.exec(match);
-            if (!argumentMatch) throw "incorrect template usage";
+        replaced = false;
+        for (const template of templates)
+        {
+            content = content.replace(new RegExp(`${template.name}<[^><]*>`, "gm"), match => {
+                replaced = true;
+                const argumentMatch = /<([^>]*)/.exec(match);
+                if (!argumentMatch) throw "incorrect template usage";
 
-            const argument = argumentMatch[1].trim();
-            return template.template.replace("$" + template.variableName, argument);
+                const argument = argumentMatch[1].trim();
+                return template.template.replace("$" + template.variableName, argument);
 
-        });
+            });
+        }
     }
     return content;
 }

@@ -1,18 +1,18 @@
 template WithPosition<inner> start=@ $inner end=@
-template KeepComments<inner> leading_comments=leading_comments _ $inner _ trailing_comment=sl_comment?
+template KeepComments<inner> leading_comments=leading_comments _ v=$inner '[^\S\r\n]*' trailing_comment=sl_comment?
 
-file := _ statements={_ KeepComments<statement=root_statement> _}* _ $
+file := _ statements={_ statement=root_statement _}* _ trailing_comments={comment=comment_or_whiteline _}* $
 
 leading_comments := _ comments={_ comment=comment_or_whiteline _}*
-comment_or_whiteline := sl_comment | ml_comment
+comment_or_whiteline := sl_comment | ml_comment | '\n[^\S\r\n]*\n'
 
 root_statement :=
-  namespace
-  | extern_definition
-  | type
-  | import_statement
-  | interface_definition
-  | component
+  KeepComments<namespace>
+  | KeepComments<extern_definition>
+  | KeepComments<type>
+  | KeepComments<import_statement>
+  | KeepComments<interface_definition>
+  | KeepComments<component>
   | statement
 
 extern_definition := EXTERN __ type=identifier __ literal=dollars _ SEMICOLON
@@ -28,19 +28,19 @@ type := enum_definition | int | extern_definition
     range := from=NUMBER _ DOTDOT _ to=NUMBER
 
 namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
-  namespace_root      := statements={_ statement=namespace_statement _}*
+  namespace_root      := statements={_ statement=namespace_statement _}* trailing_comments={comment=comment_or_whiteline _}*
   namespace_statement := type | namespace | interface_definition | component
 
-interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ KeepComments< type_or_event={type | event} > _}* _ behavior=behavior? _ BRACE_CLOSE
+interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ KeepComments< {type | event} > _}* _ behavior=behavior? _ BRACE_CLOSE
     event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
     event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
       event_direction := IN | OUT
       param_direction := INOUT | IN | OUT
 
-component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ KeepComments< port=port > _}* c4=_ body=body? c5=_ BRACE_CLOSE
+component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ KeepComments< port > _}* c4=_ body=body? c5=_ BRACE_CLOSE
   body := behavior | system
-    system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ KeepComments< instance_or_binding={instance | binding} > _}* _ BRACE_CLOSE
+    system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ KeepComments< {instance | binding} > _}* _ trailing_comments={comment=comment_or_whiteline _}* BRACE_CLOSE
       instance := type=compound_name _ name=identifier _ SEMICOLON
       binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
         end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
@@ -53,12 +53,15 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ KeepC
       formal := WithPosition< direction={direction=param_direction __}? type_name=compound_name __ name=identifier >
 
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
-  behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
-    behavior_statements := {_ KeepComments< statement=behavior_statement > _}*
+  behavior_compound := BRACE_OPEN _ statements=behavior_statements _ trailing_comments={comment=comment_or_whiteline _}* BRACE_CLOSE
+    behavior_statements := statements={_ KeepComments< behavior_statement > _}* _ trailing_comments={comment=comment_or_whiteline _}*
       behavior_statement := port | function_definition | variable_definition | declarative_statement | type
         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 
-declarative_statement := on | guard | compound
+declarative_statement := KeepComments<on> 
+  | KeepComments<guard> 
+  | KeepComments<compound>
+
   on := WithPosition< blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=imperative_statement >
     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
     on_trigger := name=compound_name _ parameters=on_formals?
@@ -69,12 +72,19 @@ declarative_statement := on | guard | compound
 
 statement   := declarative_statement
   | imperative_statement
-  | comment_or_whiteline
 
-compound := WithPosition< blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE >
+compound := WithPosition< blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ trailing_comments={comment=comment_or_whiteline _}* BRACE_CLOSE >
   statements  := {_ statement=statement _}*
 
-imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
+imperative_statement := KeepComments<if_statement>
+  | KeepComments<return_statement>
+  | KeepComments<variable_definition>
+  | KeepComments<assignment>
+  | KeepComments<defer_statement>
+  | KeepComments<expression_statement>
+  | KeepComments<dollar_statement>
+  | KeepComments<compound>
+
   assignment            := WithPosition< left=identifier _ ASSIGN _ right=expression _ SEMICOLON >
   defer_statement       := WithPosition< DEFER _ arguments=defer_arguments? _ statement=imperative_statement >
     defer_arguments       := PAREN_OPEN arguments=arguments PAREN_CLOSE

@@ -68,13 +68,13 @@ export function isOnEvent(node: ASTNode): node is on {
 
 export function systemInstances(system: system): instance[] {
     return system.instances_and_bindings
-        .map(e => e.instance_or_binding)
+        .map(e => e.v)
         .filter(e => e.kind === ASTKinds.instance) as instance[];
 }
 
 export function systemBindings(system: system): binding[] {
     return system.instances_and_bindings
-        .map(e => e.instance_or_binding)
+        .map(e => e.v)
         .filter(e => e.kind === ASTKinds.binding) as binding[];
 }
 

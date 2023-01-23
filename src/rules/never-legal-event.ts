@@ -18,7 +18,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
 
             if (node.behavior) {
                 // Find all in-events to check
-                const inEvents = node.body.map(e => e.type_or_event).filter(isInEvent);
+                const inEvents = node.body.map(e => e.v).filter(isInEvent);
                 const unSeenEvents = new Map(inEvents.map(e => [e.event_name.text, e]));
 
                 context.visit(node.behavior, subNode => {
@@ -57,7 +57,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
 };
 
 export function isIllegal(node: imperative_statement): boolean {
-    return isExpressionStatement(node) && node.expression.kind === ASTKinds.ILLEGAL;
+    return isExpressionStatement(node.v) && node.v.expression.kind === ASTKinds.ILLEGAL;
 }
 
 function isInEvent(node: event | type): node is event {

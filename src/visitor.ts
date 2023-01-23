@@ -81,9 +81,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
     [parser.ASTKinds.behavior]: (node: parser.behavior, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
-        for (const { statement } of node.block.statements) {
-            setParent(statement, node);
-            context.visit(statement, cb);
+        for (const e of node.block.statements.statements) {
+            setParent(e.v, node);
+            context.visit(e.v, cb);
         }
         context.popScope();
     },
@@ -117,9 +117,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
     [parser.ASTKinds.component]: (node: parser.component, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
-        for (const { port } of node.ports) {
-            setParent(port, node);
-            context.visit(port, cb);
+        for (const e of node.ports) {
+            setParent(e.v, node);
+            context.visit(e.v, cb);
         }
 
         if (node.body) {
@@ -224,15 +224,15 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         cb: VisitorCallback
     ) => {
         context.pushScope(node);
-        for (const { type_or_event } of node.body) {
-            setParent(type_or_event, node);
-            context.visit(type_or_event, cb);
+        for (const e of node.body) {
+            setParent(e.v, node);
+            context.visit(e.v, cb);
         }
 
         if (node.behavior) {
-            for (const { statement } of node.behavior.block.statements) {
-                setParent(statement, node);
-                context.visit(statement, cb);
+            for (const e of node.behavior.block.statements.statements) {
+                setParent(e.v, node);
+                context.visit(e.v, cb);
             }
         }
         context.popScope();
@@ -312,9 +312,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
     [parser.ASTKinds.system]: (node: parser.system, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
-        for (const { instance_or_binding } of node.instances_and_bindings) {
-            setParent(instance_or_binding, node);
-            context.visit(instance_or_binding, cb);
+        for (const s of node.instances_and_bindings) {
+            setParent(s.v, node);
+            context.visit(s.v, cb);
         }
         context.popScope();
     },

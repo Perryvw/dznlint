@@ -21,19 +21,19 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             const hasBlockingRequiresPorts = node.ports.some(
-                p => p.port.direction === "requires" && isPortBlocking(p.port)
+                p => p.v.direction === "requires" && isPortBlocking(p.v)
             );
 
             // If requires ports are present, all provided ports should be blocking
             if (hasBlockingRequiresPorts) {
-                for (const port of node.ports.filter(p => p.port.direction === "provides")) {
-                    if (!isPortBlocking(port.port)) {
+                for (const port of node.ports.filter(p => p.v.direction === "provides")) {
+                    if (!isPortBlocking(port.v)) {
                         diagnostics.push(
                             portMissingBlocking(
                                 config.severity,
                                 "Port needs to be blocking because component has blocking requires ports.",
                                 context.source,
-                                nodeToSourceRange(port.port.name)
+                                nodeToSourceRange(port.v.name)
                             )
                         );
                     }
@@ -45,8 +45,8 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
             // Otherwise, check for blocking keywords in the component behavior
             const ports = new Map(
                 node.ports
-                    .filter(p => p.port.direction === "provides")
-                    .map(p => [p.port.name.text, { port: p.port, blockingOns: [] as compound_name[] }])
+                    .filter(p => p.v.direction === "provides")
+                    .map(p => [p.v.name.text, { port: p.v, blockingOns: [] as compound_name[] }])
             );
 
             context.visit(node.body, subNode => {

@@ -15,8 +15,8 @@ export const implicit_illegal: RuleFactory = factoryContext => {
     if (config.isEnabled) {
         factoryContext.registerRule<on>(ASTKinds.on, (node, context) => {
             if (
-                node.statement.kind === ASTKinds.expression_statement &&
-                node.statement.expression.kind === ASTKinds.ILLEGAL
+                node.statement.v.kind === ASTKinds.expression_statement &&
+                node.statement.v.expression.kind === ASTKinds.ILLEGAL
             ) {
                 return [
                     implicitIllegal(

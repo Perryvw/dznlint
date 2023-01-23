@@ -1,4 +1,5 @@
 import { formatString } from "../src";
+import { formatDiagnostic } from "../src/diagnostic";
 
 test("preserves comments", () => {
     const result = formatString(`
@@ -25,6 +26,10 @@ test("preserves comments", () => {
     }
     else
     {
-        console.log(result.errors);
+        for (const err of result.errors)
+        {
+            console.log(formatDiagnostic(err));
+        }
+        //console.log(result.errors.map(formatDiagnostic));
     }
 });

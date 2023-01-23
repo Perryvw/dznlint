@@ -20,7 +20,7 @@ export const never_fired_event: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             // Look up all out events to check
-            const outEvents = node.body.map(e => e.type_or_event).filter(isOutEvent);
+            const outEvents = node.body.map(e => e.v).filter(isOutEvent);
             const unSeenEvents = new Map(outEvents.map(e => [e.event_name.text, e]));
 
             context.visit(node.behavior, subNode => {

@@ -17,7 +17,7 @@ export const no_unused_ports: RuleFactory = factoryContext => {
                 const system = node.body;
 
                 const seenPorts = new Map<string, { port: port; seen: boolean }>();
-                for (const { port } of node.ports) {
+                for (const { v: port } of node.ports) {
                     seenPorts.set(port.name.text, { port, seen: false });
                 }
 
