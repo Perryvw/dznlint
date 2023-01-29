@@ -180,7 +180,7 @@ NEWLINE             := '\n'
 
 
 sl_comment          := WithPosition< text='//[^\n]*\n' >
-ml_comment          := WithPosition< '/\*' text={!ml_comment_end '.'}* ml_comment_end >
+ml_comment          := WithPosition< '/\*' text={!ml_comment_end c='.'}* ml_comment_end >
   ml_comment_end    := '\*' '/'
 _                   := '\s*'
 __                  := '\s+'
