@@ -58,7 +58,8 @@
 *   statement   := declarative_statement | imperative_statement
 * imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
-*   defer_statement       := start=@ DEFER _ arguments=defer_arguments? _ statement=imperative_statement end=@
+*   defer_statement       := start=@ header=defer_header _ statement=imperative_statement end=@
+*     defer_header        := start=@ DEFER _ arguments=defer_arguments? end=@
 *     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
 *   dollar_statement      := start=@ expression=dollars end=@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
@@ -150,7 +151,7 @@
 */
 type Nullable<T> = T | null;
 type $$RuleType<T> = () => Nullable<T>;
-interface ASTNodeIntf {
+export interface ASTNodeIntf {
     kind: ASTKinds;
 }
 export enum ASTKinds {
@@ -267,6 +268,7 @@ export enum ASTKinds {
     imperative_statement_8 = "imperative_statement_8",
     assignment = "assignment",
     defer_statement = "defer_statement",
+    defer_header = "defer_header",
     defer_arguments = "defer_arguments",
     dollar_statement = "dollar_statement",
     expression_statement = "expression_statement",
@@ -734,8 +736,14 @@ export interface assignment {
 export interface defer_statement {
     kind: ASTKinds.defer_statement;
     start: PosInfo;
-    arguments: Nullable<defer_arguments>;
+    header: defer_header;
     statement: imperative_statement;
+    end: PosInfo;
+}
+export interface defer_header {
+    kind: ASTKinds.defer_header;
+    start: PosInfo;
+    arguments: Nullable<defer_arguments>;
     end: PosInfo;
 }
 export interface defer_arguments {
@@ -2252,20 +2260,37 @@ export class Parser {
         return this.run<defer_statement>($$dpth,
             () => {
                 let $scope$start: Nullable<PosInfo>;
-                let $scope$arguments: Nullable<Nullable<defer_arguments>>;
+                let $scope$header: Nullable<defer_header>;
                 let $scope$statement: Nullable<imperative_statement>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<defer_statement> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && this.matchDEFER($$dpth + 1, $$cr) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$arguments = this.matchdefer_arguments($$dpth + 1, $$cr)) || true)
+                    && ($scope$header = this.matchdefer_header($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.defer_statement, start: $scope$start, arguments: $scope$arguments, statement: $scope$statement, end: $scope$end};
+                    $$res = {kind: ASTKinds.defer_statement, start: $scope$start, header: $scope$header, statement: $scope$statement, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchdefer_header($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_header> {
+        return this.run<defer_header>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$arguments: Nullable<Nullable<defer_arguments>>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<defer_header> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.matchDEFER($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && (($scope$arguments = this.matchdefer_arguments($$dpth + 1, $$cr)) || true)
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.defer_header, start: $scope$start, arguments: $scope$arguments, end: $scope$end};
                 }
                 return $$res;
             });

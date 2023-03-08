@@ -137,8 +137,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.popScope();
     },
     [parser.ASTKinds.defer_statement]: (node: parser.defer_statement, context: VisitorContext, cb: VisitorCallback) => {
-        if (node.arguments) {
-            for (const argument of node.arguments.arguments) {
+        if (node.header.arguments) {
+            for (const argument of node.header.arguments.arguments) {
                 setParent(argument.expression, node);
                 context.visit(argument.expression, cb);
             }

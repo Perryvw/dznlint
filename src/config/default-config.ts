@@ -32,6 +32,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     no_bool_out_parameters: "error",
     no_duplicate_parameters: "error",
     no_duplicate_port_binding: "error",
+    no_empty_defer_capture: "warning",
     no_recursive_system: "error",
     no_shadowing: "error",
     no_unknown_port_binding: "error",

@@ -128,6 +128,14 @@ Ports cannot be bound more than once.
 
 ---
 
+## no_empty_defer_capture
+
+Defer statements should capture one or more state variables to prevent unexpected verification time explosion due to the defer queue unexpectedly growing.
+
+**Possible values:** "hint" | **"warning"** | "error"
+
+---
+
 ## no_recursive_system
 
 Systems cannot contain instances of themself.

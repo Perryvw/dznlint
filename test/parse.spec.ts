@@ -1,7 +1,8 @@
 import * as path from "path";
 import { formatDiagnostic } from "../src/diagnostic";
-import { lintFiles, lintString } from "../src";
+import { DiagnosticCode, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
+import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
@@ -240,7 +241,8 @@ test("blocking with guard", () => {
 });
 
 test("defer statement", () => {
-    expectCanParseWithoutDiagnostics(`
+    expectCanParseWithoutDiagnostics(
+        `
         component c {
             provides blocking IPort port;
 
@@ -250,11 +252,14 @@ test("defer statement", () => {
                 }
             }
         }
-    `);
+    `,
+        [emptyDeferCapture.code]
+    );
 });
 
 test("defer with empty capture", () => {
-    expectCanParseWithoutDiagnostics(`
+    expectCanParseWithoutDiagnostics(
+        `
         component c {
             provides blocking IPort port;
 
@@ -264,7 +269,9 @@ test("defer with empty capture", () => {
                 }
             }
         }
-    `);
+    `,
+        [emptyDeferCapture.code]
+    );
 });
 
 test("defer with capture", () => {
@@ -282,7 +289,8 @@ test("defer with capture", () => {
 });
 
 test("defer block", () => {
-    expectCanParseWithoutDiagnostics(`
+    expectCanParseWithoutDiagnostics(
+        `
         component c {
             provides blocking IPort port;
 
@@ -295,7 +303,9 @@ test("defer block", () => {
                 }
             }
         }
-    `);
+    `,
+        [emptyDeferCapture.code]
+    );
 });
 
 // https://github.com/Perryvw/dznlint/issues/2
@@ -342,10 +352,15 @@ test("dollars statement", () => {
     `);
 });
 
-function expectCanParseWithoutDiagnostics(dzn: string) {
+function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
     const result = lintString(dzn, parseOnlyConfiguration);
-    for (const diagnostic of result) {
+
+    const ignoreCodesSet = new Set(ignoreCodes);
+    const filteredDiagnostics = result.filter(d => !ignoreCodesSet.has(d.code));
+
+    for (const diagnostic of filteredDiagnostics) {
         console.log(formatDiagnostic(diagnostic));
     }
-    expect(result).toHaveLength(0);
+
+    expect(filteredDiagnostics).toHaveLength(0);
 }
