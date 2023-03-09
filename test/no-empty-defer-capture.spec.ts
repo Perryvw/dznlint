@@ -25,10 +25,10 @@ test("empty defer capture", () => {
     });
 });
 
-test("missing defer capture", () => {
+test("implicit defer capture", () => {
     testdznlint({
         diagnostic: emptyDeferCapture.code,
-        fail: `component C {
+        pass: `component C {
             behavior {
                 on port.event(): {
                     defer {

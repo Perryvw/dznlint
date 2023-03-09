@@ -15,7 +15,7 @@ export const no_empty_defer_capture: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         factoryContext.registerRule<defer_statement>(ASTKinds.defer_statement, (node, context) => {
-            if (node.header.arguments === null || node.header.arguments?.arguments.length == 0) {
+            if (node.header.arguments?.arguments.length == 0) {
                 return [
                     emptyDeferCapture(
                         config.severity,
