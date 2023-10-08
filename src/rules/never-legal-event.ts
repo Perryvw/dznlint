@@ -2,7 +2,7 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
-import { ASTKinds, event, imperative_statement, interface_definition, type } from "../grammar/parser";
+import { ASTKinds, event, interface_definition, statement, type_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { headTailToList, isExpressionStatement, isIdentifier, isOnEvent, nodeToSourceRange } from "../util";
 import { VisitResult } from "../visitor";
@@ -56,10 +56,10 @@ export const never_legal_event: RuleFactory = factoryContext => {
     }
 };
 
-export function isIllegal(node: imperative_statement): boolean {
+export function isIllegal(node: statement): boolean {
     return isExpressionStatement(node) && node.expression.kind === ASTKinds.ILLEGAL;
 }
 
-function isInEvent(node: event | type): node is event {
+function isInEvent(node: event | type_definition): node is event {
     return node.kind === ASTKinds.event && node.direction === "in";
 }
