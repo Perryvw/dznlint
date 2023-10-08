@@ -4,7 +4,7 @@
 * root_statement :=
 *   namespace
 *   | extern_definition
-*   | type
+*   | type_definition
 *   | import_statement
 *   | interface_definition
 *   | component
@@ -13,15 +13,15 @@
 * extern_definition := EXTERN __ type=identifier __ literal=dollars _ SEMICOLON
 * import_statement := IMPORT __ file_name=file_name _ SEMICOLON
 *   file_name := '[^;]+'
-* type := enum_definition | int | extern_definition
+* type_definition := enum_definition | int | extern_definition
 *   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
 *     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier?}*
 *   int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
 * namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
 *   namespace_root      := statements={_ statement=namespace_statement _}*
-*   namespace_statement := type | namespace | interface_definition | component
-* interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type | event} _}* _ behavior=behavior? _ BRACE_CLOSE
+*   namespace_statement := type_definition | namespace | interface_definition | component
+* interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
 *     event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
 *     event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
@@ -43,10 +43,10 @@
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
-*       behavior_statement := port | function_definition | variable_definition | declarative_statement | type | sl_comment
+*       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
 *         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
 * declarative_statement := on | guard | compound
-*   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=imperative_statement end=@
+*   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=statement end=@
 *     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
 *     on_trigger := name=compound_name _ parameters=on_formals?
 *     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
@@ -168,9 +168,9 @@ export enum ASTKinds {
     extern_definition = "extern_definition",
     import_statement = "import_statement",
     file_name = "file_name",
-    type_1 = "type_1",
-    type_2 = "type_2",
-    type_3 = "type_3",
+    type_definition_1 = "type_definition_1",
+    type_definition_2 = "type_definition_2",
+    type_definition_3 = "type_definition_3",
     enum_definition = "enum_definition",
     fields = "fields",
     fields_$0 = "fields_$0",
@@ -407,7 +407,7 @@ export interface file_$0 {
 export type root_statement = root_statement_1 | root_statement_2 | root_statement_3 | root_statement_4 | root_statement_5 | root_statement_6 | root_statement_7 | root_statement_8;
 export type root_statement_1 = namespace;
 export type root_statement_2 = extern_definition;
-export type root_statement_3 = type;
+export type root_statement_3 = type_definition;
 export type root_statement_4 = import_statement;
 export type root_statement_5 = interface_definition;
 export type root_statement_6 = component;
@@ -423,10 +423,10 @@ export interface import_statement {
     file_name: file_name;
 }
 export type file_name = string;
-export type type = type_1 | type_2 | type_3;
-export type type_1 = enum_definition;
-export type type_2 = int;
-export type type_3 = extern_definition;
+export type type_definition = type_definition_1 | type_definition_2 | type_definition_3;
+export type type_definition_1 = enum_definition;
+export type type_definition_2 = int;
+export type type_definition_3 = extern_definition;
 export interface enum_definition {
     kind: ASTKinds.enum_definition;
     name: identifier;
@@ -465,7 +465,7 @@ export interface namespace_root_$0 {
     statement: namespace_statement;
 }
 export type namespace_statement = namespace_statement_1 | namespace_statement_2 | namespace_statement_3 | namespace_statement_4;
-export type namespace_statement_1 = type;
+export type namespace_statement_1 = type_definition;
 export type namespace_statement_2 = namespace;
 export type namespace_statement_3 = interface_definition;
 export type namespace_statement_4 = component;
@@ -480,7 +480,7 @@ export interface interface_definition_$0 {
     type_or_event: interface_definition_$0_$0;
 }
 export type interface_definition_$0_$0 = interface_definition_$0_$0_1 | interface_definition_$0_$0_2;
-export type interface_definition_$0_$0_1 = type;
+export type interface_definition_$0_$0_1 = type_definition;
 export type interface_definition_$0_$0_2 = event;
 export interface event {
     kind: ASTKinds.event;
@@ -634,7 +634,7 @@ export type behavior_statement_1 = port;
 export type behavior_statement_2 = function_definition;
 export type behavior_statement_3 = variable_definition;
 export type behavior_statement_4 = declarative_statement;
-export type behavior_statement_5 = type;
+export type behavior_statement_5 = type_definition;
 export type behavior_statement_6 = sl_comment;
 export interface function_definition {
     kind: ASTKinds.function_definition;
@@ -652,7 +652,7 @@ export interface on {
     start: PosInfo;
     blocking: Nullable<BLOCKING>;
     on_trigger_list: on_trigger_list;
-    statement: imperative_statement;
+    statement: statement;
     end: PosInfo;
 }
 export interface on_trigger_list {
@@ -1018,7 +1018,7 @@ export class Parser {
                 let $$res: Nullable<file> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$statements = this.loop<file_$0>(() => this.matchfile_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$statements = this.loop<file_$0>(() => this.matchfile_$0($$dpth + 1, $$cr), 0, -1)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.match$EOF($$cr) !== null
                 ) {
@@ -1061,7 +1061,7 @@ export class Parser {
         return this.matchextern_definition($$dpth + 1, $$cr);
     }
     public matchroot_statement_3($$dpth: number, $$cr?: ErrorTracker): Nullable<root_statement_3> {
-        return this.matchtype($$dpth + 1, $$cr);
+        return this.matchtype_definition($$dpth + 1, $$cr);
     }
     public matchroot_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<root_statement_4> {
         return this.matchimport_statement($$dpth + 1, $$cr);
@@ -1116,22 +1116,22 @@ export class Parser {
             });
     }
     public matchfile_name($$dpth: number, $$cr?: ErrorTracker): Nullable<file_name> {
-        return this.regexAccept(String.raw`(?:[^;]+)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:[^;]+)`, "", $$dpth + 1, $$cr);
     }
-    public matchtype($$dpth: number, $$cr?: ErrorTracker): Nullable<type> {
-        return this.choice<type>([
-            () => this.matchtype_1($$dpth + 1, $$cr),
-            () => this.matchtype_2($$dpth + 1, $$cr),
-            () => this.matchtype_3($$dpth + 1, $$cr),
+    public matchtype_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<type_definition> {
+        return this.choice<type_definition>([
+            () => this.matchtype_definition_1($$dpth + 1, $$cr),
+            () => this.matchtype_definition_2($$dpth + 1, $$cr),
+            () => this.matchtype_definition_3($$dpth + 1, $$cr),
         ]);
     }
-    public matchtype_1($$dpth: number, $$cr?: ErrorTracker): Nullable<type_1> {
+    public matchtype_definition_1($$dpth: number, $$cr?: ErrorTracker): Nullable<type_definition_1> {
         return this.matchenum_definition($$dpth + 1, $$cr);
     }
-    public matchtype_2($$dpth: number, $$cr?: ErrorTracker): Nullable<type_2> {
+    public matchtype_definition_2($$dpth: number, $$cr?: ErrorTracker): Nullable<type_definition_2> {
         return this.matchint($$dpth + 1, $$cr);
     }
-    public matchtype_3($$dpth: number, $$cr?: ErrorTracker): Nullable<type_3> {
+    public matchtype_definition_3($$dpth: number, $$cr?: ErrorTracker): Nullable<type_definition_3> {
         return this.matchextern_definition($$dpth + 1, $$cr);
     }
     public matchenum_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<enum_definition> {
@@ -1166,7 +1166,7 @@ export class Parser {
                 let $$res: Nullable<fields> = null;
                 if (true
                     && (($scope$head = this.matchmember_identifier($$dpth + 1, $$cr)) || true)
-                    && ($scope$tail = this.loop<fields_$0>(() => this.matchfields_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$tail = this.loop<fields_$0>(() => this.matchfields_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
                     $$res = {kind: ASTKinds.fields, head: $scope$head, tail: $scope$tail};
                 }
@@ -1257,7 +1257,7 @@ export class Parser {
                 let $scope$statements: Nullable<namespace_root_$0[]>;
                 let $$res: Nullable<namespace_root> = null;
                 if (true
-                    && ($scope$statements = this.loop<namespace_root_$0>(() => this.matchnamespace_root_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$statements = this.loop<namespace_root_$0>(() => this.matchnamespace_root_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
                     $$res = {kind: ASTKinds.namespace_root, statements: $scope$statements};
                 }
@@ -1288,7 +1288,7 @@ export class Parser {
         ]);
     }
     public matchnamespace_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<namespace_statement_1> {
-        return this.matchtype($$dpth + 1, $$cr);
+        return this.matchtype_definition($$dpth + 1, $$cr);
     }
     public matchnamespace_statement_2($$dpth: number, $$cr?: ErrorTracker): Nullable<namespace_statement_2> {
         return this.matchnamespace($$dpth + 1, $$cr);
@@ -1313,7 +1313,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$body = this.loop<interface_definition_$0>(() => this.matchinterface_definition_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$body = this.loop<interface_definition_$0>(() => this.matchinterface_definition_$0($$dpth + 1, $$cr), 0, -1)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$behavior = this.matchbehavior($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -1346,7 +1346,7 @@ export class Parser {
         ]);
     }
     public matchinterface_definition_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<interface_definition_$0_$0_1> {
-        return this.matchtype($$dpth + 1, $$cr);
+        return this.matchtype_definition($$dpth + 1, $$cr);
     }
     public matchinterface_definition_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<interface_definition_$0_$0_2> {
         return this.matchevent($$dpth + 1, $$cr);
@@ -1387,7 +1387,7 @@ export class Parser {
                 let $$res: Nullable<event_params> = null;
                 if (true
                     && ($scope$head = this.matchevent_parameter($$dpth + 1, $$cr)) !== null
-                    && ($scope$tail = this.loop<event_params_$0>(() => this.matchevent_params_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$tail = this.loop<event_params_$0>(() => this.matchevent_params_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
                     $$res = {kind: ASTKinds.event_params, head: $scope$head, tail: $scope$tail};
                 }
@@ -1489,7 +1489,7 @@ export class Parser {
                     && ($scope$c2 = this.match_($$dpth + 1, $$cr)) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && ($scope$c3 = this.match_($$dpth + 1, $$cr)) !== null
-                    && ($scope$ports = this.loop<component_$0>(() => this.matchcomponent_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$ports = this.loop<component_$0>(() => this.matchcomponent_$0($$dpth + 1, $$cr), 0, -1)) !== null
                     && ($scope$c4 = this.match_($$dpth + 1, $$cr)) !== null
                     && (($scope$body = this.matchbody($$dpth + 1, $$cr)) || true)
                     && ($scope$c5 = this.match_($$dpth + 1, $$cr)) !== null
@@ -1537,7 +1537,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$instances_and_bindings = this.loop<system_$0>(() => this.matchsystem_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$instances_and_bindings = this.loop<system_$0>(() => this.matchsystem_$0($$dpth + 1, $$cr), 0, -1)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
@@ -1574,7 +1574,7 @@ export class Parser {
         return this.matchbinding($$dpth + 1, $$cr);
     }
     public matchinstances_and_bindings($$dpth: number, $$cr?: ErrorTracker): Nullable<instances_and_bindings> {
-        return this.loop<instances_and_bindings_$0>(() => this.matchinstances_and_bindings_$0($$dpth + 1, $$cr), true);
+        return this.loop<instances_and_bindings_$0>(() => this.matchinstances_and_bindings_$0($$dpth + 1, $$cr), 0, -1);
     }
     public matchinstances_and_bindings_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<instances_and_bindings_$0> {
         return this.run<instances_and_bindings_$0>($$dpth,
@@ -1714,7 +1714,7 @@ export class Parser {
         return this.matchREQUIRES($$dpth + 1, $$cr);
     }
     public matchport_qualifiers($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers> {
-        return this.loop<port_qualifiers_$0>(() => this.matchport_qualifiers_$0($$dpth + 1, $$cr), true);
+        return this.loop<port_qualifiers_$0>(() => this.matchport_qualifiers_$0($$dpth + 1, $$cr), 0, -1);
     }
     public matchport_qualifiers_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers_$0> {
         return this.run<port_qualifiers_$0>($$dpth,
@@ -1772,7 +1772,7 @@ export class Parser {
                 let $$res: Nullable<formal_list> = null;
                 if (true
                     && ($scope$head = this.matchformal($$dpth + 1, $$cr)) !== null
-                    && ($scope$tail = this.loop<formal_list_$0>(() => this.matchformal_list_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$tail = this.loop<formal_list_$0>(() => this.matchformal_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
                     $$res = {kind: ASTKinds.formal_list, head: $scope$head, tail: $scope$tail};
                 }
@@ -1867,7 +1867,7 @@ export class Parser {
             });
     }
     public matchbehavior_statements($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statements> {
-        return this.loop<behavior_statements_$0>(() => this.matchbehavior_statements_$0($$dpth + 1, $$cr), true);
+        return this.loop<behavior_statements_$0>(() => this.matchbehavior_statements_$0($$dpth + 1, $$cr), 0, -1);
     }
     public matchbehavior_statements_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statements_$0> {
         return this.run<behavior_statements_$0>($$dpth,
@@ -1907,7 +1907,7 @@ export class Parser {
         return this.matchdeclarative_statement($$dpth + 1, $$cr);
     }
     public matchbehavior_statement_5($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_5> {
-        return this.matchtype($$dpth + 1, $$cr);
+        return this.matchtype_definition($$dpth + 1, $$cr);
     }
     public matchbehavior_statement_6($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_6> {
         return this.matchsl_comment($$dpth + 1, $$cr);
@@ -1956,7 +1956,7 @@ export class Parser {
                 let $scope$start: Nullable<PosInfo>;
                 let $scope$blocking: Nullable<Nullable<BLOCKING>>;
                 let $scope$on_trigger_list: Nullable<on_trigger_list>;
-                let $scope$statement: Nullable<imperative_statement>;
+                let $scope$statement: Nullable<statement>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<on> = null;
                 if (true
@@ -1969,7 +1969,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOLON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
+                    && ($scope$statement = this.matchstatement($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.on, start: $scope$start, blocking: $scope$blocking, on_trigger_list: $scope$on_trigger_list, statement: $scope$statement, end: $scope$end};
@@ -1985,7 +1985,7 @@ export class Parser {
                 let $$res: Nullable<on_trigger_list> = null;
                 if (true
                     && (($scope$head = this.matchon_trigger($$dpth + 1, $$cr)) || true)
-                    && ($scope$tail = this.loop<on_trigger_list_$0>(() => this.matchon_trigger_list_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$tail = this.loop<on_trigger_list_$0>(() => this.matchon_trigger_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
                     $$res = {kind: ASTKinds.on_trigger_list, head: $scope$head, tail: $scope$tail};
                 }
@@ -2049,7 +2049,7 @@ export class Parser {
                 let $$res: Nullable<on_formal_list> = null;
                 if (true
                     && ($scope$head = this.matchon_formal($$dpth + 1, $$cr)) !== null
-                    && ($scope$tail = this.loop<on_formal_list_$0>(() => this.matchon_formal_list_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$tail = this.loop<on_formal_list_$0>(() => this.matchon_formal_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
                     $$res = {kind: ASTKinds.on_formal_list, head: $scope$head, tail: $scope$tail};
                 }
@@ -2167,7 +2167,7 @@ export class Parser {
             });
     }
     public matchstatements($$dpth: number, $$cr?: ErrorTracker): Nullable<statements> {
-        return this.loop<statements_$0>(() => this.matchstatements_$0($$dpth + 1, $$cr), true);
+        return this.loop<statements_$0>(() => this.matchstatements_$0($$dpth + 1, $$cr), 0, -1);
     }
     public matchstatements_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<statements_$0> {
         return this.run<statements_$0>($$dpth,
@@ -2366,7 +2366,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$statement = this.matchimperative_statement($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$else_statements = this.loop<else_statement>(() => this.matchelse_statement($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$else_statements = this.loop<else_statement>(() => this.matchelse_statement($$dpth + 1, $$cr), 0, -1)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.if_statement, start: $scope$start, expression: $scope$expression, statement: $scope$statement, else_statements: $scope$else_statements, end: $scope$end};
@@ -2629,7 +2629,7 @@ export class Parser {
             });
     }
     public matcharguments($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments> {
-        return this.loop<arguments_$0>(() => this.matcharguments_$0($$dpth + 1, $$cr), true);
+        return this.loop<arguments_$0>(() => this.matcharguments_$0($$dpth + 1, $$cr), 0, -1);
     }
     public matcharguments_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments_$0> {
         return this.run<arguments_$0>($$dpth,
@@ -2654,7 +2654,7 @@ export class Parser {
                 let $$res: Nullable<dollars> = null;
                 if (true
                     && this.matchDOLLAR($$dpth + 1, $$cr) !== null
-                    && ($scope$value = this.regexAccept(String.raw`(?:[^$]*)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$value = this.regexAccept(String.raw`(?:[^$]*)`, "", $$dpth + 1, $$cr)) !== null
                     && this.matchDOLLAR($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.dollars, value: $scope$value};
@@ -2794,7 +2794,7 @@ export class Parser {
                 let $$res: Nullable<identifier> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z_][a-zA-Z0-9_]*)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z_][a-zA-Z0-9_]*)`, "", $$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.identifier, start: $scope$start, text: $scope$text, end: $scope$end};
@@ -2811,7 +2811,7 @@ export class Parser {
                 let $$res: Nullable<member_identifier> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z0-9_]+)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$text = this.regexAccept(String.raw`(?:[a-zA-Z0-9_]+)`, "", $$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.member_identifier, start: $scope$start, text: $scope$text, end: $scope$end};
@@ -2825,7 +2825,7 @@ export class Parser {
                 let $$res: Nullable<NUMBER> = null;
                 if (true
                     && ((this.matchMINUS($$dpth + 1, $$cr)) || true)
-                    && this.regexAccept(String.raw`(?:[0-9]+)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:[0-9]+)`, "", $$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.NUMBER, };
                 }
@@ -2833,85 +2833,85 @@ export class Parser {
             });
     }
     public matchASTERISK($$dpth: number, $$cr?: ErrorTracker): Nullable<ASTERISK> {
-        return this.regexAccept(String.raw`(?:\*)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\*)`, "", $$dpth + 1, $$cr);
     }
     public matchDOLLAR($$dpth: number, $$cr?: ErrorTracker): Nullable<DOLLAR> {
-        return this.regexAccept(String.raw`(?:\$)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\$)`, "", $$dpth + 1, $$cr);
     }
     public matchBRACE_OPEN($$dpth: number, $$cr?: ErrorTracker): Nullable<BRACE_OPEN> {
-        return this.regexAccept(String.raw`(?:{)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:{)`, "", $$dpth + 1, $$cr);
     }
     public matchBRACE_CLOSE($$dpth: number, $$cr?: ErrorTracker): Nullable<BRACE_CLOSE> {
-        return this.regexAccept(String.raw`(?:})`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:})`, "", $$dpth + 1, $$cr);
     }
     public matchBRACKET_OPEN($$dpth: number, $$cr?: ErrorTracker): Nullable<BRACKET_OPEN> {
-        return this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\[)`, "", $$dpth + 1, $$cr);
     }
     public matchBRACKET_CLOSE($$dpth: number, $$cr?: ErrorTracker): Nullable<BRACKET_CLOSE> {
-        return this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\])`, "", $$dpth + 1, $$cr);
     }
     public matchPAREN_OPEN($$dpth: number, $$cr?: ErrorTracker): Nullable<PAREN_OPEN> {
-        return this.regexAccept(String.raw`(?:\()`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\()`, "", $$dpth + 1, $$cr);
     }
     public matchPAREN_CLOSE($$dpth: number, $$cr?: ErrorTracker): Nullable<PAREN_CLOSE> {
-        return this.regexAccept(String.raw`(?:\))`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\))`, "", $$dpth + 1, $$cr);
     }
     public matchSEMICOLON($$dpth: number, $$cr?: ErrorTracker): Nullable<SEMICOLON> {
-        return this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:;)`, "", $$dpth + 1, $$cr);
     }
     public matchCOLON($$dpth: number, $$cr?: ErrorTracker): Nullable<COLON> {
-        return this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?::)`, "", $$dpth + 1, $$cr);
     }
     public matchDOT($$dpth: number, $$cr?: ErrorTracker): Nullable<DOT> {
-        return this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\.)`, "", $$dpth + 1, $$cr);
     }
     public matchDOTDOT($$dpth: number, $$cr?: ErrorTracker): Nullable<DOTDOT> {
-        return this.regexAccept(String.raw`(?:\.\.)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\.\.)`, "", $$dpth + 1, $$cr);
     }
     public matchCOMMA($$dpth: number, $$cr?: ErrorTracker): Nullable<COMMA> {
-        return this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:,)`, "", $$dpth + 1, $$cr);
     }
     public matchBIND($$dpth: number, $$cr?: ErrorTracker): Nullable<BIND> {
-        return this.regexAccept(String.raw`(?:<=>)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:<=>)`, "", $$dpth + 1, $$cr);
     }
     public matchASSIGN($$dpth: number, $$cr?: ErrorTracker): Nullable<ASSIGN> {
-        return this.regexAccept(String.raw`(?:=)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:=)`, "", $$dpth + 1, $$cr);
     }
     public matchLEFT_ARROW($$dpth: number, $$cr?: ErrorTracker): Nullable<LEFT_ARROW> {
-        return this.regexAccept(String.raw`(?:<-)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:<-)`, "", $$dpth + 1, $$cr);
     }
     public matchOR($$dpth: number, $$cr?: ErrorTracker): Nullable<OR> {
-        return this.regexAccept(String.raw`(?:\|\|)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\|\|)`, "", $$dpth + 1, $$cr);
     }
     public matchAND($$dpth: number, $$cr?: ErrorTracker): Nullable<AND> {
-        return this.regexAccept(String.raw`(?:&&)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:&&)`, "", $$dpth + 1, $$cr);
     }
     public matchEQUAL($$dpth: number, $$cr?: ErrorTracker): Nullable<EQUAL> {
-        return this.regexAccept(String.raw`(?:==)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:==)`, "", $$dpth + 1, $$cr);
     }
     public matchNOT_EQUAL($$dpth: number, $$cr?: ErrorTracker): Nullable<NOT_EQUAL> {
-        return this.regexAccept(String.raw`(?:!=)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:!=)`, "", $$dpth + 1, $$cr);
     }
     public matchLESS($$dpth: number, $$cr?: ErrorTracker): Nullable<LESS> {
-        return this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:<)`, "", $$dpth + 1, $$cr);
     }
     public matchLESS_EQUAL($$dpth: number, $$cr?: ErrorTracker): Nullable<LESS_EQUAL> {
-        return this.regexAccept(String.raw`(?:<=)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:<=)`, "", $$dpth + 1, $$cr);
     }
     public matchGREATER($$dpth: number, $$cr?: ErrorTracker): Nullable<GREATER> {
-        return this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:>)`, "", $$dpth + 1, $$cr);
     }
     public matchGREATER_EQUAL($$dpth: number, $$cr?: ErrorTracker): Nullable<GREATER_EQUAL> {
-        return this.regexAccept(String.raw`(?:>=)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:>=)`, "", $$dpth + 1, $$cr);
     }
     public matchPLUS($$dpth: number, $$cr?: ErrorTracker): Nullable<PLUS> {
-        return this.regexAccept(String.raw`(?:\+)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\+)`, "", $$dpth + 1, $$cr);
     }
     public matchMINUS($$dpth: number, $$cr?: ErrorTracker): Nullable<MINUS> {
-        return this.regexAccept(String.raw`(?:-)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:-)`, "", $$dpth + 1, $$cr);
     }
     public matchNOT($$dpth: number, $$cr?: ErrorTracker): Nullable<NOT> {
-        return this.regexAccept(String.raw`(?:!)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:!)`, "", $$dpth + 1, $$cr);
     }
     public matchCOMPARE($$dpth: number, $$cr?: ErrorTracker): Nullable<COMPARE> {
         return this.choice<COMPARE>([
@@ -2948,40 +2948,40 @@ export class Parser {
         ]);
     }
     public matchBEHAVIOR_1($$dpth: number, $$cr?: ErrorTracker): Nullable<BEHAVIOR_1> {
-        return this.regexAccept(String.raw`(?:behavior)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:behavior)`, "", $$dpth + 1, $$cr);
     }
     public matchBEHAVIOR_2($$dpth: number, $$cr?: ErrorTracker): Nullable<BEHAVIOR_2> {
-        return this.regexAccept(String.raw`(?:behaviour)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:behaviour)`, "", $$dpth + 1, $$cr);
     }
     public matchBLOCKING($$dpth: number, $$cr?: ErrorTracker): Nullable<BLOCKING> {
-        return this.regexAccept(String.raw`(?:blocking)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:blocking)`, "", $$dpth + 1, $$cr);
     }
     public matchBOOL($$dpth: number, $$cr?: ErrorTracker): Nullable<BOOL> {
-        return this.regexAccept(String.raw`(?:bool)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:bool)`, "", $$dpth + 1, $$cr);
     }
     public matchCOMPONENT($$dpth: number, $$cr?: ErrorTracker): Nullable<COMPONENT> {
-        return this.regexAccept(String.raw`(?:component)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:component)`, "", $$dpth + 1, $$cr);
     }
     public matchDEFER($$dpth: number, $$cr?: ErrorTracker): Nullable<DEFER> {
-        return this.regexAccept(String.raw`(?:defer)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:defer)`, "", $$dpth + 1, $$cr);
     }
     public matchELSE($$dpth: number, $$cr?: ErrorTracker): Nullable<ELSE> {
-        return this.regexAccept(String.raw`(?:else)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:else)`, "", $$dpth + 1, $$cr);
     }
     public matchENUM($$dpth: number, $$cr?: ErrorTracker): Nullable<ENUM> {
-        return this.regexAccept(String.raw`(?:enum)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:enum)`, "", $$dpth + 1, $$cr);
     }
     public matchEXTERN($$dpth: number, $$cr?: ErrorTracker): Nullable<EXTERN> {
-        return this.regexAccept(String.raw`(?:extern)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:extern)`, "", $$dpth + 1, $$cr);
     }
     public matchEXTERNAL($$dpth: number, $$cr?: ErrorTracker): Nullable<EXTERNAL> {
-        return this.regexAccept(String.raw`(?:external)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:external)`, "", $$dpth + 1, $$cr);
     }
     public matchFALSE($$dpth: number, $$cr?: ErrorTracker): Nullable<FALSE> {
-        return this.regexAccept(String.raw`(?:false)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:false)`, "", $$dpth + 1, $$cr);
     }
     public matchIF($$dpth: number, $$cr?: ErrorTracker): Nullable<IF> {
-        return this.regexAccept(String.raw`(?:if)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:if)`, "", $$dpth + 1, $$cr);
     }
     public matchILLEGAL($$dpth: number, $$cr?: ErrorTracker): Nullable<ILLEGAL> {
         return this.run<ILLEGAL>($$dpth,
@@ -2991,7 +2991,7 @@ export class Parser {
                 let $$res: Nullable<ILLEGAL> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && this.regexAccept(String.raw`(?:illegal)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:illegal)`, "", $$dpth + 1, $$cr) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.ILLEGAL, start: $scope$start, end: $scope$end};
@@ -3000,64 +3000,64 @@ export class Parser {
             });
     }
     public matchIMPORT($$dpth: number, $$cr?: ErrorTracker): Nullable<IMPORT> {
-        return this.regexAccept(String.raw`(?:import)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:import)`, "", $$dpth + 1, $$cr);
     }
     public matchIN($$dpth: number, $$cr?: ErrorTracker): Nullable<IN> {
-        return this.regexAccept(String.raw`(?:in)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:in)`, "", $$dpth + 1, $$cr);
     }
     public matchINEVITABLE($$dpth: number, $$cr?: ErrorTracker): Nullable<INEVITABLE> {
-        return this.regexAccept(String.raw`(?:inevitable)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:inevitable)`, "", $$dpth + 1, $$cr);
     }
     public matchINJECTED($$dpth: number, $$cr?: ErrorTracker): Nullable<INJECTED> {
-        return this.regexAccept(String.raw`(?:injected)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:injected)`, "", $$dpth + 1, $$cr);
     }
     public matchINOUT($$dpth: number, $$cr?: ErrorTracker): Nullable<INOUT> {
-        return this.regexAccept(String.raw`(?:inout)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:inout)`, "", $$dpth + 1, $$cr);
     }
     public matchINTERFACE($$dpth: number, $$cr?: ErrorTracker): Nullable<INTERFACE> {
-        return this.regexAccept(String.raw`(?:interface)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:interface)`, "", $$dpth + 1, $$cr);
     }
     public matchNAMESPACE($$dpth: number, $$cr?: ErrorTracker): Nullable<NAMESPACE> {
-        return this.regexAccept(String.raw`(?:namespace)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:namespace)`, "", $$dpth + 1, $$cr);
     }
     public matchON($$dpth: number, $$cr?: ErrorTracker): Nullable<ON> {
-        return this.regexAccept(String.raw`(?:on)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:on)`, "", $$dpth + 1, $$cr);
     }
     public matchOPTIONAL($$dpth: number, $$cr?: ErrorTracker): Nullable<OPTIONAL> {
-        return this.regexAccept(String.raw`(?:optional)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:optional)`, "", $$dpth + 1, $$cr);
     }
     public matchOTHERWISE($$dpth: number, $$cr?: ErrorTracker): Nullable<OTHERWISE> {
-        return this.regexAccept(String.raw`(?:otherwise)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:otherwise)`, "", $$dpth + 1, $$cr);
     }
     public matchOUT($$dpth: number, $$cr?: ErrorTracker): Nullable<OUT> {
-        return this.regexAccept(String.raw`(?:out)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:out)`, "", $$dpth + 1, $$cr);
     }
     public matchPROVIDES($$dpth: number, $$cr?: ErrorTracker): Nullable<PROVIDES> {
-        return this.regexAccept(String.raw`(?:provides)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:provides)`, "", $$dpth + 1, $$cr);
     }
     public matchREPLY($$dpth: number, $$cr?: ErrorTracker): Nullable<REPLY> {
-        return this.regexAccept(String.raw`(?:reply)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:reply)`, "", $$dpth + 1, $$cr);
     }
     public matchREQUIRES($$dpth: number, $$cr?: ErrorTracker): Nullable<REQUIRES> {
-        return this.regexAccept(String.raw`(?:requires)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:requires)`, "", $$dpth + 1, $$cr);
     }
     public matchRETURN($$dpth: number, $$cr?: ErrorTracker): Nullable<RETURN> {
-        return this.regexAccept(String.raw`(?:return)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:return)`, "", $$dpth + 1, $$cr);
     }
     public matchSUBINT($$dpth: number, $$cr?: ErrorTracker): Nullable<SUBINT> {
-        return this.regexAccept(String.raw`(?:subint)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:subint)`, "", $$dpth + 1, $$cr);
     }
     public matchSYSTEM($$dpth: number, $$cr?: ErrorTracker): Nullable<SYSTEM> {
-        return this.regexAccept(String.raw`(?:system)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:system)`, "", $$dpth + 1, $$cr);
     }
     public matchTRUE($$dpth: number, $$cr?: ErrorTracker): Nullable<TRUE> {
-        return this.regexAccept(String.raw`(?:true)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:true)`, "", $$dpth + 1, $$cr);
     }
     public matchVOID($$dpth: number, $$cr?: ErrorTracker): Nullable<VOID> {
-        return this.regexAccept(String.raw`(?:void)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:void)`, "", $$dpth + 1, $$cr);
     }
     public matchNEWLINE($$dpth: number, $$cr?: ErrorTracker): Nullable<NEWLINE> {
-        return this.regexAccept(String.raw`(?:\n)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\n)`, "", $$dpth + 1, $$cr);
     }
     public matchsl_comment($$dpth: number, $$cr?: ErrorTracker): Nullable<sl_comment> {
         return this.run<sl_comment>($$dpth,
@@ -3065,7 +3065,7 @@ export class Parser {
                 let $scope$text: Nullable<string>;
                 let $$res: Nullable<sl_comment> = null;
                 if (true
-                    && ($scope$text = this.regexAccept(String.raw`(?://[^\n]*\n)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$text = this.regexAccept(String.raw`(?://[^\n]*\n)`, "", $$dpth + 1, $$cr)) !== null
                 ) {
                     $$res = {kind: ASTKinds.sl_comment, text: $scope$text};
                 }
@@ -3078,8 +3078,8 @@ export class Parser {
                 let $scope$text: Nullable<ml_comment_$0[]>;
                 let $$res: Nullable<ml_comment> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:/\*)`, $$dpth + 1, $$cr) !== null
-                    && ($scope$text = this.loop<ml_comment_$0>(() => this.matchml_comment_$0($$dpth + 1, $$cr), true)) !== null
+                    && this.regexAccept(String.raw`(?:/\*)`, "", $$dpth + 1, $$cr) !== null
+                    && ($scope$text = this.loop<ml_comment_$0>(() => this.matchml_comment_$0($$dpth + 1, $$cr), 0, -1)) !== null
                     && this.matchml_comment_end($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.ml_comment, text: $scope$text};
@@ -3093,7 +3093,7 @@ export class Parser {
                 let $$res: Nullable<ml_comment_$0> = null;
                 if (true
                     && this.negate(() => this.matchml_comment_end($$dpth + 1, $$cr)) !== null
-                    && this.regexAccept(String.raw`(?:.)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:.)`, "", $$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.ml_comment_$0, };
                 }
@@ -3105,8 +3105,8 @@ export class Parser {
             () => {
                 let $$res: Nullable<ml_comment_end> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:\*)`, $$dpth + 1, $$cr) !== null
-                    && this.regexAccept(String.raw`(?:/)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\*)`, "", $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:/)`, "", $$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.ml_comment_end, };
                 }
@@ -3127,14 +3127,14 @@ export class Parser {
         return this.match__$1($$dpth + 1, $$cr);
     }
     public match__3($$dpth: number, $$cr?: ErrorTracker): Nullable<__3> {
-        return this.regexAccept(String.raw`(?:\s*)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\s*)`, "", $$dpth + 1, $$cr);
     }
     public match__$0($$dpth: number, $$cr?: ErrorTracker): Nullable<__$0> {
         return this.run<__$0>($$dpth,
             () => {
                 let $$res: Nullable<__$0> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:\s*)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\s*)`, "", $$dpth + 1, $$cr) !== null
                     && this.matchsl_comment($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                 ) {
@@ -3148,7 +3148,7 @@ export class Parser {
             () => {
                 let $$res: Nullable<__$1> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:\s*)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\s*)`, "", $$dpth + 1, $$cr) !== null
                     && this.matchml_comment($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                 ) {
@@ -3171,14 +3171,14 @@ export class Parser {
         return this.match___$1($$dpth + 1, $$cr);
     }
     public match___3($$dpth: number, $$cr?: ErrorTracker): Nullable<___3> {
-        return this.regexAccept(String.raw`(?:\s+)`, $$dpth + 1, $$cr);
+        return this.regexAccept(String.raw`(?:\s+)`, "", $$dpth + 1, $$cr);
     }
     public match___$0($$dpth: number, $$cr?: ErrorTracker): Nullable<___$0> {
         return this.run<___$0>($$dpth,
             () => {
                 let $$res: Nullable<___$0> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:\s*)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\s*)`, "", $$dpth + 1, $$cr) !== null
                     && this.matchsl_comment($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                 ) {
@@ -3192,7 +3192,7 @@ export class Parser {
             () => {
                 let $$res: Nullable<___$1> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:\s*)`, $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\s*)`, "", $$dpth + 1, $$cr) !== null
                     && this.matchml_comment($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                 ) {
@@ -3223,17 +3223,22 @@ export class Parser {
     public mark(): PosInfo {
         return this.pos;
     }
-    private loop<T>(func: $$RuleType<T>, star: boolean = false): Nullable<T[]> {
+    // @ts-ignore: loopPlus may not be called
+    private loopPlus<T>(func: $$RuleType<T>): Nullable<[T, ...T[]]> {
+        return this.loop(func, 1, -1) as Nullable<[T, ...T[]]>;
+    }
+    private loop<T>(func: $$RuleType<T>, lb: number, ub: number): Nullable<T[]> {
         const mrk = this.mark();
         const res: T[] = [];
-        for (;;) {
+        while (ub === -1 || res.length < ub) {
+            const preMrk = this.mark();
             const t = func();
-            if (t === null) {
+            if (t === null || this.pos.overallPos === preMrk.overallPos) {
                 break;
             }
             res.push(t);
         }
-        if (star || res.length > 0) {
+        if (res.length >= lb) {
             return res;
         }
         this.reset(mrk);
@@ -3247,6 +3252,7 @@ export class Parser {
         this.reset(mrk);
         return null;
     }
+    // @ts-ignore: choice may not be called
     private choice<T>(fns: Array<$$RuleType<T>>): Nullable<T> {
         for (const f of fns) {
             const res = f();
@@ -3256,10 +3262,10 @@ export class Parser {
         }
         return null;
     }
-    private regexAccept(match: string, dpth: number, cr?: ErrorTracker): Nullable<string> {
+    private regexAccept(match: string, mods: string, dpth: number, cr?: ErrorTracker): Nullable<string> {
         return this.run<string>(dpth,
             () => {
-                const reg = new RegExp(match, "y");
+                const reg = new RegExp(match, "y" + mods);
                 const mrk = this.mark();
                 reg.lastIndex = mrk.overallPos;
                 const res = this.tryConsume(reg);
@@ -3295,12 +3301,14 @@ export class Parser {
         }
         return null;
     }
+    // @ts-ignore: noConsume may not be called
     private noConsume<T>(fn: $$RuleType<T>): Nullable<T> {
         const mrk = this.mark();
         const res = fn();
         this.reset(mrk);
         return res;
     }
+    // @ts-ignore: negate may not be called
     private negate<T>(fn: $$RuleType<T>): Nullable<boolean> {
         const mrk = this.mark();
         const oneg = this.negating;
@@ -3310,6 +3318,7 @@ export class Parser {
         this.reset(mrk);
         return res === null ? true : null;
     }
+    // @ts-ignore: Memoise may not be used
     private memoise<K>(rule: $$RuleType<K>, memo: Map<number, [Nullable<K>, PosInfo]>): Nullable<K> {
         const $scope$pos = this.mark();
         const $scope$memoRes = memo.get($scope$pos.overallPos);

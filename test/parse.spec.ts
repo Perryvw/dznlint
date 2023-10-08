@@ -342,6 +342,17 @@ test("if mixed with without braces (#2)", () => {
     `);
 });
 
+// https://github.com/Perryvw/dznlint/issues/4
+test("guard inside expression (#4)", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            behavior {
+                on port.foo(): [guard] Y;
+            }
+        }
+    `);
+});
+
 test("dollars statement", () => {
     expectCanParseWithoutDiagnostics(`
         import abc.dzn;
