@@ -24,7 +24,7 @@
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
 *     event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
-*     event_parameter := direction={direction=param_direction __}? type=identifier __ name=identifier
+*     event_parameter := direction={direction=param_direction __}? type=compound_name __ name=identifier
 *       event_direction := IN | OUT
 *       param_direction := INOUT | IN | OUT
 * component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
@@ -501,7 +501,7 @@ export interface event_params_$0 {
 export interface event_parameter {
     kind: ASTKinds.event_parameter;
     direction: Nullable<event_parameter_$0>;
-    type: identifier;
+    type: compound_name;
     name: identifier;
 }
 export interface event_parameter_$0 {
@@ -1414,12 +1414,12 @@ export class Parser {
         return this.run<event_parameter>($$dpth,
             () => {
                 let $scope$direction: Nullable<Nullable<event_parameter_$0>>;
-                let $scope$type: Nullable<identifier>;
+                let $scope$type: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
                 let $$res: Nullable<event_parameter> = null;
                 if (true
                     && (($scope$direction = this.matchevent_parameter_$0($$dpth + 1, $$cr)) || true)
-                    && ($scope$type = this.matchidentifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                 ) {

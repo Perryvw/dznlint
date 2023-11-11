@@ -1,14 +1,17 @@
-/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
+/** @type {import('jest').Config} */
 module.exports = {
     preset: "ts-jest",
     testEnvironment: "node",
-    globals: {
-        "ts-jest": {
-            tsconfig: "<rootDir>/test/tsconfig.json",
-            diagnostics: {
-                ignoreCodes: ["TS151001"],
-                warnOnly: false,
+    transform: {
+        "^.+\\.tsx?$": [
+            "ts-jest",
+            {
+                tsconfig: "<rootDir>/test/tsconfig.json",
+                diagnostics: {
+                    ignoreCodes: ["TS151001"],
+                    warnOnly: false,
+                },
             },
-        },
+        ],
     },
 };
