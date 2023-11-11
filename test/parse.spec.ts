@@ -308,6 +308,19 @@ test("defer block", () => {
     );
 });
 
+test("parameter types", () => {
+    expectCanParseWithoutDiagnostics(
+        `
+        interface foo {
+            in void bar(in Type inparam);
+            in void baz(out Type inparam);
+            in void barNs(in Namespace.NestedNamespace.Type nsparam);
+            in void BazNs(out Namespace.NestedNamespace.Type nsparam);
+        }
+        `
+    );
+});
+
 // https://github.com/Perryvw/dznlint/issues/2
 test("if without braces (#2)", () => {
     expectCanParseWithoutDiagnostics(`

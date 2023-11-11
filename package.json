@@ -17,10 +17,11 @@
         "build": "npm run generate-parser && tsc",
         "lint": "eslint . --ext .ts",
         "test": "jest",
-        "prepublishOnly": "npm run build"
+        "prepublishOnly": "npm run build",
+        "fix:prettier": "prettier --write ."
     },
     "devDependencies": {
-        "@types/jest": "^29.5.5",
+        "@types/jest": "^29.5.8",
         "@types/node": "^20.8.3",
         "@typescript-eslint/eslint-plugin": "^6.7.4",
         "@typescript-eslint/parser": "^6.7.4",
