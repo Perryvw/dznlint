@@ -321,6 +321,17 @@ test("parameter types", () => {
     );
 });
 
+test("namespace brackets", () => {
+    expectCanParseWithoutDiagnostics(`
+        namespace My { namespace Project {
+        }}
+    `);
+});
+
+test("no trailing whiteline brackets", () => {
+    expectCanParseWithoutDiagnostics(`namespace MyNamespace{} // hello`);
+});
+
 // https://github.com/Perryvw/dznlint/issues/2
 test("if without braces (#2)", () => {
     expectCanParseWithoutDiagnostics(`

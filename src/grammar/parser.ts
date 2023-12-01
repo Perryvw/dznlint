@@ -18,7 +18,7 @@
 *     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier?}*
 *   int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
-* namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
+* namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
 *   namespace_root      := statements={_ statement=namespace_statement _}*
 *   namespace_statement := type_definition | namespace | interface_definition | component
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
@@ -143,7 +143,7 @@
 * TRUE                := 'true'
 * VOID                := 'void'
 * NEWLINE             := '\n'
-* sl_comment          := text='//[^\n]*\n'
+* sl_comment          := text='//[^\n]*' {'\n' | $}
 * ml_comment          := '/\*' text={!ml_comment_end '.'}* ml_comment_end
 *   ml_comment_end    := '\*' '/'
 * _                   := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s*'
@@ -381,6 +381,8 @@ export enum ASTKinds {
     VOID = "VOID",
     NEWLINE = "NEWLINE",
     sl_comment = "sl_comment",
+    sl_comment_$0_1 = "sl_comment_$0_1",
+    sl_comment_$0_2 = "sl_comment_$0_2",
     ml_comment = "ml_comment",
     ml_comment_$0 = "ml_comment_$0",
     ml_comment_end = "ml_comment_end",
@@ -960,6 +962,9 @@ export interface sl_comment {
     kind: ASTKinds.sl_comment;
     text: string;
 }
+export type sl_comment_$0 = sl_comment_$0_1 | sl_comment_$0_2;
+export type sl_comment_$0_1 = string;
+export type sl_comment_$0_2 = {kind: ASTKinds.$EOF};
 export interface ml_comment {
     kind: ASTKinds.ml_comment;
     text: ml_comment_$0[];
@@ -1244,6 +1249,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && ($scope$root = this.matchnamespace_root($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.namespace, name: $scope$name, root: $scope$root};
@@ -3065,12 +3071,25 @@ export class Parser {
                 let $scope$text: Nullable<string>;
                 let $$res: Nullable<sl_comment> = null;
                 if (true
-                    && ($scope$text = this.regexAccept(String.raw`(?://[^\n]*\n)`, "", $$dpth + 1, $$cr)) !== null
+                    && ($scope$text = this.regexAccept(String.raw`(?://[^\n]*)`, "", $$dpth + 1, $$cr)) !== null
+                    && this.matchsl_comment_$0($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.sl_comment, text: $scope$text};
                 }
                 return $$res;
             });
+    }
+    public matchsl_comment_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<sl_comment_$0> {
+        return this.choice<sl_comment_$0>([
+            () => this.matchsl_comment_$0_1($$dpth + 1, $$cr),
+            () => this.matchsl_comment_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchsl_comment_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<sl_comment_$0_1> {
+        return this.regexAccept(String.raw`(?:\n)`, "", $$dpth + 1, $$cr);
+    }
+    public matchsl_comment_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<sl_comment_$0_2> {
+        return this.match$EOF($$cr);
     }
     public matchml_comment($$dpth: number, $$cr?: ErrorTracker): Nullable<ml_comment> {
         return this.run<ml_comment>($$dpth,

@@ -22,7 +22,7 @@ type_definition := enum_definition | int | extern_definition
   int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
     range := from=NUMBER _ DOTDOT _ to=NUMBER
 
-namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root BRACE_CLOSE
+namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
   namespace_root      := statements={_ statement=namespace_statement _}*
   namespace_statement := type_definition | namespace | interface_definition | component
 
@@ -163,7 +163,7 @@ VOID                := 'void'
 NEWLINE             := '\n'
 
 
-sl_comment          := text='//[^\n]*\n'
+sl_comment          := text='//[^\n]*' {'\n' | $}
 ml_comment          := '/\*' text={!ml_comment_end '.'}* ml_comment_end
   ml_comment_end    := '\*' '/'
 _                   := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s*'

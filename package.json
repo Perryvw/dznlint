@@ -13,8 +13,8 @@
         "dznlint": "dist/cli/dznlint.js"
     },
     "scripts": {
-        "generate-parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts",
-        "build": "npm run generate-parser && tsc",
+        "build:parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts",
+        "build": "npm run build:parser && tsc",
         "lint": "eslint . --ext .ts",
         "test": "jest",
         "prepublishOnly": "npm run build",
@@ -29,7 +29,7 @@
         "jest": "^29.7.0",
         "prettier": "^3.0.3",
         "ts-jest": "^29.1.1",
-        "tspeg": "^3.3.0",
+        "tspeg": "^3.3.1",
         "typescript": "^5.2.2"
     }
 }
