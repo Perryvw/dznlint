@@ -365,8 +365,194 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.sl_comment]: stopVisiting,
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = {
+    // Root node
+    [parser.ASTKinds.file]: (node: parser.file) => {
+        for (const { statement } of node.statements) {
+            setParent(statement, node);
+        }
+    },
+
+    [parser.ASTKinds.assignment]: (node: parser.assignment) => {
+        setParent(node.left, node);
+        setParent(node.right, node);
+    },
+    [parser.ASTKinds.behavior]: (node: parser.behavior) => {
+        for (const { statement } of node.block.statements) {
+            setParent(statement, node);
+        }
+    },
+    [parser.ASTKinds.binary_expression]: (node: parser.binary_expression) => {
+        setParent(node.left, node);
+        setParent(node.right, node);
+    },
+    [parser.ASTKinds.binding]: (node: parser.binding) => {
+        setParent(node.left, node);
+        setParent(node.right, node);
+    },
+    [parser.ASTKinds.binding_expression_$0]: (node: parser.binding_expression_$0) => {
+        setParent(node.compound, node);
+        setParent(node.name, node);
+    },
+    [parser.ASTKinds.call_expression]: (node: parser.call_expression) => {
+        for (const { expression } of node.arguments) {
+            setParent(expression, node);
+        }
+    },
+    [parser.ASTKinds.component]: (node: parser.component) => {
+        for (const { port } of node.ports) {
+            setParent(port, node);
+        }
+
+        if (node.body) {
+            setParent(node.body, node);
+        }
+    },
+    [parser.ASTKinds.compound]: (node: parser.compound) => {
+        for (const { statement } of node.statements) {
+            setParent(statement, node);
+        }
+    },
+    [parser.ASTKinds.defer_statement]: (node: parser.defer_statement) => {
+        if (node.header.arguments) {
+            for (const argument of node.header.arguments.arguments) {
+                setParent(argument.expression, node);
+            }
+        }
+        setParent(node.statement, node);
+    },
+    [parser.ASTKinds.dollar_statement]: (node: parser.dollar_statement) => {
+        setParent(node.expression, node);
+    },
+    [parser.ASTKinds.expression_statement]: (node: parser.expression_statement) => {
+        setParent(node.expression, node);
+    },
+    [parser.ASTKinds.function_definition]: (node: parser.function_definition) => {
+        setParent(node.body, node);
+        setParent(node.name, node);
+
+        if (node.parameters.formals) {
+            for (const parameter of headTailToList(node.parameters.formals)) {
+                setParent(parameter, node);
+            }
+        }
+    },
+    [parser.ASTKinds.guard]: (node: parser.guard) => {
+        if (node.condition) {
+            if (typeof node.condition !== "string") {
+                setParent(node.condition, node);
+            }
+        }
+
+        if (node.statement) {
+            setParent(node.statement, node);
+        }
+    },
+    [parser.ASTKinds.if_statement]: (node: parser.if_statement) => {
+        setParent(node.expression, node);
+        setParent(node.statement, node);
+
+        for (const elseStatement of node.else_statements) {
+            setParent(elseStatement, node);
+            const { elseif, statement } = elseStatement;
+            if (elseif) {
+                setParent(elseif.expression, elseStatement);
+            }
+
+            setParent(statement, elseStatement);
+        }
+    },
+    [parser.ASTKinds.interface_definition]: (node: parser.interface_definition) => {
+        for (const { type_or_event } of node.body) {
+            setParent(type_or_event, node);
+        }
+
+        if (node.behavior) {
+            for (const { statement } of node.behavior.block.statements) {
+                setParent(statement, node);
+            }
+        }
+    },
+    [parser.ASTKinds.namespace]: (node: parser.namespace) => {
+        for (const { statement } of node.root.statements) {
+            setParent(statement, node);
+        }
+    },
+    [parser.ASTKinds.on]: (node: parser.on) => {
+        for (const trigger of headTailToList(node.on_trigger_list)) {
+            setParent(trigger, node);
+        }
+
+        setParent(node.statement, node);
+    },
+    [parser.ASTKinds.on_formal]: (node: parser.on_formal) => {
+        setParent(node.name, node);
+
+        if (node.assignment) {
+            setParent(node.assignment.name, node);
+        }
+    },
+    [parser.ASTKinds.on_trigger]: (node: parser.on_trigger) => {
+        setParent(node.name, node);
+
+        if (node.parameters?.formals) {
+            for (const parameter of headTailToList(node.parameters.formals)) {
+                setParent(parameter, node);
+            }
+        }
+    },
+    [parser.ASTKinds.parenthesized_expression]: (node: parser.parenthesized_expression) => {
+        setParent(node.expression, node);
+    },
+    [parser.ASTKinds.port]: (node: parser.port) => {
+        setParent(node.name, node);
+        setParent(node.type, node);
+    },
+    [parser.ASTKinds.property_expression]: (node: parser.property_expression) => {
+        if (node.expression) {
+            setParent(node.expression, node);
+        }
+    },
+    [parser.ASTKinds.return_statement]: (node: parser.return_statement) => {
+        if (node.expression) {
+            setParent(node.expression, node);
+        }
+    },
+    [parser.ASTKinds.system]: (node: parser.system) => {
+        for (const { instance_or_binding } of node.instances_and_bindings) {
+            setParent(instance_or_binding, node);
+        }
+    },
+    [parser.ASTKinds.variable_definition]: (node: parser.variable_definition) => {
+        if (node.initializer) {
+            setParent(node.initializer.expression, node);
+        }
+    },
+    [parser.ASTKinds.unary_operator_expression]: (node: parser.unary_operator_expression) => {
+        setParent(node.expression, node);
+    },
+
+    // Leaf nodes, no need to visit children of these
+    [parser.ASTKinds.compound_name_$0]: stopVisiting,
+    [parser.ASTKinds.dollars]: stopVisiting,
+    [parser.ASTKinds.enum_definition]: stopVisiting,
+    [parser.ASTKinds.extern_definition]: stopVisiting,
+    [parser.ASTKinds.event]: stopVisiting,
+    [parser.ASTKinds.formal]: stopVisiting,
+    [parser.ASTKinds.identifier]: stopVisiting,
+    [parser.ASTKinds.ILLEGAL]: stopVisiting,
+    [parser.ASTKinds.import_statement]: stopVisiting,
+    [parser.ASTKinds.instance]: stopVisiting,
+    [parser.ASTKinds.int]: stopVisiting,
+    [parser.ASTKinds.member_identifier]: stopVisiting,
+    [parser.ASTKinds.numeric_literal]: stopVisiting,
+    [parser.ASTKinds.sl_comment]: stopVisiting,
+};
+
 export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback) {
     const context = new VisitorContext(source);
+    context.visit(file, n => setParentVisitor[n.kind]?.(n));
     context.visit(file, callback);
 }
 

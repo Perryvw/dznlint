@@ -1,9 +1,9 @@
-import { unknownInstanceBinding } from "../src/rules/no-unknown-instance-binding";
+import { unknownVariable } from "../src/rules/no-unknown-variables";
 import { testdznlint } from "./util";
 
 test("no unknown instance bindings left", () => {
     testdznlint({
-        diagnostic: unknownInstanceBinding.code,
+        diagnostic: unknownVariable.code,
         pass: `component A {
 
             provides Type myport;
@@ -27,7 +27,7 @@ test("no unknown instance bindings left", () => {
 
 test("no unknown instance bindings right", () => {
     testdznlint({
-        diagnostic: unknownInstanceBinding.code,
+        diagnostic: unknownVariable.code,
         pass: `component A {
 
             provides Type myport;

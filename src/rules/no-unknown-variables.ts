@@ -15,7 +15,12 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         const createUnknownIdentifierDiagnostic = (name: identifier, context: VisitorContext) =>
-            unknownVariable(config.severity, `Unknown variable ${name.text}`, context.source, nodeToSourceRange(name));
+            unknownVariable(
+                config.severity,
+                `Undefined variable ${name.text}`,
+                context.source,
+                nodeToSourceRange(name)
+            );
 
         const createUnknownMemberDiagnostic = (name: identifier, ownerType: Type, context: VisitorContext) => {
             return unknownVariable(

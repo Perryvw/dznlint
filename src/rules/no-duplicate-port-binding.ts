@@ -23,6 +23,11 @@ export const no_duplicate_port_binding: RuleFactory = factoryContext => {
                     const symbolLeft = context.typeChecker.symbolOfNode(binding.left);
                     const symbolRight = context.typeChecker.symbolOfNode(binding.right);
 
+                    if (symbolLeft === undefined || symbolRight === undefined) {
+                        // Could not succesfully resolve one of the operands' symbols, no-unknown-variables will take care of this
+                        return [];
+                    }
+
                     if (seenPorts.has(symbolLeft)) {
                         seenPorts.get(symbolLeft)?.push(binding.left);
                     } else {

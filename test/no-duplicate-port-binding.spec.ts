@@ -1,7 +1,7 @@
 import { duplicatePortBinding } from "../src/rules/no-duplicate-port-binding";
 import { testdznlint } from "./util";
 
-test("no duplicate port bindings", () => {
+test.only("no duplicate port bindings", () => {
     testdznlint({
         diagnostic: duplicatePortBinding.code,
         pass: `component A {

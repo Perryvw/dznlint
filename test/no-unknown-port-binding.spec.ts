@@ -1,9 +1,9 @@
-import { unknownPortBinding } from "../src/rules/no-unknown-port-binding";
+import { unknownVariable } from "../src/rules/no-unknown-variables";
 import { testdznlint } from "./util";
 
 test("no unknown provided port bindings", () => {
     testdznlint({
-        diagnostic: unknownPortBinding.code,
+        diagnostic: unknownVariable.code,
         pass: `component A {
 
             provides Type myport;
@@ -24,7 +24,7 @@ test("no unknown provided port bindings", () => {
 
 test("no unknown required port bindings", () => {
     testdznlint({
-        diagnostic: unknownPortBinding.code,
+        diagnostic: unknownVariable.code,
         pass: `component A {
 
             requires Type myport;

@@ -6,6 +6,7 @@ import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
+    no_unknown_variables: false,
     no_unused_parameters: false,
     no_unused_instances: false,
     no_unused_variables: false,

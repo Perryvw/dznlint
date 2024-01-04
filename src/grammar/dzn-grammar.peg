@@ -10,7 +10,7 @@ root_statement :=
   | sl_comment
   | statement
 
-extern_definition := EXTERN __ type=identifier __ literal=dollars _ SEMICOLON
+extern_definition := EXTERN __ name=identifier __ literal=dollars _ SEMICOLON
 
 import_statement := IMPORT __ file_name=file_name _ SEMICOLON
   file_name := '[^;]+'
