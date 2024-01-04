@@ -27,9 +27,10 @@ export interface DznLintConfiguration {
     no_duplicate_parameters: ConfigValue;
     no_duplicate_port_binding: ConfigValue;
     no_empty_defer_capture: ConfigValue;
+    no_mismatching_binding_types: ConfigValue;
     no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;
-    no_unknown_port_binding: ConfigValue;
+    no_unknown_variables: ConfigValue;
     no_unused_instances: ConfigValue;
     no_unused_parameters: ConfigValue;
     no_unused_ports: ConfigValue;

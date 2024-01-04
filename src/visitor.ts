@@ -1,6 +1,7 @@
 import { InputSource } from "./api";
 import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
+import { TypeChecker } from "./semantics/program";
 import { headTailToList } from "./util";
 
 const stopVisiting = () => {};
@@ -24,6 +25,7 @@ interface Scope {
 }
 
 export class VisitorContext {
+    typeChecker: TypeChecker = new TypeChecker();
     scopeStack: Scope[] = [];
 
     constructor(public source: InputSource) {}
@@ -99,14 +101,22 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.visit(node.right, cb);
     },
     [parser.ASTKinds.binding]: (node: parser.binding, context: VisitorContext, cb: VisitorCallback) => {
-        if (typeof node.left !== "string") {
-            setParent(node.left, node);
-            context.visit(node.left.name, cb);
-        }
-        if (typeof node.right !== "string") {
-            setParent(node.right, node);
-            context.visit(node.right.name, cb);
-        }
+        setParent(node.left, node);
+        setParent(node.right, node);
+
+        context.visit(node.left, cb);
+        context.visit(node.right, cb);
+    },
+    [parser.ASTKinds.binding_expression_$0]: (
+        node: parser.binding_expression_$0,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        setParent(node.compound, node);
+        setParent(node.name, node);
+
+        context.visit(node.compound, cb);
+        context.visit(node.name, cb);
     },
     [parser.ASTKinds.call_expression]: (node: parser.call_expression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.expression, cb);

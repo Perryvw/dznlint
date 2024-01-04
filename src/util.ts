@@ -6,7 +6,6 @@ import {
     instance,
     system,
     PosInfo,
-    end_point,
     on,
     expression_statement,
     behavior_statement,
@@ -78,6 +77,14 @@ export function systemBindings(system: system): binding[] {
         .filter(e => e.kind === ASTKinds.binding) as binding[];
 }
 
-export function isIdentifierEndpoint(endpoint: end_point): endpoint is end_point & { name: identifier } {
-    return typeof endpoint !== "string" && !endpoint.dot && endpoint.name.kind === ASTKinds.identifier;
+export function findFirstParent<T extends ASTNode>(
+    node: ASTNode,
+    predicate: (node: ASTNode) => node is T
+): T | undefined {
+    let n = node.parent;
+    while (n) {
+        if (predicate(n)) return n;
+        n = n.parent;
+    }
+    return undefined;
 }

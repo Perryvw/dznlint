@@ -38,8 +38,9 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
       instances_and_bindings := {_{instance | binding}_}*
         instance := type=compound_name _ name=identifier _ SEMICOLON
-        binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
-          end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
+        binding := start=@ left=binding_expression _ BIND _ right=binding_expression _ SEMICOLON end=@
+          binding_expression := {start=@ compound=binding_expression DOT name={ asterisk_binding | member_identifier} end=@} | identifier | asterisk_binding
+          asterisk_binding := start=@ ASTERISK end=@
 
   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES

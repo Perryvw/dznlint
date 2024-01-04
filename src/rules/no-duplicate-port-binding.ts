@@ -2,9 +2,10 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, component, identifier } from "../grammar/parser";
+import { ASTKinds, binding_expression, component } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifierEndpoint, nodeToSourceRange, systemBindings } from "../util";
+import { SemanticSymbol } from "../semantics/program";
+import { nodeToSourceRange, systemBindings } from "../util";
 
 export const duplicatePortBinding = createDiagnosticsFactory();
 
@@ -16,25 +17,22 @@ export const no_duplicate_port_binding: RuleFactory = factoryContext => {
             if (node.body?.kind === ASTKinds.system) {
                 const system = node.body;
 
-                const seenPorts = new Map<string, identifier[]>();
+                const seenPorts = new Map<SemanticSymbol, binding_expression[]>();
 
                 for (const binding of systemBindings(system)) {
-                    // If left-hand-side is a port, record it in the map
-                    if (isIdentifierEndpoint(binding.left)) {
-                        if (!seenPorts.has(binding.left.name.text)) {
-                            seenPorts.set(binding.left.name.text, [binding.left.name]);
-                        } else {
-                            seenPorts.get(binding.left.name.text)?.push(binding.left.name);
-                        }
+                    const symbolLeft = context.typeChecker.symbolOfNode(binding.left);
+                    const symbolRight = context.typeChecker.symbolOfNode(binding.right);
+
+                    if (seenPorts.has(symbolLeft)) {
+                        seenPorts.get(symbolLeft)?.push(binding.left);
+                    } else {
+                        seenPorts.set(symbolLeft, [binding.left]);
                     }
 
-                    // If right-hand-side is a port, record it in the map
-                    if (isIdentifierEndpoint(binding.right)) {
-                        if (!seenPorts.has(binding.right.name.text)) {
-                            seenPorts.set(binding.right.name.text, [binding.right.name]);
-                        } else {
-                            seenPorts.get(binding.right.name.text)?.push(binding.right.name);
-                        }
+                    if (seenPorts.has(symbolRight)) {
+                        seenPorts.get(symbolRight)?.push(binding.right);
+                    } else {
+                        seenPorts.set(symbolRight, [binding.right]);
                     }
                 }
 

@@ -32,8 +32,9 @@
 *     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
 *       instances_and_bindings := {_{instance | binding}_}*
 *         instance := type=compound_name _ name=identifier _ SEMICOLON
-*         binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
-*           end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
+*         binding := start=@ left=binding_expression _ BIND _ right=binding_expression _ SEMICOLON end=@
+*           binding_expression := {start=@ compound=binding_expression DOT name={ asterisk_binding | member_identifier} end=@} | identifier | asterisk_binding
+*           asterisk_binding := start=@ ASTERISK end=@
 *   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
 *     port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
@@ -211,9 +212,13 @@ export enum ASTKinds {
     instances_and_bindings_$0_$0_2 = "instances_and_bindings_$0_$0_2",
     instance = "instance",
     binding = "binding",
-    end_point_1 = "end_point_1",
-    end_point_2 = "end_point_2",
-    end_point_$0 = "end_point_$0",
+    binding_expression_1 = "binding_expression_1",
+    binding_expression_2 = "binding_expression_2",
+    binding_expression_3 = "binding_expression_3",
+    binding_expression_$0 = "binding_expression_$0",
+    binding_expression_$0_$0_1 = "binding_expression_$0_$0_1",
+    binding_expression_$0_$0_2 = "binding_expression_$0_$0_2",
+    asterisk_binding = "asterisk_binding",
     port = "port",
     port_direction_1 = "port_direction_1",
     port_direction_2 = "port_direction_2",
@@ -560,18 +565,29 @@ export interface instance {
 }
 export interface binding {
     kind: ASTKinds.binding;
-    left: end_point;
-    right: end_point;
+    start: PosInfo;
+    left: binding_expression;
+    right: binding_expression;
+    end: PosInfo;
 }
-export type end_point = end_point_1 | end_point_2;
-export interface end_point_1 {
-    kind: ASTKinds.end_point_1;
-    name: expression;
-    dot: Nullable<end_point_$0>;
+export type binding_expression = binding_expression_1 | binding_expression_2 | binding_expression_3;
+export type binding_expression_1 = binding_expression_$0;
+export type binding_expression_2 = identifier;
+export type binding_expression_3 = asterisk_binding;
+export interface binding_expression_$0 {
+    kind: ASTKinds.binding_expression_$0;
+    start: PosInfo;
+    compound: binding_expression;
+    name: binding_expression_$0_$0;
+    end: PosInfo;
 }
-export type end_point_2 = ASTERISK;
-export interface end_point_$0 {
-    kind: ASTKinds.end_point_$0;
+export type binding_expression_$0_$0 = binding_expression_$0_$0_1 | binding_expression_$0_$0_2;
+export type binding_expression_$0_$0_1 = asterisk_binding;
+export type binding_expression_$0_$0_2 = member_identifier;
+export interface asterisk_binding {
+    kind: ASTKinds.asterisk_binding;
+    start: PosInfo;
+    end: PosInfo;
 }
 export interface port {
     kind: ASTKinds.port;
@@ -1011,9 +1027,11 @@ export class Parser {
         return this.pos.overallPos === this.input.length;
     }
     public clearMemos(): void {
+        this.$scope$binding_expression$memo.clear();
         this.$scope$expression$memo.clear();
         this.$scope$compound_name$memo.clear();
     }
+    protected $scope$binding_expression$memo: Map<number, [Nullable<binding_expression>, PosInfo]> = new Map();
     protected $scope$expression$memo: Map<number, [Nullable<expression>, PosInfo]> = new Map();
     protected $scope$compound_name$memo: Map<number, [Nullable<compound_name>, PosInfo]> = new Map();
     public matchfile($$dpth: number, $$cr?: ErrorTracker): Nullable<file> {
@@ -1629,57 +1647,113 @@ export class Parser {
     public matchbinding($$dpth: number, $$cr?: ErrorTracker): Nullable<binding> {
         return this.run<binding>($$dpth,
             () => {
-                let $scope$left: Nullable<end_point>;
-                let $scope$right: Nullable<end_point>;
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$left: Nullable<binding_expression>;
+                let $scope$right: Nullable<binding_expression>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<binding> = null;
                 if (true
-                    && ($scope$left = this.matchend_point($$dpth + 1, $$cr)) !== null
+                    && ($scope$start = this.mark()) !== null
+                    && ($scope$left = this.matchbinding_expression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBIND($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$right = this.matchend_point($$dpth + 1, $$cr)) !== null
+                    && ($scope$right = this.matchbinding_expression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.binding, left: $scope$left, right: $scope$right};
+                    $$res = {kind: ASTKinds.binding, start: $scope$start, left: $scope$left, right: $scope$right, end: $scope$end};
                 }
                 return $$res;
             });
     }
-    public matchend_point($$dpth: number, $$cr?: ErrorTracker): Nullable<end_point> {
-        return this.choice<end_point>([
-            () => this.matchend_point_1($$dpth + 1, $$cr),
-            () => this.matchend_point_2($$dpth + 1, $$cr),
+    public matchbinding_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression> {
+        const fn = () => {
+            return this.choice<binding_expression>([
+                () => this.matchbinding_expression_1($$dpth + 1, $$cr),
+                () => this.matchbinding_expression_2($$dpth + 1, $$cr),
+                () => this.matchbinding_expression_3($$dpth + 1, $$cr),
+            ]);
+        };
+        const $scope$pos = this.mark();
+        const memo = this.$scope$binding_expression$memo.get($scope$pos.overallPos);
+        if(memo !== undefined) {
+            this.reset(memo[1]);
+            return memo[0];
+        }
+        const $scope$oldMemoSafe = this.memoSafe;
+        this.memoSafe = false;
+        this.$scope$binding_expression$memo.set($scope$pos.overallPos, [null, $scope$pos]);
+        let lastRes: Nullable<binding_expression> = null;
+        let lastPos: PosInfo = $scope$pos;
+        for(;;) {
+            this.reset($scope$pos);
+            const res = fn();
+            const end = this.mark();
+            if(end.overallPos <= lastPos.overallPos)
+                break;
+            lastRes = res;
+            lastPos = end;
+            this.$scope$binding_expression$memo.set($scope$pos.overallPos, [lastRes, lastPos]);
+        }
+        this.reset(lastPos);
+        this.memoSafe = $scope$oldMemoSafe;
+        return lastRes;
+    }
+    public matchbinding_expression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_1> {
+        return this.matchbinding_expression_$0($$dpth + 1, $$cr);
+    }
+    public matchbinding_expression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_2> {
+        return this.matchidentifier($$dpth + 1, $$cr);
+    }
+    public matchbinding_expression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_3> {
+        return this.matchasterisk_binding($$dpth + 1, $$cr);
+    }
+    public matchbinding_expression_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_$0> {
+        return this.run<binding_expression_$0>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$compound: Nullable<binding_expression>;
+                let $scope$name: Nullable<binding_expression_$0_$0>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<binding_expression_$0> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && ($scope$compound = this.matchbinding_expression($$dpth + 1, $$cr)) !== null
+                    && this.matchDOT($$dpth + 1, $$cr) !== null
+                    && ($scope$name = this.matchbinding_expression_$0_$0($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.binding_expression_$0, start: $scope$start, compound: $scope$compound, name: $scope$name, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchbinding_expression_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_$0_$0> {
+        return this.choice<binding_expression_$0_$0>([
+            () => this.matchbinding_expression_$0_$0_1($$dpth + 1, $$cr),
+            () => this.matchbinding_expression_$0_$0_2($$dpth + 1, $$cr),
         ]);
     }
-    public matchend_point_1($$dpth: number, $$cr?: ErrorTracker): Nullable<end_point_1> {
-        return this.run<end_point_1>($$dpth,
-            () => {
-                let $scope$name: Nullable<expression>;
-                let $scope$dot: Nullable<Nullable<end_point_$0>>;
-                let $$res: Nullable<end_point_1> = null;
-                if (true
-                    && ($scope$name = this.matchexpression($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$dot = this.matchend_point_$0($$dpth + 1, $$cr)) || true)
-                ) {
-                    $$res = {kind: ASTKinds.end_point_1, name: $scope$name, dot: $scope$dot};
-                }
-                return $$res;
-            });
+    public matchbinding_expression_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_$0_$0_1> {
+        return this.matchasterisk_binding($$dpth + 1, $$cr);
     }
-    public matchend_point_2($$dpth: number, $$cr?: ErrorTracker): Nullable<end_point_2> {
-        return this.matchASTERISK($$dpth + 1, $$cr);
+    public matchbinding_expression_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<binding_expression_$0_$0_2> {
+        return this.matchmember_identifier($$dpth + 1, $$cr);
     }
-    public matchend_point_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<end_point_$0> {
-        return this.run<end_point_$0>($$dpth,
+    public matchasterisk_binding($$dpth: number, $$cr?: ErrorTracker): Nullable<asterisk_binding> {
+        return this.run<asterisk_binding>($$dpth,
             () => {
-                let $$res: Nullable<end_point_$0> = null;
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<asterisk_binding> = null;
                 if (true
-                    && this.matchDOT($$dpth + 1, $$cr) !== null
+                    && ($scope$start = this.mark()) !== null
                     && this.matchASTERISK($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.end_point_$0, };
+                    $$res = {kind: ASTKinds.asterisk_binding, start: $scope$start, end: $scope$end};
                 }
                 return $$res;
             });
