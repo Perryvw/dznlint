@@ -9,6 +9,7 @@ import {
     isIdentifier,
     nameToString,
     ScopedBlock,
+    isPort,
 } from "../util";
 
 export class SemanticSymbol {
@@ -74,7 +75,7 @@ export class TypeChecker {
             const ownerType = this.typeOfNode(node.compound);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
             const ownerMembers = this.getMembersOfType(ownerType);
-            return ownerMembers.get(node.name.text) ?? SemanticSymbol.ErrorSymbol();
+            return ownerMembers.get(node.name.text);
         } else if (isCompoundBindingExpression(node)) {
             const ownerType = this.typeOfNode(node.compound);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
@@ -83,8 +84,12 @@ export class TypeChecker {
                 // TODO: What to return here?
                 return SemanticSymbol.ErrorSymbol();
             } else {
-                return ownerMembers.get(node.name.text) ?? SemanticSymbol.ErrorSymbol();
+                return ownerMembers.get(node.name.text);
             }
+        } else if (isPort(node)) {
+            const symbol = new SemanticSymbol(node);
+            this.symbols.set(node, symbol);
+            return symbol;
         } else {
             throw `I don't know how to find the symbol for node type ${ASTKinds[node.kind]}`;
         }
@@ -96,7 +101,7 @@ export class TypeChecker {
             const instance = declaration as instance;
             const typeSymbol = this.symbolOfNode(instance.type);
             if (!typeSymbol) return ERROR_TYPE;
-            return { kind: TypeKind.Component, declaration: typeSymbol.declaration, name: instance.name.text };
+            return { kind: TypeKind.Component, declaration: typeSymbol.declaration, name: nameToString(instance.type) };
         } else if (symbol.declaration.kind === ASTKinds.variable_definition) {
             const definition = declaration as variable_definition;
             const typeSymbol = this.symbolOfNode(definition.type_name);

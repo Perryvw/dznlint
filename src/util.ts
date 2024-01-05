@@ -1,37 +1,15 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
-import {
-    ASTKinds,
-    binding,
-    identifier,
-    instance,
-    system,
-    PosInfo,
-    on,
-    expression_statement,
-    behavior_statement,
-    function_definition,
-    call_expression,
-    compound,
-    behavior_compound,
-    compound_name_$0,
-    binding_expression_$0,
-    compound_name,
-    interface_definition,
-    namespace,
-    component,
-    behavior,
-    file,
-} from "./grammar/parser";
+import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
-export function nodeToSourceRange(node: { start: PosInfo; end: PosInfo }): SourceRange {
+export function nodeToSourceRange(node: { start: parser.PosInfo; end: parser.PosInfo }): SourceRange {
     return {
         from: posInfoToSourcePosition(node.start),
         to: posInfoToSourcePosition(node.end),
     };
 }
 
-export function posInfoToSourcePosition(pos: PosInfo): SourcePosition {
+export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
     return {
         index: pos.overallPos,
         line: pos.line,
@@ -50,75 +28,79 @@ export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): 
     return result;
 }
 
-export function isIdentifier(node: ASTNode): node is identifier {
-    return node.kind === ASTKinds.identifier;
+export function isIdentifier(node: ASTNode): node is parser.identifier {
+    return node.kind === parser.ASTKinds.identifier;
 }
 
-export function isCompoundName(node: ASTNode): node is compound_name_$0 {
-    return node.kind === ASTKinds.compound_name_$0;
+export function isCompoundName(node: ASTNode): node is parser.compound_name_$0 {
+    return node.kind === parser.ASTKinds.compound_name_$0;
 }
 
-export function isCompoundBindingExpression(node: ASTNode): node is binding_expression_$0 {
-    return node.kind === ASTKinds.binding_expression_$0;
+export function isCompoundBindingExpression(node: ASTNode): node is parser.binding_expression_$0 {
+    return node.kind === parser.ASTKinds.binding_expression_$0;
 }
 
-export function isCallExpression(node: ASTNode): node is call_expression {
-    return node.kind === ASTKinds.call_expression;
+export function isCallExpression(node: ASTNode): node is parser.call_expression {
+    return node.kind === parser.ASTKinds.call_expression;
 }
 
-export function isCompound(node: ASTNode): node is compound {
-    return node.kind === ASTKinds.compound;
+export function isCompound(node: ASTNode): node is parser.compound {
+    return node.kind === parser.ASTKinds.compound;
 }
 
-export function isSourceFile(node: ASTNode): node is file {
-    return node.kind === ASTKinds.file;
+export function isSourceFile(node: ASTNode): node is parser.file {
+    return node.kind === parser.ASTKinds.file;
+}
+
+export function isPort(node: ASTNode): node is parser.port {
+    return node.kind === parser.ASTKinds.port;
+}
+
+export function isExpressionStatement(node: ASTNode): node is parser.expression_statement {
+    return node.kind === parser.ASTKinds.expression_statement;
 }
 
 export type ScopedBlock =
-    | behavior
-    | component
-    | compound
-    | behavior_compound
-    | system
-    | namespace
-    | interface_definition
-    | file;
+    | parser.behavior
+    | parser.component
+    | parser.compound
+    | parser.behavior_compound
+    | parser.system
+    | parser.namespace
+    | parser.interface_definition
+    | parser.file;
 
 export function isScopedBlock(node: ASTNode): node is ScopedBlock {
     return (
-        node.kind === ASTKinds.behavior ||
-        node.kind === ASTKinds.behavior_compound ||
-        node.kind === ASTKinds.component ||
-        node.kind === ASTKinds.compound ||
-        node.kind === ASTKinds.file ||
-        node.kind === ASTKinds.namespace ||
-        node.kind === ASTKinds.interface_definition ||
-        node.kind === ASTKinds.system
+        node.kind === parser.ASTKinds.behavior ||
+        node.kind === parser.ASTKinds.behavior_compound ||
+        node.kind === parser.ASTKinds.component ||
+        node.kind === parser.ASTKinds.compound ||
+        node.kind === parser.ASTKinds.file ||
+        node.kind === parser.ASTKinds.namespace ||
+        node.kind === parser.ASTKinds.interface_definition ||
+        node.kind === parser.ASTKinds.system
     );
 }
 
-export function isExpressionStatement(node: ASTNode): node is expression_statement {
-    return node.kind === ASTKinds.expression_statement;
+export function isFunctionDefinition(statement: parser.behavior_statement): statement is parser.function_definition {
+    return statement.kind === parser.ASTKinds.function_definition;
 }
 
-export function isFunctionDefinition(statement: behavior_statement): statement is function_definition {
-    return statement.kind === ASTKinds.function_definition;
+export function isOnEvent(node: ASTNode): node is parser.on {
+    return node.kind === parser.ASTKinds.on;
 }
 
-export function isOnEvent(node: ASTNode): node is on {
-    return node.kind === ASTKinds.on;
-}
-
-export function systemInstances(system: system): instance[] {
+export function systemInstances(system: parser.system): parser.instance[] {
     return system.instances_and_bindings
         .map(e => e.instance_or_binding)
-        .filter(e => e.kind === ASTKinds.instance) as instance[];
+        .filter(e => e.kind === parser.ASTKinds.instance) as parser.instance[];
 }
 
-export function systemBindings(system: system): binding[] {
+export function systemBindings(system: parser.system): parser.binding[] {
     return system.instances_and_bindings
         .map(e => e.instance_or_binding)
-        .filter(e => e.kind === ASTKinds.binding) as binding[];
+        .filter(e => e.kind === parser.ASTKinds.binding) as parser.binding[];
 }
 
 export function findFirstParent<T extends ASTNode>(
@@ -133,8 +115,8 @@ export function findFirstParent<T extends ASTNode>(
     return undefined;
 }
 
-export function nameToString(name: compound_name): string {
-    if (name.kind === ASTKinds.identifier) {
+export function nameToString(name: parser.compound_name): string {
+    if (name.kind === parser.ASTKinds.identifier) {
         return name.text;
     } else {
         if (name.compound) {
