@@ -42,8 +42,7 @@ export function testdznlint(test: LintTest) {
 function expectDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
     const diagnosticsOfType = diagnostics.filter(d => d.code === code);
     if (diagnosticsOfType.length === 0) {
-        const formattedDiagnostics = diagnosticsOfType.map(formatDiagnostic).join("\n");
-        expect(formattedDiagnostics).not.toEqual("");
+        expect(diagnostics.map(formatDiagnostic).join("\n")).toEqual(`A diagnostic with code ${code}`);
     }
 }
 

@@ -20,6 +20,7 @@ import {
     namespace,
     component,
     behavior,
+    file,
 } from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
@@ -69,6 +70,10 @@ export function isCompound(node: ASTNode): node is compound {
     return node.kind === ASTKinds.compound;
 }
 
+export function isSourceFile(node: ASTNode): node is file {
+    return node.kind === ASTKinds.file;
+}
+
 export type ScopedBlock =
     | behavior
     | component
@@ -76,7 +81,8 @@ export type ScopedBlock =
     | behavior_compound
     | system
     | namespace
-    | interface_definition;
+    | interface_definition
+    | file;
 
 export function isScopedBlock(node: ASTNode): node is ScopedBlock {
     return (
@@ -84,6 +90,7 @@ export function isScopedBlock(node: ASTNode): node is ScopedBlock {
         node.kind === ASTKinds.behavior_compound ||
         node.kind === ASTKinds.component ||
         node.kind === ASTKinds.compound ||
+        node.kind === ASTKinds.file ||
         node.kind === ASTKinds.namespace ||
         node.kind === ASTKinds.interface_definition ||
         node.kind === ASTKinds.system

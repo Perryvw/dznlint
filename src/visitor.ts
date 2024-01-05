@@ -414,6 +414,10 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
             setParent(statement, node);
         }
     },
+    [parser.ASTKinds.compound_name_$0]: (node: parser.compound_name_$0) => {
+        if (node.compound) setParent(node.compound, node);
+        setParent(node.name, node);
+    },
     [parser.ASTKinds.defer_statement]: (node: parser.defer_statement) => {
         if (node.header.arguments) {
             for (const argument of node.header.arguments.arguments) {
@@ -424,6 +428,10 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     },
     [parser.ASTKinds.dollar_statement]: (node: parser.dollar_statement) => {
         setParent(node.expression, node);
+    },
+    [parser.ASTKinds.event]: (node: parser.event) => {
+        setParent(node.event_name, node);
+        setParent(node.type_name, node);
     },
     [parser.ASTKinds.expression_statement]: (node: parser.expression_statement) => {
         setParent(node.expression, node);
@@ -462,6 +470,10 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
 
             setParent(statement, elseStatement);
         }
+    },
+    [parser.ASTKinds.instance]: (node: parser.instance) => {
+        setParent(node.name, node);
+        setParent(node.type, node);
     },
     [parser.ASTKinds.interface_definition]: (node: parser.interface_definition) => {
         for (const { type_or_event } of node.body) {
@@ -534,16 +546,13 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     },
 
     // Leaf nodes, no need to visit children of these
-    [parser.ASTKinds.compound_name_$0]: stopVisiting,
     [parser.ASTKinds.dollars]: stopVisiting,
     [parser.ASTKinds.enum_definition]: stopVisiting,
     [parser.ASTKinds.extern_definition]: stopVisiting,
-    [parser.ASTKinds.event]: stopVisiting,
     [parser.ASTKinds.formal]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
     [parser.ASTKinds.ILLEGAL]: stopVisiting,
     [parser.ASTKinds.import_statement]: stopVisiting,
-    [parser.ASTKinds.instance]: stopVisiting,
     [parser.ASTKinds.int]: stopVisiting,
     [parser.ASTKinds.member_identifier]: stopVisiting,
     [parser.ASTKinds.numeric_literal]: stopVisiting,

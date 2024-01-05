@@ -1,4 +1,4 @@
-import { ASTKinds, enum_definition } from "../grammar/parser";
+import { ASTKinds, component, enum_definition, instance, port, variable_definition } from "../grammar/parser";
 import { ASTNode } from "../linting-rule";
 import {
     findFirstParent,
@@ -10,26 +10,6 @@ import {
     nameToString,
     ScopedBlock,
 } from "../util";
-
-// class Program {
-
-// }
-
-// enum Kind {
-
-// }
-
-// class Component {
-
-// }
-
-// class Interface {
-
-// }
-
-// class SourceFile {
-//     public imports: SourceFile[] = [];
-// }
 
 export class SemanticSymbol {
     public constructor(public declaration: ASTNode) {}
@@ -51,27 +31,20 @@ export enum TypeKind {
 export interface Type {
     kind: TypeKind;
     name: string;
+    declaration?: ASTNode;
 }
 
-// interface FunctionParameter {
-//     direction: "in" | "out" | "inout";
-//     name: string;
-//     type: Type;
-// }
-
-// interface FunctionType extends Type
-// {
-//     kind: TypeKind.Function;
-//     parameters: FunctionParameter;
-//     returnType: Type;
-// }
+const ERROR_TYPE = {
+    kind: TypeKind.Invalid,
+    name: "invalid type",
+    declaration: null!,
+} satisfies Type;
 
 export class TypeChecker {
     public typeOfNode(node: ASTNode): Type {
-        void node;
-        //const symbol = this.symbolOfNode(node);
-
-        return { kind: TypeKind.Invalid, name: "unknown" };
+        const symbol = this.symbolOfNode(node);
+        if (!symbol) return ERROR_TYPE;
+        return this.typeOfSymbol(symbol);
     }
 
     private symbols = new Map<ASTNode, SemanticSymbol>();
@@ -98,14 +71,14 @@ export class TypeChecker {
             }
             return undefined;
         } else if (isCompoundName(node) && node.compound !== null) {
-            const ownerSymbol = this.symbolOfNode(node.compound);
-            if (ownerSymbol === undefined) return undefined;
-            const ownerMembers = this.getMembersOfSymbol(ownerSymbol);
+            const ownerType = this.typeOfNode(node.compound);
+            if (ownerType.kind === TypeKind.Invalid) return undefined;
+            const ownerMembers = this.getMembersOfType(ownerType);
             return ownerMembers.get(node.name.text) ?? SemanticSymbol.ErrorSymbol();
         } else if (isCompoundBindingExpression(node)) {
-            const ownerSymbol = this.symbolOfNode(node.compound);
-            if (ownerSymbol === undefined) return undefined;
-            const ownerMembers = this.getMembersOfSymbol(ownerSymbol);
+            const ownerType = this.typeOfNode(node.compound);
+            if (ownerType.kind === TypeKind.Invalid) return undefined;
+            const ownerMembers = this.getMembersOfType(ownerType);
             if (node.name.kind === ASTKinds.asterisk_binding) {
                 // TODO: What to return here?
                 return SemanticSymbol.ErrorSymbol();
@@ -117,25 +90,57 @@ export class TypeChecker {
         }
     }
 
-    // public getDeclaration(type: Type): AstNode {
+    public typeOfSymbol(symbol: SemanticSymbol): Type {
+        const declaration = symbol.declaration;
+        if (declaration.kind === ASTKinds.instance) {
+            const instance = declaration as instance;
+            const typeSymbol = this.symbolOfNode(instance.type);
+            if (!typeSymbol) return ERROR_TYPE;
+            return { kind: TypeKind.Component, declaration: typeSymbol.declaration, name: instance.name.text };
+        } else if (symbol.declaration.kind === ASTKinds.variable_definition) {
+            const definition = declaration as variable_definition;
+            const typeSymbol = this.symbolOfNode(definition.type_name);
+            if (!typeSymbol) return ERROR_TYPE;
+            return { kind: TypeKind.External, declaration: typeSymbol.declaration, name: definition.name.text };
+        } else if (symbol.declaration.kind === ASTKinds.port) {
+            const definition = declaration as port;
+            const typeSymbol = this.symbolOfNode(definition.type);
+            if (!typeSymbol) return ERROR_TYPE;
+            return { kind: TypeKind.External, declaration: typeSymbol.declaration, name: definition.name.text };
+        } else if (symbol.declaration.kind === ASTKinds.$EOF) {
+            return ERROR_TYPE;
+        } else {
+            throw `I don't know how to find type for a symbol of kind ${ASTKinds[symbol.declaration.kind]}`;
+        }
+    }
 
-    // }
+    public getMembersOfType(type: Type): Map<string, SemanticSymbol> {
+        if (!type.declaration) return new Map();
 
-    // public isFunctionType(type: Type): type is FunctionType
-    // {
-    //     return "returnType" in type;
-    // }
+        const result = new Map<string, SemanticSymbol>();
 
-    public getMembersOfSymbol(symbol: SemanticSymbol): Map<string, SemanticSymbol> {
-        if (symbol.declaration.kind === ASTKinds.enum_definition) {
-            const result = new Map();
-            for (const d of headTailToList((symbol.declaration as enum_definition).fields)) {
-                result.set(d.text, new SemanticSymbol(d));
+        if (type.declaration.kind === ASTKinds.enum_definition) {
+            for (const d of headTailToList((type.declaration as enum_definition).fields)) {
+                const symbol = this.symbolOfNode(d);
+                if (symbol) {
+                    result.set(d.text, symbol);
+                }
             }
             return result;
+        } else if (type.declaration?.kind === ASTKinds.component) {
+            for (const [name, declaration] of findVariablesDeclaredInScope(type.declaration as component)) {
+                const symbol = this.symbolOfNode(declaration);
+                if (symbol) {
+                    result.set(name, symbol);
+                }
+            }
         } else {
-            throw `I don't know how to find members for a symbol of type ${ASTKinds[symbol.declaration.kind]}`;
+            throw `I don't know how to find members for a type of kind ${
+                type.declaration && ASTKinds[type.declaration.kind]
+            }`;
         }
+
+        return result;
     }
 }
 
@@ -176,6 +181,17 @@ function findVariablesDeclaredInScope(scope: ScopedBlock): Map<string, ASTNode> 
     } else if (scope.kind === ASTKinds.compound) {
         for (const { statement } of scope.statements) {
             if (statement.kind === ASTKinds.variable_definition) {
+                result.set(statement.name.text, statement);
+            }
+        }
+    } else if (scope.kind === ASTKinds.file) {
+        // TODO: imports
+        for (const { statement } of scope.statements) {
+            if (
+                statement.kind === ASTKinds.enum_definition ||
+                statement.kind === ASTKinds.component ||
+                statement.kind === ASTKinds.interface_definition
+            ) {
                 result.set(statement.name.text, statement);
             }
         }

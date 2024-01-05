@@ -4,7 +4,10 @@ import { testdznlint } from "./util";
 test.only("no duplicate port bindings", () => {
     testdznlint({
         diagnostic: duplicatePortBinding.code,
-        pass: `component A {
+        pass: `
+        component Instance {}
+
+        component A {
 
             provides Type myport;
 
@@ -13,7 +16,10 @@ test.only("no duplicate port bindings", () => {
                 myInstance.port <=> myport;
             }
         }`,
-        fail: `component A {
+        fail: `
+        component Instance {}
+
+        component A {
 
             provides Type myport;
 
