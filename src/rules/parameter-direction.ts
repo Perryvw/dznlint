@@ -15,7 +15,7 @@ export const parameter_direction: RuleFactory = factoryContext => {
         factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
             const diagnostics = [];
 
-            const parameters = node.parameters.formals ? headTailToList(node.parameters.formals) : [];
+            const parameters = node.parameters.parameters ? headTailToList(node.parameters.parameters) : [];
             for (const param of parameters) {
                 if (!param.direction) {
                     diagnostics.push(

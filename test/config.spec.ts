@@ -7,7 +7,7 @@ const codeWithDiagnostic = `component A { behavior {
     function myFunction(data foo) {}
 } }`;
 
-const config: DznLintUserConfiguration = { no_unused_parameters: false };
+const config: DznLintUserConfiguration = { no_unused_parameters: false, no_unknown_variables: false };
 
 test("has default severity unless specified otherwise", () => {
     const diagnostics = lintString(codeWithDiagnostic, config);

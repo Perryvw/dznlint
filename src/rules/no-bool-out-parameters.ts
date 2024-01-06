@@ -24,8 +24,8 @@ export const no_bool_out_parameters: RuleFactory = factoryContext => {
         factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
             const diagnostics = [];
 
-            if (node.parameters.formals) {
-                for (const parameter of headTailToList(node.parameters.formals)) {
+            if (node.parameters.parameters) {
+                for (const parameter of headTailToList(node.parameters.parameters)) {
                     if (parameter.direction?.direction === "out" && isBoolIdentifier(parameter.type_name)) {
                         diagnostics.push(createDiagnostic(parameter.type_name, context.source));
                     }

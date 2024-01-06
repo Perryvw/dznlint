@@ -6,11 +6,12 @@ describe("in systems", () => {
         testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
+            interface I {}
             component B {}
 
             component A {
 
-                provides Type myport;
+                provides I myport;
 
                 system {
                     B myInstance;
@@ -37,7 +38,7 @@ describe("in systems", () => {
 
             component A {
 
-                provides Type myport;
+                provides I myport;
 
                 system {
                     B myInstance;
@@ -65,7 +66,7 @@ describe("in systems", () => {
 
             component A {
 
-                provides Type myport;
+                provides I myport;
 
                 system {
                     B myInstance;
@@ -110,6 +111,225 @@ describe("in systems", () => {
                 system {
                     B myInstance;
                     myInstance.port <=> myport;
+                }
+            }`,
+        });
+    });
+});
+
+describe("in interfaces", () => {
+    test.each(["in", "out"])("no unknown %s event types", eventDirection => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            extern Bla $$;
+            interface I {
+
+                ${eventDirection} Bla myEvent();
+
+                behavior {
+                    on myEvent: {}
+                }
+            }`,
+            fail: `
+            interface I {
+
+                ${eventDirection} Bla myEvent();
+
+                behavior {
+                    on myEvent: {}
+                }
+            }`,
+        });
+    });
+
+    test.each(["in", "out"])("no unknown %s events", eventDirection => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            extern Bla $$;
+            interface I {
+
+                ${eventDirection} Bla myEvent();
+
+                behavior {
+                    on myEvent: {}
+                }
+            }`,
+            fail: `
+            interface I {
+                behavior {
+                    on myEvent: {}
+                }
+            }`,
+        });
+    });
+});
+
+describe("in components", () => {
+    test("no ports for unknown interfaces", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I { in void e(); }
+            component A {
+
+                provides I i;
+
+                behavior {
+                    on i.e: {}
+                }
+            }`,
+            fail: `
+            component A {
+                provides I i;
+            }`,
+        });
+    });
+
+    test("no unknown ports", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I { in void e(); }
+            component A {
+
+                provides I i;
+
+                behavior {
+                    on i.e: {}
+                }
+            }`,
+            fail: `
+            interface I { in void e(); }
+            component A {
+                behavior {
+                    on i.e: {}
+                }
+            }`,
+        });
+    });
+
+    test("no unknown events on known ports", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I { in void e(); }
+            component A {
+
+                provides I i;
+
+                behavior {
+                    on i.e: {}
+                }
+            }`,
+            fail: `
+            interface I { in void e(); }
+            component A {
+
+                provides I i;
+
+                behavior {
+                    on i.e2: {}
+                }
+            }`,
+        });
+    });
+
+    test("no functions with unknown types", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    void foo() { }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    UNKNOWN foo() { }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown function calls", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    void foo() {
+                        bar();
+                    }
+                    void bar() {
+
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        bar();
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown parameter types", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    void foo(in bool b) {
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo(in UNKNOWN b) {
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown call arguments", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    void foo(in bool b) {
+                        foo(b);
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo(in bool b) {
+                        foo(c);
+                    }
+                }
+            }`,
+        });
+    });
+
+    test.each(["true", "false"])("no literal bool arguments are known", boolLiteral => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    void foo(in bool b) {
+                        foo(${boolLiteral});
+                    }
                 }
             }`,
         });

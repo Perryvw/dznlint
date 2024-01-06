@@ -38,21 +38,21 @@
 *   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
 *     port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
-*     formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
-*       formal_list := head=formal tail={ _ COMMA _ elem=formal }*
-*       formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
+*     parameters := PAREN_OPEN _ parameters=parameter_list? _ PAREN_CLOSE
+*       parameter_list := head=function_parameter tail={ _ COMMA _ elem=function_parameter }*
+*       function_parameter := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-*         function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
+*         function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=compound
 * declarative_statement := on | guard | compound
 *   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=statement end=@
 *     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
-*     on_trigger := name=compound_name _ parameters=on_formals?
-*     on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
-*       on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
-*         on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
+*     on_trigger := name=compound_name _ parameters=on_parameters?
+*     on_parameters := PAREN_OPEN _ parameters=on_parameter_list? _ PAREN_CLOSE
+*       on_parameter_list := head=on_parameter tail={ _ COMMA _ elem=on_parameter }*
+*         on_parameter := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
 *   guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
@@ -71,13 +71,12 @@
 * expression := binary_expression | unary_expression
 *   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
 *     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
-* unary_expression := parenthesized_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_operator_expression
+* unary_expression := parenthesized_expression | call_expression | dollars | ILLEGAL | compound_name | numeric_literal | unary_operator_expression
 *   call_expression             := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
 *     arguments                 := {_ expression=expression _ COMMA?}*
 *   dollars                     := DOLLAR value='[^$]*' DOLLAR
 *   numeric_literal             := text=NUMBER
 *   parenthesized_expression    := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
-*   property_expression         := expression=expression? DOT access_name=member_identifier
 *   unary_operator_expression   := operator=unary_operator _ expression=expression
 *     unary_operator            := NOT
 * compound_name := {start=@ compound=compound_name? DOT name=member_identifier end=@} | identifier
@@ -227,11 +226,11 @@ export enum ASTKinds {
     port_qualifiers_$0_$0_1 = "port_qualifiers_$0_$0_1",
     port_qualifiers_$0_$0_2 = "port_qualifiers_$0_$0_2",
     port_qualifiers_$0_$0_3 = "port_qualifiers_$0_$0_3",
-    formals = "formals",
-    formal_list = "formal_list",
-    formal_list_$0 = "formal_list_$0",
-    formal = "formal",
-    formal_$0 = "formal_$0",
+    parameters = "parameters",
+    parameter_list = "parameter_list",
+    parameter_list_$0 = "parameter_list_$0",
+    function_parameter = "function_parameter",
+    function_parameter_$0 = "function_parameter_$0",
     behavior = "behavior",
     behavior_compound = "behavior_compound",
     behavior_statements = "behavior_statements",
@@ -250,11 +249,11 @@ export enum ASTKinds {
     on_trigger_list = "on_trigger_list",
     on_trigger_list_$0 = "on_trigger_list_$0",
     on_trigger = "on_trigger",
-    on_formals = "on_formals",
-    on_formal_list = "on_formal_list",
-    on_formal_list_$0 = "on_formal_list_$0",
-    on_formal = "on_formal",
-    on_formal_$0 = "on_formal_$0",
+    on_parameters = "on_parameters",
+    on_parameter_list = "on_parameter_list",
+    on_parameter_list_$0 = "on_parameter_list_$0",
+    on_parameter = "on_parameter",
+    on_parameter_$0 = "on_parameter_$0",
     guard = "guard",
     guard_$0_1 = "guard_$0_1",
     guard_$0_2 = "guard_$0_2",
@@ -303,14 +302,12 @@ export enum ASTKinds {
     unary_expression_5 = "unary_expression_5",
     unary_expression_6 = "unary_expression_6",
     unary_expression_7 = "unary_expression_7",
-    unary_expression_8 = "unary_expression_8",
     call_expression = "call_expression",
     arguments = "arguments",
     arguments_$0 = "arguments_$0",
     dollars = "dollars",
     numeric_literal = "numeric_literal",
     parenthesized_expression = "parenthesized_expression",
-    property_expression = "property_expression",
     unary_operator_expression = "unary_operator_expression",
     unary_operator = "unary_operator",
     compound_name_1 = "compound_name_1",
@@ -608,29 +605,29 @@ export type port_qualifiers_$0_$0 = port_qualifiers_$0_$0_1 | port_qualifiers_$0
 export type port_qualifiers_$0_$0_1 = EXTERNAL;
 export type port_qualifiers_$0_$0_2 = INJECTED;
 export type port_qualifiers_$0_$0_3 = BLOCKING;
-export interface formals {
-    kind: ASTKinds.formals;
-    formals: Nullable<formal_list>;
+export interface parameters {
+    kind: ASTKinds.parameters;
+    parameters: Nullable<parameter_list>;
 }
-export interface formal_list {
-    kind: ASTKinds.formal_list;
-    head: formal;
-    tail: formal_list_$0[];
+export interface parameter_list {
+    kind: ASTKinds.parameter_list;
+    head: function_parameter;
+    tail: parameter_list_$0[];
 }
-export interface formal_list_$0 {
-    kind: ASTKinds.formal_list_$0;
-    elem: formal;
+export interface parameter_list_$0 {
+    kind: ASTKinds.parameter_list_$0;
+    elem: function_parameter;
 }
-export interface formal {
-    kind: ASTKinds.formal;
+export interface function_parameter {
+    kind: ASTKinds.function_parameter;
     start: PosInfo;
-    direction: Nullable<formal_$0>;
+    direction: Nullable<function_parameter_$0>;
     type_name: compound_name;
     name: identifier;
     end: PosInfo;
 }
-export interface formal_$0 {
-    kind: ASTKinds.formal_$0;
+export interface function_parameter_$0 {
+    kind: ASTKinds.function_parameter_$0;
     direction: param_direction;
 }
 export interface behavior {
@@ -658,7 +655,7 @@ export interface function_definition {
     kind: ASTKinds.function_definition;
     return_type: compound_name;
     name: identifier;
-    parameters: formals;
+    parameters: parameters;
     body: compound;
 }
 export type declarative_statement = declarative_statement_1 | declarative_statement_2 | declarative_statement_3;
@@ -685,28 +682,28 @@ export interface on_trigger_list_$0 {
 export interface on_trigger {
     kind: ASTKinds.on_trigger;
     name: compound_name;
-    parameters: Nullable<on_formals>;
+    parameters: Nullable<on_parameters>;
 }
-export interface on_formals {
-    kind: ASTKinds.on_formals;
-    formals: Nullable<on_formal_list>;
+export interface on_parameters {
+    kind: ASTKinds.on_parameters;
+    parameters: Nullable<on_parameter_list>;
 }
-export interface on_formal_list {
-    kind: ASTKinds.on_formal_list;
-    head: on_formal;
-    tail: on_formal_list_$0[];
+export interface on_parameter_list {
+    kind: ASTKinds.on_parameter_list;
+    head: on_parameter;
+    tail: on_parameter_list_$0[];
 }
-export interface on_formal_list_$0 {
-    kind: ASTKinds.on_formal_list_$0;
-    elem: on_formal;
+export interface on_parameter_list_$0 {
+    kind: ASTKinds.on_parameter_list_$0;
+    elem: on_parameter;
 }
-export interface on_formal {
-    kind: ASTKinds.on_formal;
+export interface on_parameter {
+    kind: ASTKinds.on_parameter;
     name: identifier;
-    assignment: Nullable<on_formal_$0>;
+    assignment: Nullable<on_parameter_$0>;
 }
-export interface on_formal_$0 {
-    kind: ASTKinds.on_formal_$0;
+export interface on_parameter_$0 {
+    kind: ASTKinds.on_parameter_$0;
     name: identifier;
 }
 export interface guard {
@@ -835,15 +832,14 @@ export type binary_operator_7 = GREATER_EQUAL;
 export type binary_operator_8 = GREATER;
 export type binary_operator_9 = PLUS;
 export type binary_operator_10 = MINUS;
-export type unary_expression = unary_expression_1 | unary_expression_2 | unary_expression_3 | unary_expression_4 | unary_expression_5 | unary_expression_6 | unary_expression_7 | unary_expression_8;
+export type unary_expression = unary_expression_1 | unary_expression_2 | unary_expression_3 | unary_expression_4 | unary_expression_5 | unary_expression_6 | unary_expression_7;
 export type unary_expression_1 = parenthesized_expression;
-export type unary_expression_2 = property_expression;
-export type unary_expression_3 = call_expression;
-export type unary_expression_4 = dollars;
-export type unary_expression_5 = ILLEGAL;
-export type unary_expression_6 = identifier;
-export type unary_expression_7 = numeric_literal;
-export type unary_expression_8 = unary_operator_expression;
+export type unary_expression_2 = call_expression;
+export type unary_expression_3 = dollars;
+export type unary_expression_4 = ILLEGAL;
+export type unary_expression_5 = compound_name;
+export type unary_expression_6 = numeric_literal;
+export type unary_expression_7 = unary_operator_expression;
 export interface call_expression {
     kind: ASTKinds.call_expression;
     expression: expression;
@@ -865,11 +861,6 @@ export interface numeric_literal {
 export interface parenthesized_expression {
     kind: ASTKinds.parenthesized_expression;
     expression: expression;
-}
-export interface property_expression {
-    kind: ASTKinds.property_expression;
-    expression: Nullable<expression>;
-    access_name: member_identifier;
 }
 export interface unary_operator_expression {
     kind: ASTKinds.unary_operator_expression;
@@ -1827,86 +1818,86 @@ export class Parser {
     public matchport_qualifiers_$0_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<port_qualifiers_$0_$0_3> {
         return this.matchBLOCKING($$dpth + 1, $$cr);
     }
-    public matchformals($$dpth: number, $$cr?: ErrorTracker): Nullable<formals> {
-        return this.run<formals>($$dpth,
+    public matchparameters($$dpth: number, $$cr?: ErrorTracker): Nullable<parameters> {
+        return this.run<parameters>($$dpth,
             () => {
-                let $scope$formals: Nullable<Nullable<formal_list>>;
-                let $$res: Nullable<formals> = null;
+                let $scope$parameters: Nullable<Nullable<parameter_list>>;
+                let $$res: Nullable<parameters> = null;
                 if (true
                     && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$formals = this.matchformal_list($$dpth + 1, $$cr)) || true)
+                    && (($scope$parameters = this.matchparameter_list($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formals, formals: $scope$formals};
+                    $$res = {kind: ASTKinds.parameters, parameters: $scope$parameters};
                 }
                 return $$res;
             });
     }
-    public matchformal_list($$dpth: number, $$cr?: ErrorTracker): Nullable<formal_list> {
-        return this.run<formal_list>($$dpth,
+    public matchparameter_list($$dpth: number, $$cr?: ErrorTracker): Nullable<parameter_list> {
+        return this.run<parameter_list>($$dpth,
             () => {
-                let $scope$head: Nullable<formal>;
-                let $scope$tail: Nullable<formal_list_$0[]>;
-                let $$res: Nullable<formal_list> = null;
+                let $scope$head: Nullable<function_parameter>;
+                let $scope$tail: Nullable<parameter_list_$0[]>;
+                let $$res: Nullable<parameter_list> = null;
                 if (true
-                    && ($scope$head = this.matchformal($$dpth + 1, $$cr)) !== null
-                    && ($scope$tail = this.loop<formal_list_$0>(() => this.matchformal_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
+                    && ($scope$head = this.matchfunction_parameter($$dpth + 1, $$cr)) !== null
+                    && ($scope$tail = this.loop<parameter_list_$0>(() => this.matchparameter_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal_list, head: $scope$head, tail: $scope$tail};
+                    $$res = {kind: ASTKinds.parameter_list, head: $scope$head, tail: $scope$tail};
                 }
                 return $$res;
             });
     }
-    public matchformal_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<formal_list_$0> {
-        return this.run<formal_list_$0>($$dpth,
+    public matchparameter_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<parameter_list_$0> {
+        return this.run<parameter_list_$0>($$dpth,
             () => {
-                let $scope$elem: Nullable<formal>;
-                let $$res: Nullable<formal_list_$0> = null;
+                let $scope$elem: Nullable<function_parameter>;
+                let $$res: Nullable<parameter_list_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$elem = this.matchformal($$dpth + 1, $$cr)) !== null
+                    && ($scope$elem = this.matchfunction_parameter($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal_list_$0, elem: $scope$elem};
+                    $$res = {kind: ASTKinds.parameter_list_$0, elem: $scope$elem};
                 }
                 return $$res;
             });
     }
-    public matchformal($$dpth: number, $$cr?: ErrorTracker): Nullable<formal> {
-        return this.run<formal>($$dpth,
+    public matchfunction_parameter($$dpth: number, $$cr?: ErrorTracker): Nullable<function_parameter> {
+        return this.run<function_parameter>($$dpth,
             () => {
                 let $scope$start: Nullable<PosInfo>;
-                let $scope$direction: Nullable<Nullable<formal_$0>>;
+                let $scope$direction: Nullable<Nullable<function_parameter_$0>>;
                 let $scope$type_name: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$end: Nullable<PosInfo>;
-                let $$res: Nullable<formal> = null;
+                let $$res: Nullable<function_parameter> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && (($scope$direction = this.matchformal_$0($$dpth + 1, $$cr)) || true)
+                    && (($scope$direction = this.matchfunction_parameter_$0($$dpth + 1, $$cr)) || true)
                     && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal, start: $scope$start, direction: $scope$direction, type_name: $scope$type_name, name: $scope$name, end: $scope$end};
+                    $$res = {kind: ASTKinds.function_parameter, start: $scope$start, direction: $scope$direction, type_name: $scope$type_name, name: $scope$name, end: $scope$end};
                 }
                 return $$res;
             });
     }
-    public matchformal_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<formal_$0> {
-        return this.run<formal_$0>($$dpth,
+    public matchfunction_parameter_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<function_parameter_$0> {
+        return this.run<function_parameter_$0>($$dpth,
             () => {
                 let $scope$direction: Nullable<param_direction>;
-                let $$res: Nullable<formal_$0> = null;
+                let $$res: Nullable<function_parameter_$0> = null;
                 if (true
                     && ($scope$direction = this.matchparam_direction($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.formal_$0, direction: $scope$direction};
+                    $$res = {kind: ASTKinds.function_parameter_$0, direction: $scope$direction};
                 }
                 return $$res;
             });
@@ -1997,7 +1988,7 @@ export class Parser {
             () => {
                 let $scope$return_type: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
-                let $scope$parameters: Nullable<formals>;
+                let $scope$parameters: Nullable<parameters>;
                 let $scope$body: Nullable<compound>;
                 let $$res: Nullable<function_definition> = null;
                 if (true
@@ -2005,7 +1996,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$parameters = this.matchformals($$dpth + 1, $$cr)) !== null
+                    && ($scope$parameters = this.matchparameters($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$body = this.matchcompound($$dpth + 1, $$cr)) !== null
                 ) {
@@ -2092,93 +2083,93 @@ export class Parser {
         return this.run<on_trigger>($$dpth,
             () => {
                 let $scope$name: Nullable<compound_name>;
-                let $scope$parameters: Nullable<Nullable<on_formals>>;
+                let $scope$parameters: Nullable<Nullable<on_parameters>>;
                 let $$res: Nullable<on_trigger> = null;
                 if (true
                     && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$parameters = this.matchon_formals($$dpth + 1, $$cr)) || true)
+                    && (($scope$parameters = this.matchon_parameters($$dpth + 1, $$cr)) || true)
                 ) {
                     $$res = {kind: ASTKinds.on_trigger, name: $scope$name, parameters: $scope$parameters};
                 }
                 return $$res;
             });
     }
-    public matchon_formals($$dpth: number, $$cr?: ErrorTracker): Nullable<on_formals> {
-        return this.run<on_formals>($$dpth,
+    public matchon_parameters($$dpth: number, $$cr?: ErrorTracker): Nullable<on_parameters> {
+        return this.run<on_parameters>($$dpth,
             () => {
-                let $scope$formals: Nullable<Nullable<on_formal_list>>;
-                let $$res: Nullable<on_formals> = null;
+                let $scope$parameters: Nullable<Nullable<on_parameter_list>>;
+                let $$res: Nullable<on_parameters> = null;
                 if (true
                     && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$formals = this.matchon_formal_list($$dpth + 1, $$cr)) || true)
+                    && (($scope$parameters = this.matchon_parameter_list($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on_formals, formals: $scope$formals};
+                    $$res = {kind: ASTKinds.on_parameters, parameters: $scope$parameters};
                 }
                 return $$res;
             });
     }
-    public matchon_formal_list($$dpth: number, $$cr?: ErrorTracker): Nullable<on_formal_list> {
-        return this.run<on_formal_list>($$dpth,
+    public matchon_parameter_list($$dpth: number, $$cr?: ErrorTracker): Nullable<on_parameter_list> {
+        return this.run<on_parameter_list>($$dpth,
             () => {
-                let $scope$head: Nullable<on_formal>;
-                let $scope$tail: Nullable<on_formal_list_$0[]>;
-                let $$res: Nullable<on_formal_list> = null;
+                let $scope$head: Nullable<on_parameter>;
+                let $scope$tail: Nullable<on_parameter_list_$0[]>;
+                let $$res: Nullable<on_parameter_list> = null;
                 if (true
-                    && ($scope$head = this.matchon_formal($$dpth + 1, $$cr)) !== null
-                    && ($scope$tail = this.loop<on_formal_list_$0>(() => this.matchon_formal_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
+                    && ($scope$head = this.matchon_parameter($$dpth + 1, $$cr)) !== null
+                    && ($scope$tail = this.loop<on_parameter_list_$0>(() => this.matchon_parameter_list_$0($$dpth + 1, $$cr), 0, -1)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on_formal_list, head: $scope$head, tail: $scope$tail};
+                    $$res = {kind: ASTKinds.on_parameter_list, head: $scope$head, tail: $scope$tail};
                 }
                 return $$res;
             });
     }
-    public matchon_formal_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<on_formal_list_$0> {
-        return this.run<on_formal_list_$0>($$dpth,
+    public matchon_parameter_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<on_parameter_list_$0> {
+        return this.run<on_parameter_list_$0>($$dpth,
             () => {
-                let $scope$elem: Nullable<on_formal>;
-                let $$res: Nullable<on_formal_list_$0> = null;
+                let $scope$elem: Nullable<on_parameter>;
+                let $$res: Nullable<on_parameter_list_$0> = null;
                 if (true
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOMMA($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$elem = this.matchon_formal($$dpth + 1, $$cr)) !== null
+                    && ($scope$elem = this.matchon_parameter($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on_formal_list_$0, elem: $scope$elem};
+                    $$res = {kind: ASTKinds.on_parameter_list_$0, elem: $scope$elem};
                 }
                 return $$res;
             });
     }
-    public matchon_formal($$dpth: number, $$cr?: ErrorTracker): Nullable<on_formal> {
-        return this.run<on_formal>($$dpth,
+    public matchon_parameter($$dpth: number, $$cr?: ErrorTracker): Nullable<on_parameter> {
+        return this.run<on_parameter>($$dpth,
             () => {
                 let $scope$name: Nullable<identifier>;
-                let $scope$assignment: Nullable<Nullable<on_formal_$0>>;
-                let $$res: Nullable<on_formal> = null;
+                let $scope$assignment: Nullable<Nullable<on_parameter_$0>>;
+                let $$res: Nullable<on_parameter> = null;
                 if (true
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$assignment = this.matchon_formal_$0($$dpth + 1, $$cr)) || true)
+                    && (($scope$assignment = this.matchon_parameter_$0($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.on_formal, name: $scope$name, assignment: $scope$assignment};
+                    $$res = {kind: ASTKinds.on_parameter, name: $scope$name, assignment: $scope$assignment};
                 }
                 return $$res;
             });
     }
-    public matchon_formal_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<on_formal_$0> {
-        return this.run<on_formal_$0>($$dpth,
+    public matchon_parameter_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<on_parameter_$0> {
+        return this.run<on_parameter_$0>($$dpth,
             () => {
                 let $scope$name: Nullable<identifier>;
-                let $$res: Nullable<on_formal_$0> = null;
+                let $$res: Nullable<on_parameter_$0> = null;
                 if (true
                     && this.matchLEFT_ARROW($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on_formal_$0, name: $scope$name};
+                    $$res = {kind: ASTKinds.on_parameter_$0, name: $scope$name};
                 }
                 return $$res;
             });
@@ -2663,31 +2654,27 @@ export class Parser {
             () => this.matchunary_expression_5($$dpth + 1, $$cr),
             () => this.matchunary_expression_6($$dpth + 1, $$cr),
             () => this.matchunary_expression_7($$dpth + 1, $$cr),
-            () => this.matchunary_expression_8($$dpth + 1, $$cr),
         ]);
     }
     public matchunary_expression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_1> {
         return this.matchparenthesized_expression($$dpth + 1, $$cr);
     }
     public matchunary_expression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_2> {
-        return this.matchproperty_expression($$dpth + 1, $$cr);
-    }
-    public matchunary_expression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_3> {
         return this.matchcall_expression($$dpth + 1, $$cr);
     }
-    public matchunary_expression_4($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_4> {
+    public matchunary_expression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_3> {
         return this.matchdollars($$dpth + 1, $$cr);
     }
-    public matchunary_expression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_5> {
+    public matchunary_expression_4($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_4> {
         return this.matchILLEGAL($$dpth + 1, $$cr);
     }
-    public matchunary_expression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_6> {
-        return this.matchidentifier($$dpth + 1, $$cr);
+    public matchunary_expression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_5> {
+        return this.matchcompound_name($$dpth + 1, $$cr);
     }
-    public matchunary_expression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_7> {
+    public matchunary_expression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_6> {
         return this.matchnumeric_literal($$dpth + 1, $$cr);
     }
-    public matchunary_expression_8($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_8> {
+    public matchunary_expression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression_7> {
         return this.matchunary_operator_expression($$dpth + 1, $$cr);
     }
     public matchcall_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<call_expression> {
@@ -2768,22 +2755,6 @@ export class Parser {
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.parenthesized_expression, expression: $scope$expression};
-                }
-                return $$res;
-            });
-    }
-    public matchproperty_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<property_expression> {
-        return this.run<property_expression>($$dpth,
-            () => {
-                let $scope$expression: Nullable<Nullable<expression>>;
-                let $scope$access_name: Nullable<member_identifier>;
-                let $$res: Nullable<property_expression> = null;
-                if (true
-                    && (($scope$expression = this.matchexpression($$dpth + 1, $$cr)) || true)
-                    && this.matchDOT($$dpth + 1, $$cr) !== null
-                    && ($scope$access_name = this.matchmember_identifier($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.property_expression, expression: $scope$expression, access_name: $scope$access_name};
                 }
                 return $$res;
             });

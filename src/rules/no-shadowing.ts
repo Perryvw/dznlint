@@ -35,8 +35,8 @@ export const no_shadowing: RuleFactory = factoryContext => {
             const diagnostics = [];
 
             for (const trigger of headTailToList(node.on_trigger_list)) {
-                if (trigger.parameters && trigger.parameters.formals) {
-                    for (const param of headTailToList(trigger.parameters.formals)) {
+                if (trigger.parameters && trigger.parameters.parameters) {
+                    for (const param of headTailToList(trigger.parameters.parameters)) {
                         const previousDefinition = findDeclarationInUpperScope(param.name.text, context);
                         if (previousDefinition) {
                             diagnostics.push(...createDiagnostics(param.name, previousDefinition, context.source));
@@ -65,8 +65,8 @@ export const no_shadowing: RuleFactory = factoryContext => {
                 diagnostics.push(...createDiagnostics(node.name, previousFunctionNameDefinition, context.source));
             }
 
-            if (node.parameters.formals) {
-                for (const { name } of headTailToList(node.parameters.formals)) {
+            if (node.parameters.parameters) {
+                for (const { name } of headTailToList(node.parameters.parameters)) {
                     const previousDefinition = findDeclarationInUpperScope(name.text, context);
                     if (previousDefinition) {
                         diagnostics.push(...createDiagnostics(name, previousDefinition, context.source));

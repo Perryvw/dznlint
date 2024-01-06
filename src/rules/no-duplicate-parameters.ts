@@ -35,8 +35,8 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
 
             const seenNames = new Map<string, identifier>();
 
-            if (node.parameters.formals) {
-                for (const param of headTailToList(node.parameters.formals)) {
+            if (node.parameters.parameters) {
+                for (const param of headTailToList(node.parameters.parameters)) {
                     if (seenNames.has(param.name.text)) {
                         diagnostics.push(
                             ...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source)
@@ -56,8 +56,8 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
             for (const on of headTailToList(node.on_trigger_list)) {
                 const seenNames = new Map<string, identifier>();
 
-                if (on.parameters && on.parameters.formals) {
-                    for (const param of headTailToList(on.parameters.formals)) {
+                if (on.parameters && on.parameters.parameters) {
+                    for (const param of headTailToList(on.parameters.parameters)) {
                         if (seenNames.has(param.name.text)) {
                             diagnostics.push(
                                 ...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source)

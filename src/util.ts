@@ -63,11 +63,12 @@ export function isExpressionStatement(node: ASTNode): node is parser.expression_
 export type ScopedBlock =
     | parser.behavior
     | parser.component
-    | parser.compound
     | parser.behavior_compound
-    | parser.system
-    | parser.namespace
+    | parser.compound
+    | parser.function_definition
     | parser.interface_definition
+    | parser.namespace
+    | parser.system
     | parser.file;
 
 export function isScopedBlock(node: ASTNode): node is ScopedBlock {
@@ -76,10 +77,11 @@ export function isScopedBlock(node: ASTNode): node is ScopedBlock {
         node.kind === parser.ASTKinds.behavior_compound ||
         node.kind === parser.ASTKinds.component ||
         node.kind === parser.ASTKinds.compound ||
-        node.kind === parser.ASTKinds.file ||
-        node.kind === parser.ASTKinds.namespace ||
+        node.kind === parser.ASTKinds.function_definition ||
         node.kind === parser.ASTKinds.interface_definition ||
-        node.kind === parser.ASTKinds.system
+        node.kind === parser.ASTKinds.namespace ||
+        node.kind === parser.ASTKinds.system ||
+        node.kind === parser.ASTKinds.file
     );
 }
 

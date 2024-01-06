@@ -168,16 +168,25 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
+        context.visit(node.return_type, cb);
         context.visit(node.name, cb);
         context.pushScope(node);
-        if (node.parameters.formals) {
-            for (const parameter of headTailToList(node.parameters.formals)) {
+        if (node.parameters.parameters) {
+            for (const parameter of headTailToList(node.parameters.parameters)) {
                 context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
                 context.visit(parameter, cb);
             }
         }
         context.visit(node.body, cb);
         context.popScope();
+    },
+    [parser.ASTKinds.function_parameter]: (
+        node: parser.function_parameter,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        context.visit(node.type_name, cb);
+        context.visit(node.name, cb);
     },
     [parser.ASTKinds.guard]: (node: parser.guard, context: VisitorContext, cb: VisitorCallback) => {
         if (node.condition) {
@@ -246,7 +255,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 
         context.popScope();
     },
-    [parser.ASTKinds.on_formal]: (node: parser.on_formal, context: VisitorContext, cb: VisitorCallback) => {
+    [parser.ASTKinds.on_parameter]: (node: parser.on_parameter, context: VisitorContext, cb: VisitorCallback) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
 
         context.visit(node.name, cb);
@@ -258,8 +267,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.on_trigger]: (node: parser.on_trigger, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.name, cb);
 
-        if (node.parameters?.formals) {
-            for (const parameter of headTailToList(node.parameters.formals)) {
+        if (node.parameters?.parameters) {
+            for (const parameter of headTailToList(node.parameters.parameters)) {
                 context.visit(parameter, cb);
             }
         }
@@ -271,17 +280,10 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     ) => {
         context.visit(node.expression, cb);
     },
-    [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext) => {
+    [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext, cb: VisitorCallback) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
-    },
-    [parser.ASTKinds.property_expression]: (
-        node: parser.property_expression,
-        context: VisitorContext,
-        cb: VisitorCallback
-    ) => {
-        if (node.expression) {
-            context.visit(node.expression, cb);
-        }
+        context.visit(node.type, cb);
+        context.visit(node.name, cb);
     },
     [parser.ASTKinds.return_statement]: (
         node: parser.return_statement,
@@ -321,7 +323,6 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.dollars]: stopVisiting,
     [parser.ASTKinds.enum_definition]: stopVisiting,
     [parser.ASTKinds.extern_definition]: stopVisiting,
-    [parser.ASTKinds.formal]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
     [parser.ASTKinds.ILLEGAL]: stopVisiting,
     [parser.ASTKinds.import_statement]: stopVisiting,
@@ -362,6 +363,7 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
         setParent(node.name, node);
     },
     [parser.ASTKinds.call_expression]: (node: parser.call_expression) => {
+        setParent(node.expression, node);
         for (const { expression } of node.arguments) {
             setParent(expression, node);
         }
@@ -404,13 +406,18 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     },
     [parser.ASTKinds.function_definition]: (node: parser.function_definition) => {
         setParent(node.body, node);
+        setParent(node.return_type, node);
         setParent(node.name, node);
 
-        if (node.parameters.formals) {
-            for (const parameter of headTailToList(node.parameters.formals)) {
+        if (node.parameters.parameters) {
+            for (const parameter of headTailToList(node.parameters.parameters)) {
                 setParent(parameter, node);
             }
         }
+    },
+    [parser.ASTKinds.function_parameter]: (node: parser.function_parameter) => {
+        setParent(node.type_name, node);
+        setParent(node.name, node);
     },
     [parser.ASTKinds.guard]: (node: parser.guard) => {
         if (node.condition) {
@@ -464,7 +471,7 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
 
         setParent(node.statement, node);
     },
-    [parser.ASTKinds.on_formal]: (node: parser.on_formal) => {
+    [parser.ASTKinds.on_parameter]: (node: parser.on_parameter) => {
         setParent(node.name, node);
 
         if (node.assignment) {
@@ -474,8 +481,8 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.on_trigger]: (node: parser.on_trigger) => {
         setParent(node.name, node);
 
-        if (node.parameters?.formals) {
-            for (const parameter of headTailToList(node.parameters.formals)) {
+        if (node.parameters?.parameters) {
+            for (const parameter of headTailToList(node.parameters.parameters)) {
                 setParent(parameter, node);
             }
         }
@@ -486,11 +493,6 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.port]: (node: parser.port) => {
         setParent(node.name, node);
         setParent(node.type, node);
-    },
-    [parser.ASTKinds.property_expression]: (node: parser.property_expression) => {
-        if (node.expression) {
-            setParent(node.expression, node);
-        }
     },
     [parser.ASTKinds.return_statement]: (node: parser.return_statement) => {
         if (node.expression) {
@@ -515,7 +517,6 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.dollars]: stopVisiting,
     [parser.ASTKinds.enum_definition]: stopVisiting,
     [parser.ASTKinds.extern_definition]: stopVisiting,
-    [parser.ASTKinds.formal]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
     [parser.ASTKinds.ILLEGAL]: stopVisiting,
     [parser.ASTKinds.import_statement]: stopVisiting,
