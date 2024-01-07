@@ -46,7 +46,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             const diagnostics = [];
             for (const trigger of headTailToList(node.on_trigger_list)) {
                 if (context.typeChecker.symbolOfNode(trigger.name) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "event", context));
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "port or event", context));
                 }
             }
             return diagnostics;
@@ -94,7 +94,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                 const diagnostics = [];
 
                 if (context.typeChecker.symbolOfNode(node.type_name) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.type_name, "function", context));
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.type_name, "type", context));
                 }
 
                 if (node.initializer) {
@@ -157,7 +157,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                     nodeToSourceRange(compoundName.name)
                 );
             } else {
-                return createUnknownCompoundNameDiagnostic(compoundName.compound, typeForMessage, context);
+                return createUnknownCompoundNameDiagnostic(compoundName.compound, "variable", context);
             }
         };
 

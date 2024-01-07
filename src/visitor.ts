@@ -307,6 +307,8 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         cb: VisitorCallback
     ) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
+        context.visit(node.type_name, cb);
+        context.visit(node.name, cb);
         if (node.initializer) {
             context.visit(node.initializer.expression, cb);
         }
@@ -460,6 +462,17 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
         }
     },
     [parser.ASTKinds.namespace]: (node: parser.namespace) => {
+        while (node.name.kind !== parser.ASTKinds.identifier && node.name.compound) {
+            // De-sugar
+            const newNs = {
+                kind: parser.ASTKinds.namespace,
+                name: { ...node.name.name, kind: parser.ASTKinds.identifier },
+                root: { kind: parser.ASTKinds.namespace_root, statements: node.root.statements },
+            } satisfies parser.namespace;
+            node.name = node.name.compound;
+            node.root.statements = [{ kind: parser.ASTKinds.namespace_root_$0, statement: newNs }];
+        }
+        setParent(node.name, node);
         for (const { statement } of node.root.statements) {
             setParent(statement, node);
         }
@@ -505,6 +518,7 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
         }
     },
     [parser.ASTKinds.variable_definition]: (node: parser.variable_definition) => {
+        setParent(node.type_name, node);
         if (node.initializer) {
             setParent(node.initializer.expression, node);
         }

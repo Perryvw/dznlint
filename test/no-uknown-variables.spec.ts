@@ -334,4 +334,101 @@ describe("in components", () => {
             }`,
         });
     });
+
+    test("no unknown variable declaration type", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    void foo() {
+                        bool bar = true;
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        UNKNOWN bar = $bla$;
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown namespaced variable declaration type", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            namespace NS {
+                extern Type $$;
+            }
+            component C {
+                behavior {
+                    void foo() {
+                        NS.Type bar = $bla$;
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        NS.Type bar = $bla$;
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown nested namespaced variable declaration type", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            namespace NS { namespace NS2 {
+                extern Type $$;
+            } }
+            component C {
+                behavior {
+                    void foo() {
+                        NS.NS2.Type bar = $bla$;
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        NS.NS2.Type bar = $bla$;
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown compound namespaced variable declaration type", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            namespace NS.NS2 {
+                extern Type $$;
+            }
+            component C {
+                behavior {
+                    void foo() {
+                        NS.NS2.Type bar = $bla$;
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        NS.NS2.Type bar = $bla$;
+                    }
+                }
+            }`,
+        });
+    });
 });

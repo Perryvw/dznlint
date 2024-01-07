@@ -13,7 +13,10 @@ import {
 import { memoize } from "./memoize";
 
 export class SemanticSymbol {
-    public constructor(public declaration: ASTNode) {}
+    public constructor(
+        public declaration: ASTNode,
+        public name?: parser.compound_name
+    ) {}
 
     static ErrorSymbol(): SemanticSymbol {
         return new SemanticSymbol({ kind: parser.ASTKinds.$EOF });
@@ -28,6 +31,7 @@ export enum TypeKind {
     Event,
     Interface,
     Component,
+    Namespace,
     Function,
 }
 
@@ -111,6 +115,14 @@ export class TypeChecker {
             const symbol = new SemanticSymbol(node);
             this.symbols.set(node, symbol);
             return symbol;
+        } else if (node.kind === parser.ASTKinds.extern_definition) {
+            const symbol = new SemanticSymbol(node);
+            this.symbols.set(node, symbol);
+            return symbol;
+        } else if (node.kind === parser.ASTKinds.namespace) {
+            const symbol = new SemanticSymbol(node);
+            this.symbols.set(node, symbol);
+            return symbol;
         } else {
             throw `I don't know how to find the symbol for node type ${parser.ASTKinds[node.kind]}`;
         }
@@ -135,6 +147,13 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === parser.ASTKinds.event) {
             const definition = declaration as parser.event;
             return { kind: TypeKind.Event, declaration: symbol.declaration, name: definition.event_name.text };
+        } else if (symbol.declaration.kind === parser.ASTKinds.namespace) {
+            const definition = declaration as parser.namespace;
+            if (definition.name.kind === parser.ASTKinds.identifier) {
+                return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.text };
+            } else {
+                return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.name.text };
+            }
         } else if (symbol.declaration.kind === parser.ASTKinds.$EOF) {
             return ERROR_TYPE;
         } else {
@@ -197,8 +216,15 @@ export class TypeChecker {
             }
         } else if (scope.kind === parser.ASTKinds.namespace) {
             for (const { statement } of scope.root.statements) {
-                if (statement.kind === parser.ASTKinds.enum_definition) {
+                if (
+                    statement.kind === parser.ASTKinds.enum_definition ||
+                    statement.kind === parser.ASTKinds.extern_definition
+                ) {
                     result.set(statement.name.text, statement);
+                } else if (statement.kind === parser.ASTKinds.namespace) {
+                    // In case of compound namespace name, find root namespace
+                    const rootNs = this.compoundRoot(statement.name);
+                    if (rootNs) result.set(rootNs.text, statement);
                 }
             }
         } else if (scope.kind === parser.ASTKinds.interface_definition) {
@@ -243,6 +269,10 @@ export class TypeChecker {
                     statement.kind === parser.ASTKinds.extern_definition
                 ) {
                     result.set(statement.name.text, statement);
+                } else if (statement.kind === parser.ASTKinds.namespace) {
+                    // In case of compound namespace name, find root namespace
+                    const rootNs = this.compoundRoot(statement.name);
+                    if (rootNs) result.set(rootNs.text, statement);
                 }
             }
         } else {
@@ -250,5 +280,13 @@ export class TypeChecker {
         }
 
         return result;
+    }
+
+    private compoundRoot(compound: parser.compound_name): parser.identifier | null {
+        let root: parser.compound_name | null = compound;
+        while (root && root.kind !== parser.ASTKinds.identifier) {
+            root = root.compound;
+        }
+        return root;
     }
 }
