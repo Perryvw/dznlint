@@ -1,7 +1,7 @@
 import { InputSource } from "./api";
 import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
-import { TypeChecker } from "./semantics/program";
+import { Program, TypeChecker } from "./semantics/program";
 import { headTailToList } from "./util";
 
 const stopVisiting = () => {};
@@ -25,10 +25,15 @@ interface Scope {
 }
 
 export class VisitorContext {
-    typeChecker: TypeChecker = new TypeChecker();
+    typeChecker: TypeChecker;
     scopeStack: Scope[] = [];
 
-    constructor(public source: InputSource) {}
+    constructor(
+        public source: InputSource,
+        public program: Program
+    ) {
+        this.typeChecker = new TypeChecker(program);
+    }
 
     pushScope(root: ScopeRoot): void {
         this.scopeStack.unshift({ root, variable_declarations: {} });
@@ -540,8 +545,8 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.sl_comment]: stopVisiting,
 };
 
-export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback) {
-    const context = new VisitorContext(source);
+export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback, program: Program) {
+    const context = new VisitorContext(source, program);
     context.visit(file, n => setParentVisitor[n.kind]?.(n));
     context.visit(file, callback);
 }

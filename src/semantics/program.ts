@@ -1,5 +1,8 @@
+import { InputSource } from "../api";
+import { Diagnostic } from "../diagnostic";
 import * as parser from "../grammar/parser";
 import { ASTNode } from "../linting-rule";
+import { parseDznSource } from "../parse";
 import {
     findFirstParent,
     headTailToList,
@@ -11,6 +14,57 @@ import {
     ScopedBlock,
 } from "../util";
 import { memoize } from "./memoize";
+
+export interface LinterHost {
+    includePaths: string[];
+    fileExists(filePath: string): boolean;
+    readFile(filePath: string): string;
+    resolveImport(importPath: string, importingFilePath: string): string | undefined;
+}
+
+export class Program {
+    constructor(
+        public sources: InputSource[],
+        public host: LinterHost
+    ) {}
+
+    private parsedFiles = new Map<string, SourceFile>();
+
+    public getSourceFile(path: string): SourceFile | undefined {
+        if (this.parsedFiles.has(path)) return this.parsedFiles.get(path)!;
+
+        for (const s of this.sources) {
+            if (s.fileName === path) {
+                const sf = new SourceFile(s);
+                this.parsedFiles.set(path, sf);
+                return sf;
+            }
+        }
+
+        if (this.host.fileExists(path)) {
+            const sf = new SourceFile({ fileName: path, fileContent: this.host.readFile(path) });
+            this.parsedFiles.set(path, sf);
+            return sf;
+        }
+    }
+
+    public getFilePath(file: parser.file): string | undefined {
+        for (const [path, sourceFile] of this.parsedFiles) {
+            if (sourceFile.ast === file) return path;
+        }
+    }
+}
+
+class SourceFile {
+    public parseDiagnostics: Diagnostic[];
+    public ast?: parser.file;
+
+    public constructor(public source: InputSource) {
+        const { ast, diagnostics } = parseDznSource(source);
+        this.parseDiagnostics = diagnostics;
+        this.ast = ast;
+    }
+}
 
 export class SemanticSymbol {
     public constructor(
@@ -48,6 +102,8 @@ const ERROR_TYPE = {
 } satisfies Type;
 
 export class TypeChecker {
+    public constructor(private program: Program) {}
+
     public typeOfNode(node: ASTNode): Type {
         const symbol = this.symbolOfNode(node);
         if (!symbol) return ERROR_TYPE;
@@ -260,7 +316,6 @@ export class TypeChecker {
                 }
             }
         } else if (scope.kind === parser.ASTKinds.file) {
-            // TODO: imports
             for (const { statement } of scope.statements) {
                 if (
                     statement.kind === parser.ASTKinds.enum_definition ||
@@ -273,6 +328,14 @@ export class TypeChecker {
                     // In case of compound namespace name, find root namespace
                     const rootNs = this.compoundRoot(statement.name);
                     if (rootNs) result.set(rootNs.text, statement);
+                } else if (statement.kind === parser.ASTKinds.import_statement) {
+                    const currentFile = this.program.getFilePath(scope);
+                    if (!currentFile) continue;
+                    const resolvedFile = this.program.host.resolveImport(statement.file_name, currentFile);
+                    const sourceFile = this.program.getSourceFile(resolvedFile ?? statement.file_name);
+                    if (!sourceFile?.ast) continue;
+
+                    return this.findVariablesDeclaredInScope(sourceFile.ast);
                 }
             }
         } else {

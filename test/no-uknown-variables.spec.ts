@@ -1,27 +1,21 @@
+import { InputSource, lint } from "../src/api";
 import { unknownVariable } from "../src/rules/no-unknown-variables";
-import { testdznlint } from "./util";
+import { expectNoDiagnosticOfType, testdznlint } from "./util";
 
 describe("in systems", () => {
     test("no instance of unknown type", () => {
         testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
-            interface I {}
             component B {}
 
             component A {
-
-                provides I myport;
-
                 system {
                     B myInstance;
                 }
             }`,
             fail: `
             component A {
-
-                provides Type myport;
-
                 system {
                     B myInstance;
                 }
@@ -430,5 +424,33 @@ describe("in components", () => {
                 }
             }`,
         });
+    });
+
+    test("no uknown imported symbols", () => {
+        const files: InputSource[] = [
+            {
+                fileName: "main.dzn",
+                fileContent: `
+                import other.dzn;
+                component C {
+                    behavior {
+                        OtherNS.EType foo() {
+                        }
+                    }
+                }
+            `,
+            },
+            {
+                fileName: "other.dzn",
+                fileContent: `
+                namespace OtherNS {
+                    extern EType $$;
+                }
+            `,
+            },
+        ];
+
+        const diagnostics = lint(files);
+        expectNoDiagnosticOfType(diagnostics, unknownVariable.code);
     });
 });

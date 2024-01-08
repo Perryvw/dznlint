@@ -39,14 +39,14 @@ export function testdznlint(test: LintTest) {
     }
 }
 
-function expectDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
+export function expectDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
     const diagnosticsOfType = diagnostics.filter(d => d.code === code);
     if (diagnosticsOfType.length === 0) {
         expect(diagnostics.map(formatDiagnostic).join("\n")).toEqual(`A diagnostic with code ${code}`);
     }
 }
 
-function expectNoDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
+export function expectNoDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
     const diagnosticsOfType = diagnostics.filter(d => d.code === code);
     if (diagnosticsOfType.length > 0) {
         const formattedDiagnostics = diagnosticsOfType.map(formatDiagnostic).join("\n");
