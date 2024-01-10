@@ -36,6 +36,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     no_mismatching_binding_types: "error",
     no_recursive_system: "error",
     no_shadowing: "error",
+    no_unknown_imports: "error",
     no_unknown_variables: "error",
     no_unused_instances: "warning",
     no_unused_parameters: "warning",

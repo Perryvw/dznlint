@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as api from "../src/api";
-import { expectNoDiagnostics } from "./util";
+import { expectDiagnosticOfType, expectNoDiagnostics } from "./util";
+import { couldNotResolveFile } from "../src/rules/no-unknown-imports";
 
 test("basic import", () => {
     const files: api.InputSource[] = [
@@ -45,7 +46,7 @@ test("basic import with include dir", () => {
         },
     ];
 
-    expectNoDiagnostics(api.lint(files, {}, { includePaths: ["mysubdir"]}));
+    expectNoDiagnostics(api.lint(files, {}, { includePaths: ["mysubdir"] }));
 });
 
 test("resolve import from disk", () => {
@@ -61,14 +62,14 @@ test("resolve import from disk", () => {
                 }
             }
         `,
-        }
+        },
     ];
 
     const mockHost = {
         fileExists: jest.fn(() => true),
         readFile: jest.fn(() => "extern EType $$;"),
     } satisfies Partial<api.LinterHost>;
-    expectNoDiagnostics(api.lint(files, {}, mockHost));
+    expectNoDiagnostics(api.lint(files, { no_unknown_imports: false }, mockHost));
 
     expect(mockHost.fileExists).toHaveBeenCalledTimes(2);
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(1, "other.dzn"); // Resolve
@@ -90,7 +91,7 @@ test("resolve import from disk with include dir", () => {
                 }
             }
         `,
-        }
+        },
     ];
 
     const mockHost = {
@@ -101,8 +102,8 @@ test("resolve import from disk with include dir", () => {
 
     mockHost.fileExists.mockReturnValueOnce(false).mockReturnValueOnce(true).mockReturnValueOnce(true);
 
-    expectNoDiagnostics(api.lint(files, {}, mockHost));
-    
+    expectNoDiagnostics(api.lint(files, { no_unknown_imports: false }, mockHost));
+
     expect(mockHost.fileExists).toHaveBeenCalledTimes(3);
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(1, "other.dzn"); // Resolve
     expect(mockHost.fileExists).toHaveNthReturnedWith(1, false); // Resolve
@@ -111,4 +112,28 @@ test("resolve import from disk with include dir", () => {
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(2, path.join("mysubdir", "other.dzn")); // Read
     expect(mockHost.readFile).toHaveBeenCalledTimes(1);
     expect(mockHost.readFile).toHaveBeenCalledWith(path.join("mysubdir", "other.dzn"));
+});
+
+test("failed to resolve import", () => {
+    const files: api.InputSource[] = [
+        {
+            fileName: "main.dzn",
+            fileContent: `
+            import other.dzn;
+            component C {
+                behavior {
+                }
+            }
+        `,
+        },
+    ];
+
+    const mockHost = {
+        fileExists: jest.fn(() => false),
+        readFile: jest.fn(() => ""),
+    } satisfies Partial<api.LinterHost>;
+
+    expectDiagnosticOfType(api.lint(files, {}, mockHost), couldNotResolveFile.code);
+
+    expect(mockHost.readFile).toHaveBeenCalledTimes(0);
 });

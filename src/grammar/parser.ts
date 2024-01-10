@@ -11,7 +11,7 @@
 *   | sl_comment
 *   | statement
 * extern_definition := EXTERN __ name=identifier __ literal=dollars _ SEMICOLON
-* import_statement := IMPORT __ file_name=file_name _ SEMICOLON
+* import_statement := start=@ IMPORT __ file_name=file_name _ SEMICOLON end=@
 *   file_name := '[^;]+'
 * type_definition := enum_definition | int | extern_definition
 *   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
@@ -424,7 +424,9 @@ export interface extern_definition {
 }
 export interface import_statement {
     kind: ASTKinds.import_statement;
+    start: PosInfo;
     file_name: file_name;
+    end: PosInfo;
 }
 export type file_name = string;
 export type type_definition = type_definition_1 | type_definition_2 | type_definition_3;
@@ -1115,16 +1117,20 @@ export class Parser {
     public matchimport_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<import_statement> {
         return this.run<import_statement>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$file_name: Nullable<file_name>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<import_statement> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && this.matchIMPORT($$dpth + 1, $$cr) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$file_name = this.matchfile_name($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.import_statement, file_name: $scope$file_name};
+                    $$res = {kind: ASTKinds.import_statement, start: $scope$start, file_name: $scope$file_name, end: $scope$end};
                 }
                 return $$res;
             });

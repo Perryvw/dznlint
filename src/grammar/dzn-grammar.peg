@@ -12,7 +12,7 @@ root_statement :=
 
 extern_definition := EXTERN __ name=identifier __ literal=dollars _ SEMICOLON
 
-import_statement := IMPORT __ file_name=file_name _ SEMICOLON
+import_statement := start=@ IMPORT __ file_name=file_name _ SEMICOLON end=@
   file_name := '[^;]+'
 
 type_definition := enum_definition | int | extern_definition

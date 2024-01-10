@@ -30,6 +30,7 @@ export interface DznLintConfiguration {
     no_mismatching_binding_types: ConfigValue;
     no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;
+    no_unknown_imports: ConfigValue;
     no_unknown_variables: ConfigValue;
     no_unused_instances: ConfigValue;
     no_unused_parameters: ConfigValue;
