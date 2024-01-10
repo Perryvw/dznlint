@@ -19,7 +19,7 @@ export interface LinterHost {
     includePaths: string[];
     fileExists(filePath: string): boolean;
     readFile(filePath: string): string;
-    resolveImport(importPath: string, importingFilePath: string): string | undefined;
+    resolveImport(importPath: string, importingFilePath: string, program: Program): string | undefined;
 }
 
 export class Program {
@@ -331,7 +331,11 @@ export class TypeChecker {
                 } else if (statement.kind === parser.ASTKinds.import_statement) {
                     const currentFile = this.program.getFilePath(scope);
                     if (!currentFile) continue;
-                    const resolvedFile = this.program.host.resolveImport(statement.file_name, currentFile);
+                    const resolvedFile = this.program.host.resolveImport(
+                        statement.file_name,
+                        currentFile,
+                        this.program
+                    );
                     const sourceFile = this.program.getSourceFile(resolvedFile ?? statement.file_name);
                     if (!sourceFile?.ast) continue;
 

@@ -53,3 +53,11 @@ export function expectNoDiagnosticOfType(diagnostics: Diagnostic[], code: Diagno
         expect(formattedDiagnostics).toEqual("");
     }
 }
+
+export function expectNoDiagnostics(diagnostics: Diagnostic[]) {
+    const diagnosticsOfType = diagnostics;
+    if (diagnosticsOfType.length > 0) {
+        const formattedDiagnostics = diagnosticsOfType.map(formatDiagnostic).join("\n");
+        expect(formattedDiagnostics).toEqual("");
+    }
+}

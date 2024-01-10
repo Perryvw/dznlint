@@ -1,11 +1,11 @@
 import * as fs from "fs";
-import * as path from "path";
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
 import { Diagnostic } from "./diagnostic";
 import { ASTKinds } from "./grammar/parser";
 import { ASTNode, Linter, loadLinters } from "./linting-rule";
 import { visitFile } from "./visitor";
 import { LinterHost, Program } from "./semantics/program";
+import { resolveImport } from "./resolve-imports";
 
 export { LinterHost };
 
@@ -77,21 +77,7 @@ const defaultLinterHost: LinterHost = {
     readFile(filePath) {
         return fs.readFileSync(filePath).toString();
     },
-    resolveImport(importPath, importingFilePath) {
-        const requiringBase = importingFilePath ? path.dirname(importingFilePath) : ".";
-        const baseImport = path.join(requiringBase, importPath);
-        if (this.fileExists?.(baseImport)) {
-            return baseImport;
-        }
-
-        // oh no we have to see if we can resolve from include dirs instead
-        if (this.includePaths) {
-            for (const includePath of this.includePaths) {
-                const importedFile = path.join(includePath, importPath);
-                if (this.fileExists?.(importedFile)) {
-                    return importedFile;
-                }
-            }
-        }
+    resolveImport(importPath, importingFilePath, program) {
+        return resolveImport(importPath, importingFilePath, program);
     },
 };
