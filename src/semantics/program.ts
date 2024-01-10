@@ -184,8 +184,7 @@ export class TypeChecker {
         }
     }
 
-    @memoize
-    public typeOfSymbol(symbol: SemanticSymbol): Type {
+    public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {
         const declaration = symbol.declaration;
         if (declaration.kind === parser.ASTKinds.instance) {
             const instance = declaration as parser.instance;
@@ -215,10 +214,9 @@ export class TypeChecker {
         } else {
             throw `I don't know how to find type for a symbol of kind ${parser.ASTKinds[symbol.declaration.kind]}`;
         }
-    }
+    })
 
-    @memoize
-    public getMembersOfType(type: Type): Map<string, SemanticSymbol> {
+    public getMembersOfType = memoize(this, (type: Type): Map<string, SemanticSymbol> => {
         if (!type.declaration) return new Map();
 
         const result = new Map<string, SemanticSymbol>();
@@ -258,10 +256,9 @@ export class TypeChecker {
         }
 
         return result;
-    }
+    })
 
-    @memoize
-    private findVariablesDeclaredInScope(scope: ScopedBlock): Map<string, ASTNode> {
+    private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ASTNode> => {
         const result = new Map<string, ASTNode>();
 
         if (scope.kind === parser.ASTKinds.system) {
@@ -347,7 +344,7 @@ export class TypeChecker {
         }
 
         return result;
-    }
+    })
 
     private compoundRoot(compound: parser.compound_name): parser.identifier | null {
         let root: parser.compound_name | null = compound;
