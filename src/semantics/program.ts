@@ -359,6 +359,14 @@ export class TypeChecker {
                     }
                 }
             }
+        } else if (scope.kind === parser.ASTKinds.on) {
+            for (const trigger of headTailToList(scope.on_trigger_list)) {
+                if (trigger.parameters?.parameters) {
+                    for (const parameter of headTailToList(trigger.parameters.parameters)) {
+                        result.set(parameter.name.text, parameter);
+                    }
+                }
+            }
         } else {
             throw `I don't know how to find variables in scope of type ${parser.ASTKinds[scope.kind]} ${util.inspect(
                 scope

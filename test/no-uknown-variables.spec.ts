@@ -522,4 +522,34 @@ describe("in components", () => {
         const diagnostics = lint(files);
         expectNoDiagnosticOfType(diagnostics, unknownVariable.code);
     });
+
+    test("no unknown variables from event arguments", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+                in bool Bla(bool v, bool v2);
+            }
+            component C {
+                provides I api;
+                behavior {
+                    on api.Bla(v1, v2): {
+                        reply(v2);
+                    }
+                }
+            }`,
+            fail: `
+            interface I {
+                in bool Bla(bool v, bool v2);
+            }
+            component C {
+                provides I api;
+                behavior {
+                    on api.Bla(v1, v2): {
+                        reply(v3);
+                    }
+                }
+            }`,
+        });
+    });
 });

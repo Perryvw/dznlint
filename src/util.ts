@@ -68,6 +68,7 @@ export type ScopedBlock =
     | parser.function_definition
     | parser.interface_definition
     | parser.namespace
+    | parser.on
     | parser.system
     | parser.file;
 
@@ -80,6 +81,7 @@ export function isScopedBlock(node: ASTNode): node is ScopedBlock {
         node.kind === parser.ASTKinds.function_definition ||
         node.kind === parser.ASTKinds.interface_definition ||
         node.kind === parser.ASTKinds.namespace ||
+        node.kind === parser.ASTKinds.on ||
         node.kind === parser.ASTKinds.system ||
         node.kind === parser.ASTKinds.file
     );

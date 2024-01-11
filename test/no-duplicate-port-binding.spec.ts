@@ -61,3 +61,45 @@ test("also works when binding port to self", () => {
         }`,
     });
 });
+
+test("multiple bindings of same type is allowed", () => {
+    testdznlint({
+        diagnostic: duplicatePortBinding.code,
+        pass: `
+        interface Type {}
+        component A {
+
+            provides Type providedport1;
+            provides Type providedport2;
+            requires Type requiredport1;
+            requires Type requiredport2;
+
+            system {
+                providedport1 <=> requiredport1;
+                providedport2 <=> requiredport2;
+            }
+        }`,
+    });
+});
+
+test("binding to multiple instances of same type is allowed", () => {
+    testdznlint({
+        diagnostic: duplicatePortBinding.code,
+        pass: `
+        interface Type {}
+        component C { provides Type api; }
+        component A {
+
+            provides Type providedport1;
+            provides Type providedport2;
+
+            system {
+                C c1;
+                C c2;
+
+                providedport1 <=> c1.api;
+                providedport2 <=> c2.api;
+            }
+        }`,
+    });
+});
