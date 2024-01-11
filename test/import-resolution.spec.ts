@@ -26,14 +26,20 @@ test("basic import", () => {
     expectNoDiagnostics(api.lint(files));
 });
 
-test("import interface", () => {
+test("[bug] mixed scenario import interface", () => {
     const files: api.InputSource[] = [
         {
             fileName: "main.dzn",
             fileContent: `
             import other.dzn;
-            component C {
-                requires IInterface interface;
+            enum MyEnum { A, B, C };
+            interface IMyInterface {
+                in MyEnum Bla();
+                behavior {
+                    on Bla: reply(MyEnum.A);
+                    on Bla: reply(MyEnum.B);
+                    on Bla: reply(MyEnum.C);
+                }
             }
         `,
         },

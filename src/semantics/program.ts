@@ -198,21 +198,31 @@ export class TypeChecker {
             const instance = declaration as parser.instance;
             const typeSymbol = this.symbolOfNode(instance.type);
             if (!typeSymbol) return ERROR_TYPE;
-            return { kind: TypeKind.Component, declaration: typeSymbol.declaration, name: nameToString(instance.type) };
+            return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === parser.ASTKinds.variable_definition) {
             const definition = declaration as parser.variable_definition;
             const typeSymbol = this.symbolOfNode(definition.type_name);
             if (!typeSymbol) return ERROR_TYPE;
-            return { kind: TypeKind.External, declaration: typeSymbol.declaration, name: definition.name.text };
+            return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === parser.ASTKinds.enum_definition) {
             const definition = declaration as parser.enum_definition;
             return { kind: TypeKind.Enum, declaration: definition, name: definition.name.text };
         } else if (symbol.declaration.kind === parser.ASTKinds.port) {
             const definition = declaration as parser.port;
-            return { kind: TypeKind.Port, declaration: symbol.declaration, name: definition.name.text };
+            const typeSymbol = this.symbolOfNode(definition.type);
+            if (!typeSymbol) return ERROR_TYPE;
+            return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === parser.ASTKinds.event) {
             const definition = declaration as parser.event;
-            return { kind: TypeKind.Event, declaration: symbol.declaration, name: definition.event_name.text };
+            const typeSymbol = this.symbolOfNode(definition.type_name);
+            if (!typeSymbol) return ERROR_TYPE;
+            return this.typeOfSymbol(typeSymbol);
+        } else if (symbol.declaration.kind === parser.ASTKinds.component) {
+            const definition = declaration as parser.component;
+            return { kind: TypeKind.Component, name: definition.name.text, declaration: definition };
+        } else if (symbol.declaration.kind === parser.ASTKinds.interface_definition) {
+            const definition = declaration as parser.interface_definition;
+            return { kind: TypeKind.Interface, name: definition.name.text, declaration: definition };
         } else if (symbol.declaration.kind === parser.ASTKinds.namespace) {
             const definition = declaration as parser.namespace;
             if (definition.name.kind === parser.ASTKinds.identifier) {
@@ -344,7 +354,9 @@ export class TypeChecker {
                     const sourceFile = this.program.getSourceFile(resolvedFile ?? statement.file_name);
                     if (!sourceFile?.ast) continue;
 
-                    return this.findVariablesDeclaredInScope(sourceFile.ast);
+                    for (const [name, node] of this.findVariablesDeclaredInScope(sourceFile.ast)) {
+                        result.set(name, node);
+                    }
                 }
             }
         } else {

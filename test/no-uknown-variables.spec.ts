@@ -315,7 +315,7 @@ describe("in components", () => {
         });
     });
 
-    test.each(["true", "false"])("no literal bool arguments are known", boolLiteral => {
+    test.each(["true", "false"])("literal bool arguments are known", boolLiteral => {
         testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
@@ -324,6 +324,19 @@ describe("in components", () => {
                     void foo(in bool b) {
                         foo(${boolLiteral});
                     }
+                }
+            }`,
+        });
+    });
+
+    test.each(["optional", "inevitable"])("optional inevitable are known", keyword => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+                out void Bla();
+                behavior {
+                    on ${keyword}: {}
                 }
             }`,
         });

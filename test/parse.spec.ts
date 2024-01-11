@@ -3,6 +3,7 @@ import { formatDiagnostic } from "../src/diagnostic";
 import { DiagnosticCode, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
+import { expectNoDiagnostics } from "./util";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
@@ -16,10 +17,7 @@ const parseOnlyConfiguration: DznLintUserConfiguration = {
 test.each(["component.dzn", "interface.dzn", "system.dzn"])("can parse file without diagnostics (%p)", fileName => {
     const filePath = path.join(__dirname, "files", fileName);
     const result = lintFiles([filePath], parseOnlyConfiguration);
-    for (const diagnostic of result) {
-        console.log(formatDiagnostic(diagnostic));
-    }
-    expect(result).toHaveLength(0);
+    expectNoDiagnostics(result);
 });
 
 test("empty file", () => {
