@@ -1,3 +1,5 @@
+import * as util from "util";
+
 import { InputSource } from "../api";
 import { Diagnostic } from "../diagnostic";
 import * as parser from "../grammar/parser";
@@ -134,11 +136,11 @@ export class TypeChecker {
             if (builtInType) return builtInType;
         }
 
-        if (node.parent && node.parent.kind === parser.ASTKinds.enum_definition) {
-            // node is a member_identifier
-            const newSymbol = new SemanticSymbol(node);
-            this.symbols.set(node, newSymbol);
-            return newSymbol;
+        if (node.parent && isCompoundName(node.parent) && node.parent.name === node) {
+            if (!node.parent.compound) return undefined;
+
+            const parentType = this.typeOfNode(node.parent);
+            return this.getMembersOfType(parentType).get(node.parent.name.text);
         }
 
         // Try to resolve type the hard way
@@ -152,9 +154,7 @@ export class TypeChecker {
                     if (existingSymbol) {
                         return existingSymbol;
                     } else {
-                        const newSymbol = new SemanticSymbol(variableDeclaration);
-                        this.symbols.set(variableDeclaration, newSymbol);
-                        return newSymbol;
+                        return this.getOrCreateSymbol(variableDeclaration);
                     }
                 }
                 scope = findFirstParent(scope, isScopedBlock);
@@ -175,20 +175,17 @@ export class TypeChecker {
             } else {
                 return ownerMembers.get(node.name.text);
             }
-        } else if (node.kind === parser.ASTKinds.port || node.kind === parser.ASTKinds.event) {
-            const symbol = new SemanticSymbol(node);
-            this.symbols.set(node, symbol);
-            return symbol;
-        } else if (node.kind === parser.ASTKinds.extern_definition) {
-            const symbol = new SemanticSymbol(node);
-            this.symbols.set(node, symbol);
-            return symbol;
-        } else if (node.kind === parser.ASTKinds.namespace) {
-            const symbol = new SemanticSymbol(node);
-            this.symbols.set(node, symbol);
-            return symbol;
+        } else if (
+            node.kind === parser.ASTKinds.port ||
+            node.kind === parser.ASTKinds.event ||
+            node.kind === parser.ASTKinds.extern_definition ||
+            node.kind === parser.ASTKinds.namespace
+        ) {
+            return this.getOrCreateSymbol(node);
         } else {
-            throw `I don't know how to find the symbol for node type ${parser.ASTKinds[node.kind]}`;
+            throw `I don't know how to find the symbol for node type ${parser.ASTKinds[node.kind]} ${util.inspect(
+                node
+            )}`;
         }
     }
 
@@ -224,7 +221,9 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === parser.ASTKinds.$EOF) {
             return ERROR_TYPE;
         } else {
-            throw `I don't know how to find type for a symbol of kind ${parser.ASTKinds[symbol.declaration.kind]}`;
+            throw `I don't know how to find type for a symbol of kind ${
+                parser.ASTKinds[symbol.declaration.kind]
+            } ${util.inspect(symbol.declaration)}`;
         }
     });
 
@@ -235,10 +234,7 @@ export class TypeChecker {
 
         if (type.kind === TypeKind.Enum) {
             for (const d of headTailToList((type.declaration as parser.enum_definition).fields)) {
-                const symbol = this.symbolOfNode(d);
-                if (symbol) {
-                    result.set(d.text, symbol);
-                }
+                result.set(d.text, this.getOrCreateSymbol(d));
             }
             return result;
         } else if (type.kind === TypeKind.Port) {
@@ -249,27 +245,31 @@ export class TypeChecker {
                 for (const [name, event] of this.findVariablesDeclaredInScope(
                     portType.declaration as parser.interface_definition
                 )) {
-                    const symbol = this.symbolOfNode(event);
-                    if (symbol) {
-                        result.set(name, symbol);
-                    }
+                    result.set(name, this.getOrCreateSymbol(event));
                 }
             }
         } else if (isScopedBlock(type.declaration)) {
             for (const [name, declaration] of this.findVariablesDeclaredInScope(type.declaration)) {
-                const symbol = this.symbolOfNode(declaration);
-                if (symbol) {
-                    result.set(name, symbol);
-                }
+                result.set(name, this.getOrCreateSymbol(declaration));
             }
         } else {
             throw `I don't know how to find members for a type of kind ${
                 type.declaration && parser.ASTKinds[type.declaration.kind]
-            }`;
+            } ${util.inspect(type)}`;
         }
 
         return result;
     });
+
+    private getOrCreateSymbol(node: ASTNode): SemanticSymbol {
+        if (this.symbols.has(node)) {
+            return this.symbols.get(node)!;
+        } else {
+            const newSymbol = new SemanticSymbol(node);
+            this.symbols.set(node, newSymbol);
+            return newSymbol;
+        }
+    }
 
     private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ASTNode> => {
         const result = new Map<string, ASTNode>();
@@ -353,7 +353,9 @@ export class TypeChecker {
                 }
             }
         } else {
-            throw `I don't know how to find variables in scope of type ${parser.ASTKinds[scope.kind]}`;
+            throw `I don't know how to find variables in scope of type ${parser.ASTKinds[scope.kind]} ${util.inspect(
+                scope
+            )}`;
         }
 
         return result;
