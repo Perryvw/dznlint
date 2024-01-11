@@ -253,7 +253,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.pushScope(node);
 
         for (const trigger of headTailToList(node.on_trigger_list)) {
-            context.visit(trigger, cb);
+            if (trigger) context.visit(trigger, cb);
         }
 
         context.visit(node.statement, cb);
@@ -404,6 +404,12 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.dollar_statement]: (node: parser.dollar_statement) => {
         setParent(node.expression, node);
     },
+    [parser.ASTKinds.enum_definition]: (node: parser.enum_definition) => {
+        setParent(node.name, node);
+        for (const member of headTailToList(node.fields)) {
+            setParent(member, node);
+        }
+    },
     [parser.ASTKinds.event]: (node: parser.event) => {
         setParent(node.event_name, node);
         setParent(node.type_name, node);
@@ -484,7 +490,7 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     },
     [parser.ASTKinds.on]: (node: parser.on) => {
         for (const trigger of headTailToList(node.on_trigger_list)) {
-            setParent(trigger, node);
+            if (trigger) setParent(trigger, node);
         }
 
         setParent(node.statement, node);
@@ -534,7 +540,6 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
 
     // Leaf nodes, no need to visit children of these
     [parser.ASTKinds.dollars]: stopVisiting,
-    [parser.ASTKinds.enum_definition]: stopVisiting,
     [parser.ASTKinds.extern_definition]: stopVisiting,
     [parser.ASTKinds.identifier]: stopVisiting,
     [parser.ASTKinds.ILLEGAL]: stopVisiting,

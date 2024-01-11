@@ -351,6 +351,62 @@ describe("in components", () => {
         });
     });
 
+    test("no unknown enum members", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    enum MyEnum { A, B };
+                    void foo() {
+                        MyEnum bar = MyEnum.A;
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    enum MyEnum { A, B };
+                    void foo() {
+                        MyEnum bar = MyEnum.C;
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown reply", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I { in void foo(); }
+            component C {
+                provides I port;
+                behavior {
+                    on port.foo(): {
+                        reply();
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("no unknown reply on port", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I { in void foo(); }
+            component C {
+                provides I port;
+                behavior {
+                    on port.foo(): {
+                        port.reply();
+                    }
+                }
+            }`,
+        });
+    });
+
     test("no unknown namespaced variable declaration type", () => {
         testdznlint({
             diagnostic: unknownVariable.code,

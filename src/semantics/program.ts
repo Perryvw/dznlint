@@ -80,7 +80,7 @@ export class SemanticSymbol {
 export enum TypeKind {
     Invalid,
     External,
-    EnumMember,
+    Enum,
     Port,
     Event,
     Interface,
@@ -117,6 +117,7 @@ export class TypeChecker {
         ["bool", new SemanticSymbol(null!)],
         ["true", new SemanticSymbol(null!)],
         ["false", new SemanticSymbol(null!)],
+        ["reply", new SemanticSymbol(null!)],
     ]);
 
     public symbolOfNode(node: ASTNode): SemanticSymbol | undefined {
@@ -131,6 +132,13 @@ export class TypeChecker {
         ) {
             const builtInType = this.builtInSymbols.get(node.text);
             if (builtInType) return builtInType;
+        }
+
+        if (node.parent && node.parent.kind === parser.ASTKinds.enum_definition) {
+            // node is a member_identifier
+            const newSymbol = new SemanticSymbol(node);
+            this.symbols.set(node, newSymbol);
+            return newSymbol;
         }
 
         // Try to resolve type the hard way
@@ -186,6 +194,7 @@ export class TypeChecker {
 
     public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {
         const declaration = symbol.declaration;
+
         if (declaration.kind === parser.ASTKinds.instance) {
             const instance = declaration as parser.instance;
             const typeSymbol = this.symbolOfNode(instance.type);
@@ -196,6 +205,9 @@ export class TypeChecker {
             const typeSymbol = this.symbolOfNode(definition.type_name);
             if (!typeSymbol) return ERROR_TYPE;
             return { kind: TypeKind.External, declaration: typeSymbol.declaration, name: definition.name.text };
+        } else if (declaration.kind === parser.ASTKinds.enum_definition) {
+            const definition = declaration as parser.enum_definition;
+            return { kind: TypeKind.Enum, declaration: definition, name: definition.name.text };
         } else if (symbol.declaration.kind === parser.ASTKinds.port) {
             const definition = declaration as parser.port;
             return { kind: TypeKind.Port, declaration: symbol.declaration, name: definition.name.text };
@@ -214,14 +226,14 @@ export class TypeChecker {
         } else {
             throw `I don't know how to find type for a symbol of kind ${parser.ASTKinds[symbol.declaration.kind]}`;
         }
-    })
+    });
 
     public getMembersOfType = memoize(this, (type: Type): Map<string, SemanticSymbol> => {
         if (!type.declaration) return new Map();
 
         const result = new Map<string, SemanticSymbol>();
 
-        if (type.kind === TypeKind.EnumMember) {
+        if (type.kind === TypeKind.Enum) {
             for (const d of headTailToList((type.declaration as parser.enum_definition).fields)) {
                 const symbol = this.symbolOfNode(d);
                 if (symbol) {
@@ -232,6 +244,7 @@ export class TypeChecker {
         } else if (type.kind === TypeKind.Port) {
             const declaration = type.declaration as parser.port;
             const portType = this.symbolOfNode(declaration.type);
+            result.set("reply", this.builtInSymbols.get("reply")!);
             if (portType?.declaration) {
                 for (const [name, event] of this.findVariablesDeclaredInScope(
                     portType.declaration as parser.interface_definition
@@ -256,7 +269,7 @@ export class TypeChecker {
         }
 
         return result;
-    })
+    });
 
     private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ASTNode> => {
         const result = new Map<string, ASTNode>();
@@ -344,7 +357,7 @@ export class TypeChecker {
         }
 
         return result;
-    })
+    });
 
     private compoundRoot(compound: parser.compound_name): parser.identifier | null {
         let root: parser.compound_name | null = compound;

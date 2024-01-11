@@ -20,10 +20,10 @@ export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
 export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
     const result = [];
     if (obj.head) {
-        result.push(obj.head as NonNullable<T>);
+        result.push(obj.head);
     }
     for (const { elem } of obj.tail) {
-        result.push(elem as NonNullable<T>);
+        if (elem) result.push(elem);
     }
     return result;
 }

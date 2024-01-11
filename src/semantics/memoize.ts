@@ -1,6 +1,6 @@
 export function memoize<TClass, TIn, TReturn, TRest extends unknown[]>(
     context: TClass,
-    originalMethod: (p: TIn, ...rest: TRest) => TReturn,
+    originalMethod: (p: TIn, ...rest: TRest) => TReturn
 ) {
     const cache = new Map<TIn, TReturn>();
     return function (this: TClass, p: TIn, ...rest: TRest) {

@@ -26,6 +26,26 @@ test("basic import", () => {
     expectNoDiagnostics(api.lint(files));
 });
 
+test("import interface", () => {
+    const files: api.InputSource[] = [
+        {
+            fileName: "main.dzn",
+            fileContent: `
+            import other.dzn;
+            component C {
+                requires IInterface interface;
+            }
+        `,
+        },
+        {
+            fileName: "other.dzn",
+            fileContent: `interface IInterface {}`,
+        },
+    ];
+
+    expectNoDiagnostics(api.lint(files));
+});
+
 test("basic import with include dir", () => {
     const files: api.InputSource[] = [
         {
