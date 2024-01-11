@@ -120,6 +120,8 @@ export class TypeChecker {
         ["true", new SemanticSymbol(null!)],
         ["false", new SemanticSymbol(null!)],
         ["reply", new SemanticSymbol(null!)],
+        ["optional", new SemanticSymbol(null!)],
+        ["inevitable", new SemanticSymbol(null!)],
     ]);
 
     public symbolOfNode(node: ASTNode): SemanticSymbol | undefined {
@@ -237,20 +239,13 @@ export class TypeChecker {
                 result.set(d.text, this.getOrCreateSymbol(d));
             }
             return result;
-        } else if (type.kind === TypeKind.Port) {
-            const declaration = type.declaration as parser.port;
-            const portType = this.symbolOfNode(declaration.type);
-            result.set("reply", this.builtInSymbols.get("reply")!);
-            if (portType?.declaration) {
-                for (const [name, event] of this.findVariablesDeclaredInScope(
-                    portType.declaration as parser.interface_definition
-                )) {
-                    result.set(name, this.getOrCreateSymbol(event));
-                }
-            }
         } else if (isScopedBlock(type.declaration)) {
             for (const [name, declaration] of this.findVariablesDeclaredInScope(type.declaration)) {
                 result.set(name, this.getOrCreateSymbol(declaration));
+            }
+
+            if (type.declaration.kind === parser.ASTKinds.interface_definition) {
+                result.set("reply", this.builtInSymbols.get("reply")!);
             }
         } else {
             throw `I don't know how to find members for a type of kind ${
