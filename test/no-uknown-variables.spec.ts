@@ -552,4 +552,162 @@ describe("in components", () => {
             }`,
         });
     });
+
+    test("enum members in interface statement", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+                enum State {
+                    A,
+                    B
+                };
+                behavior {
+                    State s = State.A;
+                }
+            }`,
+            fail: `
+            interface I {
+                enum State {
+                    A,
+                    B
+                };
+                behavior {
+                    State s = State.C;
+                }
+            }`,
+        });
+    });
+
+    test("enum members in interface on body", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+
+                in void Foo();
+
+                enum State {
+                    A,
+                    B
+                };
+                behavior {
+                    State s = State.A;
+
+                    on Foo: s = State.B;
+                }
+            }`,
+            fail: `
+            interface I {
+
+                in void Foo();
+
+                enum State {
+                    A,
+                    B
+                };
+                behavior {
+                    State s = State.A;
+
+                    on Foo: s = State.C;
+                }
+            }`,
+        });
+    });
+
+    test("enum members in interface guards", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+                enum State {
+                    A,
+                    B
+                };
+                behavior {
+                    State s = State.A;
+
+                    [s.A] { }
+                }
+            }`,
+            fail: `
+            interface I {
+                enum State {
+                    A,
+                    B
+                };
+                behavior {
+                    State s = State.A;
+
+                    [s.C] { }
+                }
+            }`,
+        });
+    });
+
+    test("enum members in component on body", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I { in void foo(); }
+            component C {
+                provides I api;
+                behavior {
+                    enum State {
+                        A,
+                        B
+                    };
+                    State s = State.A;
+
+                    on api.foo(): s = State.A;
+                }
+            }`,
+            fail: `
+            interface I { in void foo(); }
+            component C {
+                provides I api;
+                behavior {
+                    enum State {
+                        A,
+                        B
+                    };
+                    State s = State.A;
+
+                    on api.foo(): s = State.C;
+                }
+            }`,
+        });
+    });
+
+    test("enum members in component guards", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {
+                behavior {
+                    enum State {
+                        A,
+                        B
+                    };
+                    State s = State.A;
+
+                    [s.A] {
+
+                    }
+                }
+            }`,
+            fail: `
+            component C {
+                behavior {
+                    enum State {
+                        A,
+                        B
+                    };
+                    State s = State.A;
+
+                    [s.C] { }
+                }
+            }`,
+        });
+    });
 });

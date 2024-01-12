@@ -62,8 +62,8 @@ export function isExpressionStatement(node: ASTNode): node is parser.expression_
 
 export type ScopedBlock =
     | parser.behavior
-    | parser.component
     | parser.behavior_compound
+    | parser.component
     | parser.compound
     | parser.function_definition
     | parser.interface_definition

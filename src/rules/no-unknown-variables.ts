@@ -117,6 +117,23 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return diagnostics;
         });
 
+        factoryContext.registerRule<parser.guard>(parser.ASTKinds.guard, (node: parser.guard, context) => {
+            if (!node.condition || typeof node.condition === "string" /* otherwise */) {
+                return [];
+            }
+            return node.condition ? checkExpressionNames(node.condition, "variable", context) : [];
+        });
+
+        factoryContext.registerRule<parser.assignment>(
+            parser.ASTKinds.assignment,
+            (node: parser.assignment, context) => {
+                return [
+                    ...checkExpressionNames(node.left, "variable", context),
+                    ...checkExpressionNames(node.right, "variable", context),
+                ];
+            }
+        );
+
         const createUnknownCompoundNameDiagnostic = (
             compoundName: parser.compound_name | parser.binding_expression,
             typeForMessage: string,

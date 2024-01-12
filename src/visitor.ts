@@ -467,8 +467,9 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
         }
 
         if (node.behavior) {
+            setParent(node.behavior, node);
             for (const { statement } of node.behavior.block.statements) {
-                setParent(statement, node);
+                setParent(statement, node.behavior);
             }
         }
     },
