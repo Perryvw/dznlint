@@ -59,6 +59,42 @@ describe("argument parsing", () => {
             expect(parsedArgs.success).toEqual(false);
         }
     });
+
+    test("include directories", () => {
+        const parsedArgs = parseCommandLineArguments([
+            "--include",
+            "includedir1",
+            "--include",
+            "./includedir2",
+            "myfile.dzn",
+            "myfile2.dzn",
+        ]);
+
+        if (parsedArgs.success === true) {
+            expect(parsedArgs.arguments.files).toEqual(["myfile.dzn", "myfile2.dzn"]);
+            expect(parsedArgs.arguments.includePaths).toEqual(["includedir1", "./includedir2"]);
+        } else {
+            expect(parsedArgs.success).toEqual(true);
+        }
+    });
+
+    test("shortcut include directories", () => {
+        const parsedArgs = parseCommandLineArguments([
+            "-I",
+            "includedir1",
+            "-I",
+            "./includedir2",
+            "myfile.dzn",
+            "myfile2.dzn",
+        ]);
+
+        if (parsedArgs.success === true) {
+            expect(parsedArgs.arguments.files).toEqual(["myfile.dzn", "myfile2.dzn"]);
+            expect(parsedArgs.arguments.includePaths).toEqual(["includedir1", "./includedir2"]);
+        } else {
+            expect(parsedArgs.success).toEqual(true);
+        }
+    });
 });
 
 describe("file matching", () => {

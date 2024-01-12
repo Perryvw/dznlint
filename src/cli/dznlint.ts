@@ -27,6 +27,7 @@ if (cliArguments.arguments.help) {
 
     helpstring += "Available options:\n";
     helpstring += "  --config-file <file>       Specify a dznlint configuration file. (Default: dznlint.config.json)\n";
+    helpstring += "  --include <directory> (-I) Specify a directory to add as include path\n";
     helpstring += "  --help                     Display this help string.\n";
     console.log(helpstring);
     process.exit(0);
@@ -70,7 +71,7 @@ if (!configValid.valid) {
 }
 
 // Lint resolved files
-const result = lintFiles(inputFiles, configuration);
+const result = lintFiles(inputFiles, configuration, { includePaths: cliArguments.arguments.includePaths });
 for (const diagnostic of result) {
     console.log(formatDiagnostic(diagnostic));
 }
