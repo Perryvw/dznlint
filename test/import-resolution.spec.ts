@@ -1,10 +1,10 @@
 import * as path from "path";
-import * as api from "../src/api";
+import * as api from "../src";
 import { expectDiagnosticOfType, expectNoDiagnostics } from "./util";
 import { couldNotResolveFile } from "../src/rules/no-unknown-imports";
 
 test("basic import", () => {
-    const files: api.InputSource[] = [
+    const files = [
         {
             fileName: "main.dzn",
             fileContent: `
@@ -23,11 +23,14 @@ test("basic import", () => {
         },
     ];
 
-    expectNoDiagnostics(api.lint(files));
+    const program = new api.Program();
+    const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+    expectNoDiagnostics(api.lint(sourceFiles, {}, program));
 });
 
 test("[bug] mixed scenario import interface", () => {
-    const files: api.InputSource[] = [
+    const files = [
         {
             fileName: "main.dzn",
             fileContent: `
@@ -49,11 +52,14 @@ test("[bug] mixed scenario import interface", () => {
         },
     ];
 
-    expectNoDiagnostics(api.lint(files));
+    const program = new api.Program();
+    const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+    expectNoDiagnostics(api.lint(sourceFiles, {}, program));
 });
 
 test("basic import with include dir", () => {
-    const files: api.InputSource[] = [
+    const files = [
         {
             fileName: "main.dzn",
             fileContent: `
@@ -72,11 +78,14 @@ test("basic import with include dir", () => {
         },
     ];
 
-    expectNoDiagnostics(api.lint(files, {}, { includePaths: ["mysubdir"] }));
+    const program = new api.Program({ includePaths: ["mysubdir"] });
+    const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+    expectNoDiagnostics(api.lint(sourceFiles, {}, program));
 });
 
 test("resolve import from disk", () => {
-    const files: api.InputSource[] = [
+    const files = [
         {
             fileName: "main.dzn",
             fileContent: `
@@ -95,7 +104,10 @@ test("resolve import from disk", () => {
         fileExists: jest.fn(() => true),
         readFile: jest.fn(() => "extern EType $$;"),
     } satisfies Partial<api.LinterHost>;
-    expectNoDiagnostics(api.lint(files, { no_unknown_imports: false }, mockHost));
+    const program = new api.Program(mockHost);
+    const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+    expectNoDiagnostics(api.lint(sourceFiles, { no_unknown_imports: false }, program));
 
     expect(mockHost.fileExists).toHaveBeenCalledTimes(2);
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(1, "other.dzn"); // Resolve
@@ -105,7 +117,7 @@ test("resolve import from disk", () => {
 });
 
 test("resolve import from disk with include dir", () => {
-    const files: api.InputSource[] = [
+    const files = [
         {
             fileName: "main.dzn",
             fileContent: `
@@ -128,7 +140,10 @@ test("resolve import from disk with include dir", () => {
 
     mockHost.fileExists.mockReturnValueOnce(false).mockReturnValueOnce(true).mockReturnValueOnce(true);
 
-    expectNoDiagnostics(api.lint(files, { no_unknown_imports: false }, mockHost));
+    const program = new api.Program(mockHost);
+    const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+    expectNoDiagnostics(api.lint(sourceFiles, { no_unknown_imports: false }, program));
 
     expect(mockHost.fileExists).toHaveBeenCalledTimes(3);
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(1, "other.dzn"); // Resolve
@@ -137,11 +152,11 @@ test("resolve import from disk with include dir", () => {
     expect(mockHost.fileExists).toHaveNthReturnedWith(2, true); // Resolve
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(2, path.join("mysubdir", "other.dzn")); // Read
     expect(mockHost.readFile).toHaveBeenCalledTimes(1);
-    expect(mockHost.readFile).toHaveBeenCalledWith(path.join("mysubdir", "other.dzn"));
+    expect(mockHost.readFile).toHaveBeenCalledWith("mysubdir/other.dzn");
 });
 
 test("failed to resolve import", () => {
-    const files: api.InputSource[] = [
+    const files = [
         {
             fileName: "main.dzn",
             fileContent: `
@@ -159,7 +174,10 @@ test("failed to resolve import", () => {
         readFile: jest.fn(() => ""),
     } satisfies Partial<api.LinterHost>;
 
-    expectDiagnosticOfType(api.lint(files, {}, mockHost), couldNotResolveFile.code);
+    const program = new api.Program(mockHost);
+    const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+    expectDiagnosticOfType(api.lint(sourceFiles, {}, program), couldNotResolveFile.code);
 
     expect(mockHost.readFile).toHaveBeenCalledTimes(0);
 });

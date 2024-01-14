@@ -1,6 +1,6 @@
 import * as path from "path";
 import { formatDiagnostic } from "../src/diagnostic";
-import { DiagnosticCode, lintFiles, lintString } from "../src";
+import { DiagnosticCode, LinterHost, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 import { expectNoDiagnostics } from "./util";
@@ -388,7 +388,19 @@ test("dollars statement", () => {
 });
 
 function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
-    const result = lintString(dzn, parseOnlyConfiguration);
+    const parseOnlyHost: LinterHost = {
+        includePaths: [],
+        fileExists() {
+            return false;
+        },
+        readFile() {
+            return "";
+        },
+        resolveImport() {
+            return undefined;
+        },
+    };
+    const result = lintString(dzn, parseOnlyConfiguration, parseOnlyHost);
 
     const ignoreCodesSet = new Set(ignoreCodes);
     const filteredDiagnostics = result.filter(d => !ignoreCodesSet.has(d.code));

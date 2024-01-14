@@ -62,7 +62,7 @@ export class Program {
         path = normalizePath(path);
         this.parsedFiles.delete(path);
 
-        if (!content) {
+        if (content === undefined) {
             return this.getSourceFile(path);
         } else {
             const sf = new SourceFile({ fileName: path, fileContent: content });
@@ -75,6 +75,12 @@ export class Program {
         for (const [path, sourceFile] of this.parsedFiles) {
             if (sourceFile.ast === file) return path;
         }
+    }
+
+    /** @internal */
+    public getCachedFile(path: string): SourceFile | undefined {
+        path = normalizePath(path);
+        return this.parsedFiles.get(path);
     }
 }
 

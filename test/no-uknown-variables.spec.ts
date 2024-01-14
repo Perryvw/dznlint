@@ -1,4 +1,4 @@
-import { InputSource, lint } from "../src/api";
+import { Program, lint } from "../src";
 import { unknownVariable } from "../src/rules/no-unknown-variables";
 import { expectNoDiagnosticOfType, testdznlint } from "./util";
 
@@ -496,7 +496,7 @@ describe("in components", () => {
     });
 
     test("no uknown imported symbols", () => {
-        const files: InputSource[] = [
+        const files = [
             {
                 fileName: "main.dzn",
                 fileContent: `
@@ -519,7 +519,10 @@ describe("in components", () => {
             },
         ];
 
-        const diagnostics = lint(files);
+        const program = new Program();
+        const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
+
+        const diagnostics = lint(sourceFiles, {}, program);
         expectNoDiagnosticOfType(diagnostics, unknownVariable.code);
     });
 

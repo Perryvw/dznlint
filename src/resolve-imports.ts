@@ -4,8 +4,23 @@ import { Program } from "./semantics/program";
 export function resolveImport(importPath: string, importingFilePath: string, program: Program): string | undefined {
     importPath = normalizePath(importPath);
     const baseDir = path.dirname(importingFilePath);
+    const resolvedFromCache = resolveFromCache(importPath, baseDir, program);
+    if (resolvedFromCache) {
+        return resolvedFromCache;
+    }
 
     return resolveFromDisk(importPath, baseDir, program);
+}
+
+function resolveFromCache(importPath: string, baseDir: string, program: Program): string | undefined {
+    const sourceFile = program.getCachedFile(normalizePath(path.join(baseDir, importPath)));
+    if (sourceFile) return sourceFile.source.fileName;
+
+    // Try finding via includes
+    for (const include of program.host.includePaths) {
+        const sourceFile = program.getCachedFile(normalizePath(path.join(include, importPath)));
+        if (sourceFile) return sourceFile.source.fileName;
+    }
 }
 
 function resolveFromDisk(importPath: string, baseDir: string, program: Program): string | undefined {
