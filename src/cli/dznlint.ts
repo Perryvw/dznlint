@@ -72,10 +72,37 @@ if (!configValid.valid) {
 
 // Lint resolved files
 const result = lintFiles(inputFiles, configuration, { includePaths: cliArguments.arguments.includePaths });
+const counts = {
+    [DiagnosticSeverity.Hint]: 0,
+    [DiagnosticSeverity.Warning]: 0,
+    [DiagnosticSeverity.Error]: 0,
+};
 for (const diagnostic of result) {
     console.log(formatDiagnostic(diagnostic));
+    counts[diagnostic.severity]++;
 }
 
+// Print a nice summary of the results
+const CONSOLE_COLOR_RESET = "\x1b[0m";
+const redText = (text: string) => `\x1b[31m${text}${CONSOLE_COLOR_RESET}`;
+const yellowText = (text: string) => `\x1b[93m${text}${CONSOLE_COLOR_RESET}`;
+
+const pluralize = (word: string, count: number) => (count === 1 ? word : word + "s");
+
+let summary = `Processed ${inputFiles.length} ${pluralize("file", inputFiles.length)}: `;
+if (counts[DiagnosticSeverity.Error] > 0)
+    summary += `${counts[DiagnosticSeverity.Error]} ${redText(pluralize("error", counts[DiagnosticSeverity.Error]))}`;
+if (counts[DiagnosticSeverity.Warning] > 0)
+    summary += `${counts[DiagnosticSeverity.Warning]} ${yellowText(
+        pluralize("warning", counts[DiagnosticSeverity.Warning])
+    )}`;
+if (counts[DiagnosticSeverity.Hint] > 0)
+    summary += `${counts[DiagnosticSeverity.Hint]} ${pluralize("suggestion", counts[DiagnosticSeverity.Hint])}`;
+if (counts[DiagnosticSeverity.Error] + counts[DiagnosticSeverity.Warning] + counts[DiagnosticSeverity.Hint] === 0)
+    summary += "No issues found";
+console.log(`${summary}.`);
+
+// If we had at least one error, exit with exit code 1
 if (result.some(d => d.severity >= DiagnosticSeverity.Error)) {
     process.exit(1);
 }
