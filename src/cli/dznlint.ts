@@ -89,17 +89,17 @@ const yellowText = (text: string) => `\x1b[93m${text}${CONSOLE_COLOR_RESET}`;
 
 const pluralize = (word: string, count: number) => (count === 1 ? word : word + "s");
 
-let summary = `Processed ${inputFiles.length} ${pluralize("file", inputFiles.length)}: `;
+let summary = `Processed ${inputFiles.length} ${pluralize("file", inputFiles.length)}:`;
 if (counts[DiagnosticSeverity.Error] > 0)
-    summary += `${counts[DiagnosticSeverity.Error]} ${redText(pluralize("error", counts[DiagnosticSeverity.Error]))}`;
+    summary += ` ${counts[DiagnosticSeverity.Error]} ${redText(pluralize("error", counts[DiagnosticSeverity.Error]))}`;
 if (counts[DiagnosticSeverity.Warning] > 0)
-    summary += `${counts[DiagnosticSeverity.Warning]} ${yellowText(
+    summary += ` ${counts[DiagnosticSeverity.Warning]} ${yellowText(
         pluralize("warning", counts[DiagnosticSeverity.Warning])
     )}`;
 if (counts[DiagnosticSeverity.Hint] > 0)
-    summary += `${counts[DiagnosticSeverity.Hint]} ${pluralize("suggestion", counts[DiagnosticSeverity.Hint])}`;
+    summary += ` ${counts[DiagnosticSeverity.Hint]} ${pluralize("suggestion", counts[DiagnosticSeverity.Hint])}`;
 if (counts[DiagnosticSeverity.Error] + counts[DiagnosticSeverity.Warning] + counts[DiagnosticSeverity.Hint] === 0)
-    summary += "No issues found";
+    summary += " No issues found";
 console.log(`${summary}.`);
 
 // If we had at least one error, exit with exit code 1
