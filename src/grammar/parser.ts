@@ -16,7 +16,7 @@
 * type_definition := enum_definition | int | extern_definition
 *   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
 *     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier?}*
-*   int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
+*   int := SUBINT __ name=identifier _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
 * namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
 *   namespace_root      := statements={_ statement=namespace_statement _}*
@@ -449,7 +449,7 @@ export interface fields_$0 {
 }
 export interface int {
     kind: ASTKinds.int;
-    name: compound_name;
+    name: identifier;
     range: range;
 }
 export interface range {
@@ -1212,13 +1212,13 @@ export class Parser {
     public matchint($$dpth: number, $$cr?: ErrorTracker): Nullable<int> {
         return this.run<int>($$dpth,
             () => {
-                let $scope$name: Nullable<compound_name>;
+                let $scope$name: Nullable<identifier>;
                 let $scope$range: Nullable<range>;
                 let $$res: Nullable<int> = null;
                 if (true
                     && this.matchSUBINT($$dpth + 1, $$cr) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
-                    && ($scope$name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchBRACE_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null

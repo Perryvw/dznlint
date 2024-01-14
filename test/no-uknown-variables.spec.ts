@@ -713,4 +713,18 @@ describe("in components", () => {
             }`,
         });
     });
+
+    test("int type variable", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            subint SmallInt {0..9};
+
+            component C {
+                behavior {
+                    SmallInt myInt = 0;
+                }
+            }`,
+        });
+    });
 });

@@ -121,6 +121,7 @@ export enum TypeKind {
     Component,
     Namespace,
     Function,
+    IntegerRange,
 }
 
 export interface Type {
@@ -262,6 +263,9 @@ export class TypeChecker {
             } else {
                 return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.name.text };
             }
+        } else if (symbol.declaration.kind === parser.ASTKinds.int) {
+            const definition = declaration as parser.int;
+            return { kind: TypeKind.IntegerRange, declaration: symbol.declaration, name: definition.name.text };
         } else if (symbol.declaration.kind === parser.ASTKinds.$EOF) {
             return ERROR_TYPE;
         } else {
@@ -321,7 +325,10 @@ export class TypeChecker {
             for (const { statement } of scope.root.statements) {
                 if (
                     statement.kind === parser.ASTKinds.enum_definition ||
-                    statement.kind === parser.ASTKinds.extern_definition
+                    statement.kind === parser.ASTKinds.component ||
+                    statement.kind === parser.ASTKinds.interface_definition ||
+                    statement.kind === parser.ASTKinds.extern_definition ||
+                    statement.kind === parser.ASTKinds.int
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === parser.ASTKinds.namespace) {
@@ -368,7 +375,8 @@ export class TypeChecker {
                     statement.kind === parser.ASTKinds.enum_definition ||
                     statement.kind === parser.ASTKinds.component ||
                     statement.kind === parser.ASTKinds.interface_definition ||
-                    statement.kind === parser.ASTKinds.extern_definition
+                    statement.kind === parser.ASTKinds.extern_definition ||
+                    statement.kind === parser.ASTKinds.int
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === parser.ASTKinds.namespace) {

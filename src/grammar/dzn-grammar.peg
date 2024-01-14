@@ -19,7 +19,7 @@ type_definition := enum_definition | int | extern_definition
   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier?}*
 
-  int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
+  int := SUBINT __ name=identifier _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
     range := from=NUMBER _ DOTDOT _ to=NUMBER
 
 namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
