@@ -1,4 +1,3 @@
-import { InputSource } from "../api";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import {
@@ -11,6 +10,7 @@ import {
     variable_definition,
 } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
+import { InputSource } from "../semantics/program";
 import { headTailToList, nodeToSourceRange } from "../util";
 
 export const nameDoesNotMatchConvention = createDiagnosticsFactory();

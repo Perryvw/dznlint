@@ -1,7 +1,6 @@
-import { InputSource } from "./api";
 import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
-import { Program, TypeChecker } from "./semantics/program";
+import { InputSource, Program, TypeChecker } from "./semantics/program";
 import { headTailToList } from "./util";
 
 const stopVisiting = () => {};

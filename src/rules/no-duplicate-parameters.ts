@@ -1,10 +1,10 @@
 // System ports can only be bound once
 
-import { InputSource } from "../api";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { ASTKinds, function_definition, identifier, on } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
+import { InputSource } from "../semantics/program";
 import { headTailToList, nodeToSourceRange } from "../util";
 
 export const duplicateParameter = createDiagnosticsFactory();

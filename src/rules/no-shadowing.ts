@@ -1,10 +1,10 @@
 // Do not redefine variables that already exist in scope
 
-import { InputSource } from "../api";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { ASTKinds, function_definition, identifier, on, variable_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
+import { InputSource } from "../semantics/program";
 import { headTailToList, nodeToSourceRange } from "../util";
 import { VisitorContext } from "../visitor";
 

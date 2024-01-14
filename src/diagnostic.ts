@@ -1,4 +1,4 @@
-import { InputSource } from "./api";
+import { InputSource } from "./semantics/program";
 
 export enum DiagnosticSeverity {
     Hint,

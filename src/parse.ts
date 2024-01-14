@@ -2,7 +2,7 @@ import * as parser from "./grammar/parser";
 
 import { createDiagnosticsFactory, DiagnosticSeverity } from "./diagnostic";
 import { Diagnostic } from "./diagnostic";
-import { InputSource } from "./api";
+import { InputSource } from "./semantics/program";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 

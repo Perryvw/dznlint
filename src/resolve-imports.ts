@@ -4,27 +4,8 @@ import { Program } from "./semantics/program";
 export function resolveImport(importPath: string, importingFilePath: string, program: Program): string | undefined {
     importPath = normalizePath(importPath);
     const baseDir = path.dirname(importingFilePath);
-    const resolvedFromSources = resolveFromSources(importPath, baseDir, program);
-    if (resolvedFromSources) {
-        return resolvedFromSources;
-    }
 
     return resolveFromDisk(importPath, baseDir, program);
-}
-
-function resolveFromSources(importPath: string, baseDir: string, program: Program): string | undefined {
-    const sourceFile = program.sources.find(
-        s => s.fileName && normalizePath(path.join(baseDir, s.fileName)) == importPath
-    );
-    if (sourceFile) return sourceFile.fileName;
-
-    // Try finding via includes
-    for (const include of program.host.includePaths) {
-        const sourceFile = program.sources.find(
-            s => s.fileName && normalizePath(s.fileName) == normalizePath(path.join(include, importPath))
-        );
-        if (sourceFile) return sourceFile.fileName;
-    }
 }
 
 function resolveFromDisk(importPath: string, baseDir: string, program: Program): string | undefined {
@@ -44,6 +25,6 @@ function resolveFromDisk(importPath: string, baseDir: string, program: Program):
     }
 }
 
-function normalizePath(pathStr: string) {
+export function normalizePath(pathStr: string) {
     return path.normalize(pathStr.trim()).replace(/\\/g, "/");
 }

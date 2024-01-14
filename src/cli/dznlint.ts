@@ -76,6 +76,6 @@ for (const diagnostic of result) {
     console.log(formatDiagnostic(diagnostic));
 }
 
-if (result.some(d => d.severity >= DiagnosticSeverity.Warning)) {
+if (result.some(d => d.severity >= DiagnosticSeverity.Error)) {
     process.exit(1);
 }

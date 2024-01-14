@@ -1,6 +1,6 @@
+import * as fs from "fs";
 import * as util from "util";
 
-import { InputSource } from "../api";
 import { Diagnostic } from "../diagnostic";
 import * as parser from "../grammar/parser";
 import { ASTNode } from "../linting-rule";
@@ -16,6 +16,7 @@ import {
     ScopedBlock,
 } from "../util";
 import { memoize } from "./memoize";
+import { normalizePath, resolveImport } from "../resolve-imports";
 
 export interface LinterHost {
     includePaths: string[];
@@ -24,27 +25,47 @@ export interface LinterHost {
     resolveImport(importPath: string, importingFilePath: string, program: Program): string | undefined;
 }
 
+const defaultLinterHost: LinterHost = {
+    includePaths: [],
+    fileExists(filePath) {
+        return fs.existsSync(filePath);
+    },
+    readFile(filePath) {
+        return fs.readFileSync(filePath).toString();
+    },
+    resolveImport(importPath, importingFilePath, program) {
+        return resolveImport(importPath, importingFilePath, program);
+    },
+};
+
 export class Program {
-    constructor(
-        public sources: InputSource[],
-        public host: LinterHost
-    ) {}
+    public host: LinterHost;
+
+    constructor(host?: Partial<LinterHost>) {
+        this.host = { ...defaultLinterHost, ...host };
+    }
 
     private parsedFiles = new Map<string, SourceFile>();
 
     public getSourceFile(path: string): SourceFile | undefined {
+        path = normalizePath(path);
         if (this.parsedFiles.has(path)) return this.parsedFiles.get(path)!;
-
-        for (const s of this.sources) {
-            if (s.fileName === path) {
-                const sf = new SourceFile(s);
-                this.parsedFiles.set(path, sf);
-                return sf;
-            }
-        }
 
         if (this.host.fileExists(path)) {
             const sf = new SourceFile({ fileName: path, fileContent: this.host.readFile(path) });
+            this.parsedFiles.set(path, sf);
+            return sf;
+        }
+    }
+
+    public parseFile(path: string, content?: string): SourceFile | undefined {
+        path = normalizePath(path);
+        this.parsedFiles.delete(path);
+
+        if (!content) {
+            return this.getSourceFile(path);
+        } else {
+            const sf = new SourceFile({ fileName: path, fileContent: content });
             this.parsedFiles.set(path, sf);
             return sf;
         }
@@ -57,7 +78,12 @@ export class Program {
     }
 }
 
-class SourceFile {
+export interface InputSource {
+    fileName?: string;
+    fileContent: string;
+}
+
+export class SourceFile {
     public parseDiagnostics: Diagnostic[];
     public ast?: parser.file;
 
