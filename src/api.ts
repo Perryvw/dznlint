@@ -48,7 +48,7 @@ export function lintFiles(
 
     const diagnostics: Diagnostic[] = [];
     const files: SourceFile[] = [];
-    for (var fileName of fileNames) {
+    for (const fileName of fileNames) {
         const sourceFile = program.parseFile(fileName);
         if (sourceFile) {
             files.push(sourceFile);
