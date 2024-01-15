@@ -37,9 +37,24 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
         });
 
         factoryContext.registerRule<parser.event>(parser.ASTKinds.event, (node: parser.event, context) => {
+            const diagnostics = [];
+
+            // Check return type
             if (context.typeChecker.symbolOfNode(node.type_name) === undefined) {
-                return [createUnknownCompoundNameDiagnostic(node.type_name, "type", context)];
-            } else return [];
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type_name, "type", context));
+            }
+
+            // Check parameter types
+            if (node.event_params) {
+                for (const param of headTailToList(node.event_params)) {
+                    const typeSymbol = context.typeChecker.symbolOfNode(param.type);
+                    if (typeSymbol === undefined) {
+                        diagnostics.push(createUnknownCompoundNameDiagnostic(param.type, "type", context));
+                    }
+                }
+            }
+
+            return diagnostics;
         });
 
         factoryContext.registerRule<parser.on>(parser.ASTKinds.on, (node: parser.on, context) => {

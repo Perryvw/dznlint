@@ -413,6 +413,13 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.event]: (node: parser.event) => {
         setParent(node.event_name, node);
         setParent(node.type_name, node);
+        if (node.event_params) {
+            for (const param of headTailToList(node.event_params)) {
+                setParent(param, node);
+                setParent(param.name, param);
+                setParent(param.type, param);
+            }
+        }
     },
     [parser.ASTKinds.expression_statement]: (node: parser.expression_statement) => {
         setParent(node.expression, node);

@@ -158,6 +158,21 @@ describe("in interfaces", () => {
             }`,
         });
     });
+
+    test("no unknown event variable types", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            extern Bla $$;
+            interface I {
+                in void myEvent(in Bla arg);
+            }`,
+            fail: `
+            interface I {
+                in void myEvent(in Bla arg);
+            }`,
+        });
+    });
 });
 
 describe("in components", () => {
