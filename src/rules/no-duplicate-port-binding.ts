@@ -4,8 +4,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTKinds, binding_expression, component } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { SemanticSymbol } from "../semantics/program";
-import { nameToString, nodeToSourceRange, systemBindings } from "../util";
+import { nodeToSourceRange, systemBindings } from "../util";
 
 export const duplicatePortBinding = createDiagnosticsFactory();
 

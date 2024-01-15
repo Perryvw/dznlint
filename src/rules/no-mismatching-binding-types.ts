@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTKinds, binding } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { Type, TypeKind } from "../semantics/program";
+import { Type, TypeKind } from "../semantics/type-checker";
 import { nodeToSourceRange } from "../util";
 import { VisitorContext } from "../visitor";
 
