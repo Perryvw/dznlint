@@ -327,6 +327,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
 
     // Leaf nodes, no need to visit children of these
+    [parser.ASTKinds.asterisk_binding]: stopVisiting,
     [parser.ASTKinds.dollars]: stopVisiting,
     [parser.ASTKinds.enum_definition]: stopVisiting,
     [parser.ASTKinds.extern_definition]: stopVisiting,
@@ -545,17 +546,6 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     [parser.ASTKinds.unary_operator_expression]: (node: parser.unary_operator_expression) => {
         setParent(node.expression, node);
     },
-
-    // Leaf nodes, no need to visit children of these
-    [parser.ASTKinds.dollars]: stopVisiting,
-    [parser.ASTKinds.extern_definition]: stopVisiting,
-    [parser.ASTKinds.identifier]: stopVisiting,
-    [parser.ASTKinds.ILLEGAL]: stopVisiting,
-    [parser.ASTKinds.import_statement]: stopVisiting,
-    [parser.ASTKinds.int]: stopVisiting,
-    [parser.ASTKinds.member_identifier]: stopVisiting,
-    [parser.ASTKinds.numeric_literal]: stopVisiting,
-    [parser.ASTKinds.sl_comment]: stopVisiting,
 };
 
 export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback, program: Program) {

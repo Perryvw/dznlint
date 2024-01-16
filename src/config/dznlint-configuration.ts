@@ -30,11 +30,11 @@ export interface DznLintConfiguration {
     no_mismatching_binding_types: ConfigValue;
     no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;
+    no_unconnected_ports: ConfigValue;
     no_unknown_imports: ConfigValue;
     no_unknown_variables: ConfigValue;
     no_unused_instances: ConfigValue;
     no_unused_parameters: ConfigValue;
-    no_unused_ports: ConfigValue;
     no_unused_variables: ConfigValue;
     parameter_direction: ConfigValue;
     port_missing_redundant_blocking: ConfigValue;

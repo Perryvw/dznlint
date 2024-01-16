@@ -31,6 +31,7 @@ export enum TypeKind {
     External,
     Enum,
     Port,
+    PortCollection,
     Event,
     Interface,
     Component,
@@ -129,7 +130,9 @@ export class TypeChecker {
             node.kind === parser.ASTKinds.port ||
             node.kind === parser.ASTKinds.event ||
             node.kind === parser.ASTKinds.extern_definition ||
-            node.kind === parser.ASTKinds.namespace
+            node.kind === parser.ASTKinds.namespace ||
+            node.kind === parser.ASTKinds.instance ||
+            node.kind === parser.ASTKinds.asterisk_binding
         ) {
             return this.getOrCreateSymbol(node);
         } else {
@@ -181,6 +184,8 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === parser.ASTKinds.int) {
             const definition = declaration as parser.int;
             return { kind: TypeKind.IntegerRange, declaration: symbol.declaration, name: definition.name.text };
+        } else if (symbol.declaration.kind === parser.ASTKinds.asterisk_binding) {
+            return { kind: TypeKind.PortCollection, declaration: symbol.declaration, name: "*" };
         } else if (symbol.declaration.kind === parser.ASTKinds.$EOF) {
             return ERROR_TYPE;
         } else {

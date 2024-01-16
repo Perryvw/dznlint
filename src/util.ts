@@ -56,6 +56,10 @@ export function isPort(node: ASTNode): node is parser.port {
     return node.kind === parser.ASTKinds.port;
 }
 
+export function isInjected(port: parser.port) {
+    return port.qualifiers?.some(q => q.qualifier === "injected") === true;
+}
+
 export function isExpressionStatement(node: ASTNode): node is parser.expression_statement {
     return node.kind === parser.ASTKinds.expression_statement;
 }
