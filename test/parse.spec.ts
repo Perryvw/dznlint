@@ -84,6 +84,20 @@ test("comment inside statement", () => {
     `);
 });
 
+test("multiline comment", () => {
+    expectCanParseWithoutDiagnostics(`
+        component MyComponent
+        {
+            /* Hello:
+             * bla
+             */
+            behavior
+            {
+            }
+        }
+    `);
+});
+
 test("parenthesized expression", () => {
     expectCanParseWithoutDiagnostics(`
         component MyComponent

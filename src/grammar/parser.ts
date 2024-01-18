@@ -144,7 +144,7 @@
 * VOID                := 'void'
 * NEWLINE             := '\n'
 * sl_comment          := text='//[^\n]*' {'\n' | $}
-* ml_comment          := '/\*' text={!ml_comment_end '.'}* ml_comment_end
+* ml_comment          := '/\*' text={!ml_comment_end '.\s*'}* ml_comment_end
 *   ml_comment_end    := '\*' '/'
 * _                   := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s*'
 * __                  := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s+'
@@ -3163,7 +3163,7 @@ export class Parser {
                 let $$res: Nullable<ml_comment_$0> = null;
                 if (true
                     && this.negate(() => this.matchml_comment_end($$dpth + 1, $$cr)) !== null
-                    && this.regexAccept(String.raw`(?:.)`, "", $$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:.\s*)`, "", $$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.ml_comment_$0, };
                 }
