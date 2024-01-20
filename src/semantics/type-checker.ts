@@ -99,16 +99,13 @@ export class TypeChecker {
         // Try to resolve type the hard way
         if (isIdentifier(node)) {
             let scope = findFirstParent(node, isScopedBlock);
+            let scopeNamespaces = [];
             while (scope) {
-                const declaredVariables = this.findVariablesDeclaredInScope(scope);
-                const variableDeclaration = declaredVariables.get(node.text);
-                if (variableDeclaration) {
-                    const existingSymbol = this.symbols.get(variableDeclaration);
-                    if (existingSymbol) {
-                        return existingSymbol;
-                    } else {
-                        return this.getOrCreateSymbol(variableDeclaration);
-                    }
+                const symbol = this.findVariableInScope(node.text, scope, scopeNamespaces);
+                if (symbol) return symbol;
+
+                if (isNamespace(scope)) {
+                    scopeNamespaces.push(nameToString(scope.name));
                 }
                 scope = findFirstParent(scope, isScopedBlock);
             }
@@ -141,6 +138,30 @@ export class TypeChecker {
             throw `I don't know how to find the symbol for node type ${parser.ASTKinds[node.kind]} ${util.inspect(
                 node
             )}`;
+        }
+    }
+
+    private findVariableInScope(
+        name: string,
+        scope: ScopedBlock,
+        scopeNamespaces: string[]
+    ): SemanticSymbol | undefined {
+        const declaredVariables = this.findVariablesDeclaredInScope(scope);
+        const variableDeclaration = declaredVariables.get(name);
+        if (variableDeclaration) {
+            const existingSymbol = this.symbols.get(variableDeclaration);
+            if (existingSymbol) {
+                return existingSymbol;
+            } else {
+                return this.getOrCreateSymbol(variableDeclaration);
+            }
+        }
+        if (scopeNamespaces.length > 0) {
+            const ns = declaredVariables.get(scopeNamespaces[scopeNamespaces.length - 1]);
+            if (ns && isNamespace(ns)) {
+                const symbol = this.findVariableInScope(name, ns, scopeNamespaces.slice(0, -1));
+                if (symbol) return symbol;
+            }
         }
     }
 
