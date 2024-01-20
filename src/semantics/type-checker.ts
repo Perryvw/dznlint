@@ -15,7 +15,6 @@ import {
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
-import { stat } from "fs";
 
 export class SemanticSymbol {
     public constructor(
@@ -99,7 +98,7 @@ export class TypeChecker {
         // Try to resolve type the hard way
         if (isIdentifier(node)) {
             let scope = findFirstParent(node, isScopedBlock);
-            let scopeNamespaces = [];
+            const scopeNamespaces = [];
             while (scope) {
                 const symbol = this.findVariableInScope(node.text, scope, scopeNamespaces);
                 if (symbol) return symbol;
