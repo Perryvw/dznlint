@@ -48,6 +48,10 @@ export function isCompound(node: ASTNode): node is parser.compound {
     return node.kind === parser.ASTKinds.compound;
 }
 
+export function isNamespace(node: ASTNode): node is parser.namespace {
+    return node.kind === parser.ASTKinds.namespace;
+}
+
 export function isSourceFile(node: ASTNode): node is parser.file {
     return node.kind === parser.ASTKinds.file;
 }

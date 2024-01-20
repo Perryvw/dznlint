@@ -11,9 +11,11 @@ import {
     isIdentifier,
     nameToString,
     ScopedBlock,
+    isNamespace,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
+import { stat } from "fs";
 
 export class SemanticSymbol {
     public constructor(
@@ -252,9 +254,13 @@ export class TypeChecker {
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === parser.ASTKinds.namespace) {
-                    // In case of compound namespace name, find root namespace
-                    const rootNs = this.compoundRoot(statement.name);
-                    if (rootNs) result.set(rootNs.text, statement);
+                    const name = nameToString(statement.name);
+                    const currentValue = result.get(name);
+                    if (currentValue !== undefined && isNamespace(currentValue)) {
+                        result.set(name, this.mergeNamespaces(currentValue, statement));
+                    } else {
+                        result.set(name, statement);
+                    }
                 }
             }
         } else if (scope.kind === parser.ASTKinds.interface_definition) {
@@ -300,9 +306,13 @@ export class TypeChecker {
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === parser.ASTKinds.namespace) {
-                    // In case of compound namespace name, find root namespace
-                    const rootNs = this.compoundRoot(statement.name);
-                    if (rootNs) result.set(rootNs.text, statement);
+                    const name = nameToString(statement.name);
+                    const currentValue = result.get(name);
+                    if (currentValue !== undefined && isNamespace(currentValue)) {
+                        result.set(name, this.mergeNamespaces(currentValue, statement));
+                    } else {
+                        result.set(name, statement);
+                    }
                 } else if (statement.kind === parser.ASTKinds.import_statement) {
                     const currentFile = this.program.getFilePath(scope);
                     if (!currentFile) continue;
@@ -336,11 +346,14 @@ export class TypeChecker {
         return result;
     });
 
-    private compoundRoot(compound: parser.compound_name): parser.identifier | null {
-        let root: parser.compound_name | null = compound;
-        while (root && root.kind !== parser.ASTKinds.identifier) {
-            root = root.compound;
-        }
-        return root;
+    private mergeNamespaces(ns1: parser.namespace, ns2: parser.namespace): parser.namespace {
+        return {
+            kind: parser.ASTKinds.namespace,
+            name: ns1.name,
+            root: {
+                kind: parser.ASTKinds.namespace_root,
+                statements: [...ns1.root.statements, ...ns2.root.statements],
+            },
+        };
     }
 }
