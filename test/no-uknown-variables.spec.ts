@@ -1,6 +1,5 @@
-import { Program, lint } from "../src";
 import { unknownVariable } from "../src/rules/no-unknown-variables";
-import { expectNoDiagnosticOfType, testdznlint } from "./util";
+import { testdznlint } from "./util";
 
 describe("in systems", () => {
     test("no instance of unknown type", () => {
@@ -511,10 +510,10 @@ describe("in components", () => {
     });
 
     test("no uknown imported symbols", () => {
-        const files = [
-            {
-                fileName: "main.dzn",
-                fileContent: `
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: {
+                ["main.dzn"]: `
                 import other.dzn;
                 component C {
                     behavior {
@@ -522,23 +521,14 @@ describe("in components", () => {
                         }
                     }
                 }
-            `,
-            },
-            {
-                fileName: "other.dzn",
-                fileContent: `
+                `,
+                ["other.dzn"]: `
                 namespace OtherNS {
                     extern EType $$;
                 }
-            `,
+                `,
             },
-        ];
-
-        const program = new Program();
-        const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
-
-        const diagnostics = lint(sourceFiles, {}, program);
-        expectNoDiagnosticOfType(diagnostics, unknownVariable.code);
+        });
     });
 
     test("no unknown variables from event arguments", () => {
