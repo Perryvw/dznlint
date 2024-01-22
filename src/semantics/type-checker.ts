@@ -345,7 +345,16 @@ export class TypeChecker {
                     if (!sourceFile?.ast) continue;
 
                     for (const [name, node] of this.findVariablesDeclaredInScope(sourceFile.ast)) {
-                        result.set(name, node);
+                        if (isNamespace(node)) {
+                            const currentValue = result.get(name);
+                            if (currentValue !== undefined && isNamespace(currentValue)) {
+                                result.set(name, this.mergeNamespaces(currentValue, node));
+                            } else {
+                                result.set(name, node);
+                            }
+                        } else {
+                            result.set(name, node);
+                        }
                     }
                 }
             }

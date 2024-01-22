@@ -104,3 +104,51 @@ test("nested merged namespace sibling lookup", () => {
         }`,
     });
 });
+
+test("merge multiple namespace imports", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: {
+            ["import1.dzn"]: `
+            namespace NS {
+                extern A $$;
+            }`,
+            ["import2.dzn"]: `
+            namespace NS {
+                extern B $$;
+            }`,
+            ["main.dzn"]: `
+            import import1.dzn;
+            import import2.dzn;
+            namespace NS {
+                interface I {
+                    in void Foo(in NS.A a, in NS.B b);
+                }
+            }`,
+        },
+    });
+});
+
+test("chain namespace imports", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: {
+            ["import1.dzn"]: `
+            namespace NS {
+                extern A $$;
+            }`,
+            ["import2.dzn"]: `
+            import import1.dzn;
+            namespace NS {
+                extern B $$;
+            }`,
+            ["main.dzn"]: `
+            import import2.dzn;
+            namespace NS {
+                interface I {
+                    in void Foo(in NS.A a, in NS.B b);
+                }
+            }`,
+        },
+    });
+});

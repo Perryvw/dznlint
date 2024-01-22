@@ -22,8 +22,8 @@ export function testdznlint(test: LintTest) {
             const sourceFiles = Object.entries(test.pass).map(e => program.parseFile(e[0], e[1])!);
 
             const entryFile = sourceFiles.find(f => f.source.fileName === "main.dzn");
-            if (!entryFile) throw `Could not find 'main.dzn' entry in test files: ${Object.keys(test.pass)}`;
-            
+            if (!entryFile) throw `Could not find 'main.dzn' entry in test files: ${Object.keys(test.pass).join(", ")}`;
+
             passResult = lint([entryFile], test.config, program);
         }
 
