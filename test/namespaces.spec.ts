@@ -75,6 +75,20 @@ test("access to variables in nested namespace in same namespace", () => {
     });
 });
 
+test("lookup namespaced variable name in own namespace", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        namespace NS {
+            extern Foo $$;
+
+            interface I {
+                in void Event(out NS.Foo b);
+            }
+        }`,
+    });
+});
+
 test("nested merged namespace sibling lookup", () => {
     testdznlint({
         diagnostic: unknownVariable.code,

@@ -160,6 +160,12 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     [parser.ASTKinds.event]: (node: parser.event, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type_name, cb);
         context.visit(node.event_name, cb);
+
+        if (node.event_params) {
+            for (const param of headTailToList(node.event_params)) {
+                context.visit(param.type, cb);
+            }
+        }
     },
     [parser.ASTKinds.expression_statement]: (
         node: parser.expression_statement,
