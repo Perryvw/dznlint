@@ -130,6 +130,7 @@ export class TypeChecker {
             node.kind === parser.ASTKinds.extern_definition ||
             node.kind === parser.ASTKinds.namespace ||
             node.kind === parser.ASTKinds.instance ||
+            node.kind === parser.ASTKinds.variable_definition ||
             node.kind === parser.ASTKinds.asterisk_binding
         ) {
             return this.getOrCreateSymbol(node);
@@ -233,7 +234,18 @@ export class TypeChecker {
             }
 
             if (type.declaration.kind === parser.ASTKinds.interface_definition) {
+                // Also add reply as a member of the interface
                 result.set("reply", this.builtInSymbols.get("reply")!);
+
+                // Also add variables delcared in the behavior as members for 2.18 shared state
+                if (type.declaration.behavior) {
+                    for (const { statement } of type.declaration.behavior.block.statements) {
+                        if (statement.kind === parser.ASTKinds.variable_definition) {
+                            const symbol = this.symbolOfNode(statement);
+                            if (symbol) result.set(statement.name.text, symbol);
+                        }
+                    }
+                }
             }
         } else {
             throw `I don't know how to find members for a type of kind ${

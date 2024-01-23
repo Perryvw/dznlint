@@ -732,4 +732,29 @@ describe("in components", () => {
             }`,
         });
     });
+
+    // https://github.com/Perryvw/dznlint/issues/9
+    test("shared state variable in interface (#9)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+                behavior {
+                    enum State {
+                        A,
+                        B
+                    };
+                    State s = State.A;
+                }
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    [api.s.B] {
+                    }
+                }
+            }`,
+        });
+    });
 });
