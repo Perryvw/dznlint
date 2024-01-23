@@ -391,6 +391,22 @@ test("guard inside expression (#4)", () => {
     `);
 });
 
+// https://github.com/Perryvw/dznlint/issues/10
+test("multi-line comment (#10)", () => {
+    expectCanParseWithoutDiagnostics(`
+        /*
+        * bla
+        */
+    `);
+});
+
+// https://github.com/Perryvw/dznlint/issues/10
+test("empty multi-line comment (#10)", () => {
+    expectCanParseWithoutDiagnostics(`
+        /**/
+    `);
+});
+
 test("dollars statement", () => {
     expectCanParseWithoutDiagnostics(`
         import abc.dzn;
