@@ -103,3 +103,26 @@ test("binding to multiple instances of same type is allowed", () => {
         }`,
     });
 });
+
+// https://github.com/Perryvw/dznlint/issues/11
+test("binding to locator does not yield duplicate binding errors (#11)", () => {
+    testdznlint({
+        diagnostic: duplicatePortBinding.code,
+        pass: `
+        component A {
+            system {
+                Instance a;
+                a.api <=> *;
+
+                Instance b;
+                b.api <=> *;
+
+                Instance c;
+                * <=> c.api;
+
+                Instance d;
+                * <=> d.api;
+            }
+        }`,
+    });
+});

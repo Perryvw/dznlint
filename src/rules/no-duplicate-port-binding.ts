@@ -32,19 +32,22 @@ export const no_duplicate_port_binding: RuleFactory = factoryContext => {
                 };
 
                 for (const binding of systemBindings(system)) {
-                    const stringLeft = bindingToString(binding.left);
-                    const stringRight = bindingToString(binding.right);
-
-                    if (seenPorts.has(stringLeft)) {
-                        seenPorts.get(stringLeft)?.push(binding.left);
-                    } else {
-                        seenPorts.set(stringLeft, [binding.left]);
+                    if (binding.left.kind !== ASTKinds.asterisk_binding) {
+                        const stringLeft = bindingToString(binding.left);
+                        if (seenPorts.has(stringLeft)) {
+                            seenPorts.get(stringLeft)?.push(binding.left);
+                        } else {
+                            seenPorts.set(stringLeft, [binding.left]);
+                        }
                     }
 
-                    if (seenPorts.has(stringRight)) {
-                        seenPorts.get(stringRight)?.push(binding.right);
-                    } else {
-                        seenPorts.set(stringRight, [binding.right]);
+                    if (binding.right.kind !== ASTKinds.asterisk_binding) {
+                        const stringRight = bindingToString(binding.right);
+                        if (seenPorts.has(stringRight)) {
+                            seenPorts.get(stringRight)?.push(binding.right);
+                        } else {
+                            seenPorts.set(stringRight, [binding.right]);
+                        }
                     }
                 }
 
