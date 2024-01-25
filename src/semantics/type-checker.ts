@@ -12,7 +12,6 @@ import {
     nameToString,
     ScopedBlock,
     isNamespace,
-    isFunctionDefinition,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
