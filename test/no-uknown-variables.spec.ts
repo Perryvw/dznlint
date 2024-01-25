@@ -733,6 +733,19 @@ describe("in components", () => {
         });
     });
 
+    test("int type variable inside behavior", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `            
+            component C {
+                behavior {
+                    subint SmallInt {0..9};
+                    SmallInt myInt = 0;
+                }
+            }`,
+        });
+    });
+
     // https://github.com/Perryvw/dznlint/issues/9
     test("shared state variable in interface (#9)", () => {
         testdznlint({

@@ -310,7 +310,8 @@ export class TypeChecker {
                 if (
                     statement.kind === parser.ASTKinds.enum_definition ||
                     statement.kind === parser.ASTKinds.function_definition ||
-                    statement.kind === parser.ASTKinds.variable_definition
+                    statement.kind === parser.ASTKinds.variable_definition ||
+                    statement.kind === parser.ASTKinds.int
                 ) {
                     result.set(statement.name.text, statement);
                 }
