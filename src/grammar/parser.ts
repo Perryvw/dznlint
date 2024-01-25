@@ -60,14 +60,14 @@
 * imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
 *   defer_statement       := start=@ header=defer_header _ statement=imperative_statement end=@
-*     defer_header        := start=@ DEFER _ arguments=defer_arguments? end=@
+*     defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=defer_arguments? end=@
 *     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
 *   dollar_statement      := start=@ expression=dollars end=@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
 *     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _
 *   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
-*   return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
+*   return_statement      := start=@ RETURN &{'\s' | SEMICOLON } _ expression=expression? _ SEMICOLON end=@
 * expression := binary_expression | unary_expression
 *   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
 *     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
@@ -273,6 +273,8 @@ export enum ASTKinds {
     assignment = "assignment",
     defer_statement = "defer_statement",
     defer_header = "defer_header",
+    defer_header_$0_1 = "defer_header_$0_1",
+    defer_header_$0_2 = "defer_header_$0_2",
     defer_arguments = "defer_arguments",
     dollar_statement = "dollar_statement",
     expression_statement = "expression_statement",
@@ -282,6 +284,8 @@ export enum ASTKinds {
     variable_definition = "variable_definition",
     variable_definition_$0 = "variable_definition_$0",
     return_statement = "return_statement",
+    return_statement_$0_1 = "return_statement_$0_1",
+    return_statement_$0_2 = "return_statement_$0_2",
     expression_1 = "expression_1",
     expression_2 = "expression_2",
     binary_expression = "binary_expression",
@@ -763,6 +767,9 @@ export interface defer_header {
     arguments: Nullable<defer_arguments>;
     end: PosInfo;
 }
+export type defer_header_$0 = defer_header_$0_1 | defer_header_$0_2;
+export type defer_header_$0_1 = string;
+export type defer_header_$0_2 = PAREN_OPEN;
 export interface defer_arguments {
     kind: ASTKinds.defer_arguments;
     arguments: arguments;
@@ -814,6 +821,9 @@ export interface return_statement {
     expression: Nullable<expression>;
     end: PosInfo;
 }
+export type return_statement_$0 = return_statement_$0_1 | return_statement_$0_2;
+export type return_statement_$0_1 = string;
+export type return_statement_$0_2 = SEMICOLON;
 export type expression = expression_1 | expression_2;
 export type expression_1 = binary_expression;
 export type expression_2 = unary_expression;
@@ -2363,6 +2373,7 @@ export class Parser {
                 if (true
                     && ($scope$start = this.mark()) !== null
                     && this.matchDEFER($$dpth + 1, $$cr) !== null
+                    && this.noConsume<defer_header_$0>(() => this.matchdefer_header_$0($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$arguments = this.matchdefer_arguments($$dpth + 1, $$cr)) || true)
                     && ($scope$end = this.mark()) !== null
@@ -2371,6 +2382,18 @@ export class Parser {
                 }
                 return $$res;
             });
+    }
+    public matchdefer_header_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_header_$0> {
+        return this.choice<defer_header_$0>([
+            () => this.matchdefer_header_$0_1($$dpth + 1, $$cr),
+            () => this.matchdefer_header_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchdefer_header_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_header_$0_1> {
+        return this.regexAccept(String.raw`(?:\s)`, "", $$dpth + 1, $$cr);
+    }
+    public matchdefer_header_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_header_$0_2> {
+        return this.matchPAREN_OPEN($$dpth + 1, $$cr);
     }
     public matchdefer_arguments($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_arguments> {
         return this.run<defer_arguments>($$dpth,
@@ -2539,6 +2562,7 @@ export class Parser {
                 if (true
                     && ($scope$start = this.mark()) !== null
                     && this.matchRETURN($$dpth + 1, $$cr) !== null
+                    && this.noConsume<return_statement_$0>(() => this.matchreturn_statement_$0($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$expression = this.matchexpression($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -2549,6 +2573,18 @@ export class Parser {
                 }
                 return $$res;
             });
+    }
+    public matchreturn_statement_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<return_statement_$0> {
+        return this.choice<return_statement_$0>([
+            () => this.matchreturn_statement_$0_1($$dpth + 1, $$cr),
+            () => this.matchreturn_statement_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchreturn_statement_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<return_statement_$0_1> {
+        return this.regexAccept(String.raw`(?:\s)`, "", $$dpth + 1, $$cr);
+    }
+    public matchreturn_statement_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<return_statement_$0_2> {
+        return this.matchSEMICOLON($$dpth + 1, $$cr);
     }
     public matchexpression($$dpth: number, $$cr?: ErrorTracker): Nullable<expression> {
         const fn = () => {

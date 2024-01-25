@@ -71,14 +71,14 @@ compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BR
 imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
   defer_statement       := start=@ header=defer_header _ statement=imperative_statement end=@
-    defer_header        := start=@ DEFER _ arguments=defer_arguments? end=@
+    defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=defer_arguments? end=@
     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
   dollar_statement      := start=@ expression=dollars end=@
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _
   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
-  return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
+  return_statement      := start=@ RETURN &{'\s' | SEMICOLON } _ expression=expression? _ SEMICOLON end=@
 
 expression := binary_expression | unary_expression
   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression

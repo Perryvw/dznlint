@@ -765,6 +765,36 @@ describe("in components", () => {
                 
                 behavior {
                     [api.s.B] {
+                        reply(api.s.A);
+                    }
+                    bool foo(in bool b) {
+                        foo(api.s.A);
+                        return api.s.B;
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("do not assume defer as part of variable is a defer statement", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface ITimer { 
+                in void start();
+                in void stop();
+                out void tick(); 
+            }
+            component C {
+                requires ITimer deferTimer;
+                requires ITimer elseTimer;
+                requires ITimer importTimer;
+                
+                behavior {
+                    on deferTimer.tick(): {
+                        deferTimer.stop();
+                        elseTimer.stop();
+                        importTimer.stop();
                     }
                 }
             }`,
