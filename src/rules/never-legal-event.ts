@@ -4,7 +4,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { ASTKinds, event, interface_definition, statement, type_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { headTailToList, isExpressionStatement, isIdentifier, isOnEvent, nodeToSourceRange } from "../util";
+import { headTailToList, isExpressionStatement, isIdentifier, isOnStatement, nodeToSourceRange } from "../util";
 import { VisitResult } from "../visitor";
 
 export const neverLegalEvent = createDiagnosticsFactory();
@@ -23,7 +23,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
 
                 context.visit(node.behavior, subNode => {
                     // Look for 'on X,Y,Z: S' where S is not illegal
-                    if (isOnEvent(subNode) && !isIllegal(subNode.statement)) {
+                    if (isOnStatement(subNode) && !isIllegal(subNode.body.statement)) {
                         // Remove all events from list of unseen events
                         for (const trigger of headTailToList(subNode.on_trigger_list)) {
                             if (isIdentifier(trigger.name) && unSeenEvents.has(trigger.name.text)) {

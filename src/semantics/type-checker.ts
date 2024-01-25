@@ -12,6 +12,7 @@ import {
     nameToString,
     ScopedBlock,
     isNamespace,
+    isFunctionDefinition,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -322,9 +323,10 @@ export class TypeChecker {
                     result.set(statement.name.text, statement);
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.function_definition) {
-            if (scope.parameters.parameters) {
-                for (const parameter of headTailToList(scope.parameters.parameters)) {
+        } else if (scope.kind === parser.ASTKinds.function_body) {
+            const functionDefinition = scope.parent as parser.function_definition;
+            if (functionDefinition.parameters.parameters) {
+                for (const parameter of headTailToList(functionDefinition.parameters.parameters)) {
                     result.set(parameter.name.text, parameter);
                 }
             }
@@ -371,8 +373,9 @@ export class TypeChecker {
                     }
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.on) {
-            for (const trigger of headTailToList(scope.on_trigger_list)) {
+        } else if (scope.kind === parser.ASTKinds.on_body) {
+            const on = scope.parent as parser.on;
+            for (const trigger of headTailToList(on.on_trigger_list)) {
                 if (trigger.parameters?.parameters) {
                     for (const parameter of headTailToList(trigger.parameters.parameters)) {
                         result.set(parameter.name.text, parameter);

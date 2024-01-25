@@ -800,4 +800,23 @@ describe("in components", () => {
             }`,
         });
     });
+
+    test("parameter shadowing interface name", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            interface I {
+                in void bla(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.bla(api): {
+                        reply(api);
+                    }
+                }
+            }`,
+        });
+    });
 });

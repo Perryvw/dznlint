@@ -45,9 +45,11 @@
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-*         function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=compound
+*         function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=function_body
+*         function_body := compound=compound
 * declarative_statement := on | guard | compound
-*   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=statement end=@
+*   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ body=on_body end=@
+*     on_body := statement=statement
 *     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
 *     on_trigger := name=compound_name _ parameters=on_parameters?
 *     on_parameters := PAREN_OPEN _ parameters=on_parameter_list? _ PAREN_CLOSE
@@ -242,10 +244,12 @@ export enum ASTKinds {
     behavior_statement_5 = "behavior_statement_5",
     behavior_statement_6 = "behavior_statement_6",
     function_definition = "function_definition",
+    function_body = "function_body",
     declarative_statement_1 = "declarative_statement_1",
     declarative_statement_2 = "declarative_statement_2",
     declarative_statement_3 = "declarative_statement_3",
     on = "on",
+    on_body = "on_body",
     on_trigger_list = "on_trigger_list",
     on_trigger_list_$0 = "on_trigger_list_$0",
     on_trigger = "on_trigger",
@@ -662,7 +666,11 @@ export interface function_definition {
     return_type: compound_name;
     name: identifier;
     parameters: parameters;
-    body: compound;
+    body: function_body;
+}
+export interface function_body {
+    kind: ASTKinds.function_body;
+    compound: compound;
 }
 export type declarative_statement = declarative_statement_1 | declarative_statement_2 | declarative_statement_3;
 export type declarative_statement_1 = on;
@@ -673,8 +681,12 @@ export interface on {
     start: PosInfo;
     blocking: Nullable<BLOCKING>;
     on_trigger_list: on_trigger_list;
-    statement: statement;
+    body: on_body;
     end: PosInfo;
+}
+export interface on_body {
+    kind: ASTKinds.on_body;
+    statement: statement;
 }
 export interface on_trigger_list {
     kind: ASTKinds.on_trigger_list;
@@ -2005,7 +2017,7 @@ export class Parser {
                 let $scope$return_type: Nullable<compound_name>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$parameters: Nullable<parameters>;
-                let $scope$body: Nullable<compound>;
+                let $scope$body: Nullable<function_body>;
                 let $$res: Nullable<function_definition> = null;
                 if (true
                     && ($scope$return_type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
@@ -2014,9 +2026,22 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$parameters = this.matchparameters($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$body = this.matchcompound($$dpth + 1, $$cr)) !== null
+                    && ($scope$body = this.matchfunction_body($$dpth + 1, $$cr)) !== null
                 ) {
                     $$res = {kind: ASTKinds.function_definition, return_type: $scope$return_type, name: $scope$name, parameters: $scope$parameters, body: $scope$body};
+                }
+                return $$res;
+            });
+    }
+    public matchfunction_body($$dpth: number, $$cr?: ErrorTracker): Nullable<function_body> {
+        return this.run<function_body>($$dpth,
+            () => {
+                let $scope$compound: Nullable<compound>;
+                let $$res: Nullable<function_body> = null;
+                if (true
+                    && ($scope$compound = this.matchcompound($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.function_body, compound: $scope$compound};
                 }
                 return $$res;
             });
@@ -2043,7 +2068,7 @@ export class Parser {
                 let $scope$start: Nullable<PosInfo>;
                 let $scope$blocking: Nullable<Nullable<BLOCKING>>;
                 let $scope$on_trigger_list: Nullable<on_trigger_list>;
-                let $scope$statement: Nullable<statement>;
+                let $scope$body: Nullable<on_body>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<on> = null;
                 if (true
@@ -2056,10 +2081,23 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchCOLON($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$statement = this.matchstatement($$dpth + 1, $$cr)) !== null
+                    && ($scope$body = this.matchon_body($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on, start: $scope$start, blocking: $scope$blocking, on_trigger_list: $scope$on_trigger_list, statement: $scope$statement, end: $scope$end};
+                    $$res = {kind: ASTKinds.on, start: $scope$start, blocking: $scope$blocking, on_trigger_list: $scope$on_trigger_list, body: $scope$body, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchon_body($$dpth: number, $$cr?: ErrorTracker): Nullable<on_body> {
+        return this.run<on_body>($$dpth,
+            () => {
+                let $scope$statement: Nullable<statement>;
+                let $$res: Nullable<on_body> = null;
+                if (true
+                    && ($scope$statement = this.matchstatement($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.on_body, statement: $scope$statement};
                 }
                 return $$res;
             });

@@ -48,6 +48,10 @@ export function isCompound(node: ASTNode): node is parser.compound {
     return node.kind === parser.ASTKinds.compound;
 }
 
+export function isFunctionDefinition(statement: ASTNode): statement is parser.function_definition {
+    return statement.kind === parser.ASTKinds.function_definition;
+}
+
 export function isNamespace(node: ASTNode): node is parser.namespace {
     return node.kind === parser.ASTKinds.namespace;
 }
@@ -68,17 +72,19 @@ export function isExpressionStatement(node: ASTNode): node is parser.expression_
     return node.kind === parser.ASTKinds.expression_statement;
 }
 
-export type ScopedBlock =
-    | parser.behavior
-    | parser.behavior_compound
-    | parser.component
-    | parser.compound
-    | parser.function_definition
-    | parser.interface_definition
-    | parser.namespace
-    | parser.on
-    | parser.system
-    | parser.file;
+export type ScopedBlock = ASTNode &
+    (
+        | parser.behavior
+        | parser.behavior_compound
+        | parser.component
+        | parser.compound
+        | parser.function_body
+        | parser.interface_definition
+        | parser.namespace
+        | parser.on_body
+        | parser.system
+        | parser.file
+    );
 
 export function isScopedBlock(node: ASTNode): node is ScopedBlock {
     return (
@@ -86,20 +92,16 @@ export function isScopedBlock(node: ASTNode): node is ScopedBlock {
         node.kind === parser.ASTKinds.behavior_compound ||
         node.kind === parser.ASTKinds.component ||
         node.kind === parser.ASTKinds.compound ||
-        node.kind === parser.ASTKinds.function_definition ||
+        node.kind === parser.ASTKinds.function_body ||
         node.kind === parser.ASTKinds.interface_definition ||
         node.kind === parser.ASTKinds.namespace ||
-        node.kind === parser.ASTKinds.on ||
+        node.kind === parser.ASTKinds.on_body ||
         node.kind === parser.ASTKinds.system ||
         node.kind === parser.ASTKinds.file
     );
 }
 
-export function isFunctionDefinition(statement: parser.behavior_statement): statement is parser.function_definition {
-    return statement.kind === parser.ASTKinds.function_definition;
-}
-
-export function isOnEvent(node: ASTNode): node is parser.on {
+export function isOnStatement(node: ASTNode): node is parser.on {
     return node.kind === parser.ASTKinds.on;
 }
 

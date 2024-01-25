@@ -174,6 +174,9 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     ) => {
         context.visit(node.expression, cb);
     },
+    [parser.ASTKinds.function_body]: (node: parser.function_body, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.compound, cb);
+    },
     [parser.ASTKinds.function_definition]: (
         node: parser.function_definition,
         context: VisitorContext,
@@ -188,7 +191,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
                 context.visit(parameter, cb);
             }
         }
-        context.visit(node.body, cb);
+        context.visit(node.body.compound, cb);
         context.popScope();
     },
     [parser.ASTKinds.function_parameter]: (
@@ -262,9 +265,12 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             if (trigger) context.visit(trigger, cb);
         }
 
-        context.visit(node.statement, cb);
+        context.visit(node.body.statement, cb);
 
         context.popScope();
+    },
+    [parser.ASTKinds.on_body]: (node: parser.on_body, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.statement, cb);
     },
     [parser.ASTKinds.on_parameter]: (node: parser.on_parameter, context: VisitorContext, cb: VisitorCallback) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
@@ -433,6 +439,7 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     },
     [parser.ASTKinds.function_definition]: (node: parser.function_definition) => {
         setParent(node.body, node);
+        setParent(node.body.compound, node.body);
         setParent(node.return_type, node);
         setParent(node.name, node);
 
@@ -508,7 +515,8 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
             if (trigger) setParent(trigger, node);
         }
 
-        setParent(node.statement, node);
+        setParent(node.body, node);
+        setParent(node.body.statement, node.body);
     },
     [parser.ASTKinds.on_parameter]: (node: parser.on_parameter) => {
         setParent(node.name, node);

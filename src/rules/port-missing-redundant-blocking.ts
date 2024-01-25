@@ -4,7 +4,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "../diagnostic";
 import { ASTKinds, component, compound, compound_name, port } from "../grammar/parser";
 import { ASTNode, RuleFactory } from "../linting-rule";
-import { headTailToList, isCompound, isIdentifier, isOnEvent, nodeToSourceRange } from "../util";
+import { headTailToList, isCompound, isIdentifier, isOnStatement, nodeToSourceRange } from "../util";
 
 export const portMissingBlocking = createDiagnosticsFactory();
 export const portRedundantBlocking = createDiagnosticsFactory();
@@ -51,8 +51,8 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
 
             context.visit(node.body, subNode => {
                 // Look for 'blocking on X: Y' or 'on X: blocking Y'
-                if (isOnEvent(subNode)) {
-                    if (subNode.blocking || isBlockingCompound(subNode.statement)) {
+                if (isOnStatement(subNode)) {
+                    if (subNode.blocking || isBlockingCompound(subNode.body.statement)) {
                         // Mark all ports as needing blocking
                         for (const { name } of headTailToList(subNode.on_trigger_list)) {
                             if (!isIdentifier(name) && name.compound && isIdentifier(name.compound)) {

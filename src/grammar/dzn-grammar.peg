@@ -53,10 +53,12 @@ behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
     behavior_statements := {_ statement=behavior_statement _}*
       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-        function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=compound
+        function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=function_body
+        function_body := compound=compound
 
 declarative_statement := on | guard | compound
-  on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=statement end=@
+  on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ body=on_body end=@
+    on_body := statement=statement
     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
     on_trigger := name=compound_name _ parameters=on_parameters?
     on_parameters := PAREN_OPEN _ parameters=on_parameter_list? _ PAREN_CLOSE

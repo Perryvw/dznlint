@@ -36,7 +36,7 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
                 }
             }
 
-            return findUnusedParameters(parameterIdentifiers, node.statement, context, config.severity);
+            return findUnusedParameters(parameterIdentifiers, node.body.statement, context, config.severity);
         });
     }
 };
