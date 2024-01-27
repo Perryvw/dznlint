@@ -26,6 +26,11 @@ export const no_mismatching_binding_types: RuleFactory = factoryContext => {
         factoryContext.registerRule<binding>(ASTKinds.binding, (node, context) => {
             const diagnostics: Diagnostic[] = [];
 
+            if (node.left.kind === ASTKinds.asterisk_binding || node.right.kind === ASTKinds.asterisk_binding) {
+                // No need to check binding to the locator
+                return [];
+            }
+
             const typeLeft = context.typeChecker.typeOfNode(node.left);
             const typeRight = context.typeChecker.typeOfNode(node.right);
 

@@ -1,12 +1,12 @@
 import { unconnectedPort } from "../src/rules/no-unconnected-ports";
 import { testdznlint } from "./util";
 
-test.each(["provided", "required"])("no unknown %s port bindings", () => {
+test.each(["provides", "requires"])("no unknown %s port bindings", portKind => {
     testdznlint({
         diagnostic: unconnectedPort.code,
         pass: `component A {
 
-            provides Type myport;
+            ${portKind} Type myport;
 
             system {
                 Instance myInstance;
@@ -15,7 +15,7 @@ test.each(["provided", "required"])("no unknown %s port bindings", () => {
         }`,
         fail: `component A {
 
-            provides Type myport;
+            ${portKind} Type myport;
 
             system {
             }
