@@ -14,8 +14,8 @@ export function parseDznSource(source: InputSource): { ast?: parser.file; diagno
     for (const err of errs) {
         diagnostics.push(
             failedToFullyParseFile(DiagnosticSeverity.Error, err.toString(), source, {
-                from: { index: err.pos.overallPos - 1, line: err.pos.line, column: err.pos.offset },
-                to: { index: err.pos.overallPos, line: err.pos.line, column: err.pos.offset + 1 },
+                from: { index: err.pos.overallPos, line: err.pos.line, column: err.pos.offset },
+                to: { index: err.pos.overallPos + 1, line: err.pos.line, column: err.pos.offset + 1 },
             })
         );
     }

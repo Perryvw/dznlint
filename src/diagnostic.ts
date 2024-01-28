@@ -72,7 +72,10 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
 function findFullLine(range: SourceRange, source: string) {
     let lineStart = range.from.index;
     for (; lineStart >= 0; lineStart--) {
-        if (source[lineStart] === "\n") break;
+        if (source[lineStart] === "\n") {
+            ++lineStart;
+            break;
+        }
     }
 
     let lineEnd = range.to.index;
@@ -87,7 +90,7 @@ function findFullLine(range: SourceRange, source: string) {
 
     return {
         fullLine: line.trimEnd(),
-        offsetInLine: range.from.index - lineStart - trimmed,
+        offsetInLine: range.from.column - trimmed,
     };
 }
 
