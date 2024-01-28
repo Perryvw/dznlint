@@ -20,6 +20,8 @@ export const no_unknown_imports: RuleFactory = factoryContext => {
                 let message = `Could not find file ${node.file_name} imported from ${context.source.fileName ?? "?"}`;
                 if (context.program.host.includePaths?.length > 0) {
                     message += ` or any of the include paths: ${context.program.host.includePaths.join(", ")}`;
+                } else {
+                    message += `. Did you forget to set your include paths?`;
                 }
 
                 return [couldNotResolveFile(config.severity, message, context.source, nodeToSourceRange(node))];
