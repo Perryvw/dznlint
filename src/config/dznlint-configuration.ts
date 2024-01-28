@@ -10,6 +10,7 @@ export interface DznLintConfiguration {
     //     braces: "same-line" | "next-line"
     // };
     // Rule configuration
+    call_arguments_must_match: ConfigValue;
     dead_code: ConfigValue;
     implicit_illegal: ConfigValue;
     inline_temporary_variables: ConfigValue;

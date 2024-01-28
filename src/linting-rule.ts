@@ -13,6 +13,7 @@ export interface RuleFactoryContext {
     registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
 }
 
+import call_arguments_must_match from "./rules/call-arguments-must-match";
 import dead_code from "./rules/dead-code";
 import implicit_illegal from "./rules/implicit-illegal";
 import inline_temporary_variables from "./rules/inline-temporary-variables";
@@ -37,6 +38,7 @@ import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-
 
 export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
+        call_arguments_must_match,
         dead_code,
         implicit_illegal,
         inline_temporary_variables,

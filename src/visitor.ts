@@ -111,7 +111,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
     [parser.ASTKinds.call_expression]: (node: parser.call_expression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.expression, cb);
-        for (const { expression } of node.arguments) {
+        for (const { expression } of node.arguments.arguments) {
             context.visit(expression, cb);
         }
     },
@@ -384,7 +384,7 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
     },
     [parser.ASTKinds.call_expression]: (node: parser.call_expression) => {
         setParent(node.expression, node);
-        for (const { expression } of node.arguments) {
+        for (const { expression } of node.arguments.arguments) {
             setParent(expression, node);
         }
     },

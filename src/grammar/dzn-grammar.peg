@@ -73,8 +73,7 @@ compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BR
 imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
   defer_statement       := start=@ header=defer_header _ statement=imperative_statement end=@
-    defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=defer_arguments? end=@
-    defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
+    defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=arguments? end=@
   dollar_statement      := start=@ expression=dollars end=@
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
@@ -87,8 +86,8 @@ expression := binary_expression | unary_expression
     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
 
 unary_expression := parenthesized_expression | call_expression | dollars | ILLEGAL | compound_name | numeric_literal | unary_operator_expression
-  call_expression             := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
-    arguments                 := {_ expression=expression _ COMMA?}*
+  call_expression             := expression=expression _ arguments=arguments
+    arguments                 := start=@ PAREN_OPEN arguments={_ expression=expression _ COMMA?}* PAREN_CLOSE end=@
   dollars                     := DOLLAR value='[^$]*' DOLLAR
   numeric_literal             := text=NUMBER
   parenthesized_expression    := PAREN_OPEN _ expression=expression _ PAREN_CLOSE

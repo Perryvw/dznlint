@@ -45,6 +45,14 @@ For example:
 
 Default values are indicated in bold.
 
+## call_arguments_must_match
+
+Arguments passed to a function call must match the parameters of that function or event.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## dead_code
 
 No code allowed after return statements in functions.

@@ -12,7 +12,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     //     indentWidth: 4,
     //     braces:  "next-line"
     // },
-
+    call_arguments_must_match: "error",
     dead_code: "error",
     implicit_illegal: "warning",
     inline_temporary_variables: "hint",

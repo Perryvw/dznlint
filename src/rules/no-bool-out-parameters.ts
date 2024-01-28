@@ -16,7 +16,7 @@ export const no_bool_out_parameters: RuleFactory = factoryContext => {
         const createDiagnostic = (node: compound_name, source: InputSource) =>
             illegalBoolOutParameter(
                 config.severity,
-                "Type 'bool' type is not allowed for out parameters",
+                "Type 'bool' is not allowed for out parameters",
                 source,
                 nodeToSourceRange(node)
             );
@@ -42,7 +42,7 @@ export const no_bool_out_parameters: RuleFactory = factoryContext => {
                 if (type_or_event.kind === ASTKinds.event && type_or_event.event_params) {
                     for (const parameter of headTailToList(type_or_event.event_params)) {
                         if (parameter.direction?.direction === "out" && isBoolIdentifier(parameter.type)) {
-                            diagnostics.push(createDiagnostic(type_or_event.type_name, context.source));
+                            diagnostics.push(createDiagnostic(parameter.type, context.source));
                         }
                     }
                 }

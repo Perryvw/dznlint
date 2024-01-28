@@ -62,8 +62,7 @@
 * imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
 *   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
 *   defer_statement       := start=@ header=defer_header _ statement=imperative_statement end=@
-*     defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=defer_arguments? end=@
-*     defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
+*     defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=arguments? end=@
 *   dollar_statement      := start=@ expression=dollars end=@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
@@ -74,8 +73,8 @@
 *   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
 *     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
 * unary_expression := parenthesized_expression | call_expression | dollars | ILLEGAL | compound_name | numeric_literal | unary_operator_expression
-*   call_expression             := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
-*     arguments                 := {_ expression=expression _ COMMA?}*
+*   call_expression             := expression=expression _ arguments=arguments
+*     arguments                 := start=@ PAREN_OPEN arguments={_ expression=expression _ COMMA?}* PAREN_CLOSE end=@
 *   dollars                     := DOLLAR value='[^$]*' DOLLAR
 *   numeric_literal             := text=NUMBER
 *   parenthesized_expression    := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
@@ -279,7 +278,6 @@ export enum ASTKinds {
     defer_header = "defer_header",
     defer_header_$0_1 = "defer_header_$0_1",
     defer_header_$0_2 = "defer_header_$0_2",
-    defer_arguments = "defer_arguments",
     dollar_statement = "dollar_statement",
     expression_statement = "expression_statement",
     if_statement = "if_statement",
@@ -776,16 +774,12 @@ export interface defer_statement {
 export interface defer_header {
     kind: ASTKinds.defer_header;
     start: PosInfo;
-    arguments: Nullable<defer_arguments>;
+    arguments: Nullable<arguments>;
     end: PosInfo;
 }
 export type defer_header_$0 = defer_header_$0_1 | defer_header_$0_2;
 export type defer_header_$0_1 = string;
 export type defer_header_$0_2 = PAREN_OPEN;
-export interface defer_arguments {
-    kind: ASTKinds.defer_arguments;
-    arguments: arguments;
-}
 export interface dollar_statement {
     kind: ASTKinds.dollar_statement;
     start: PosInfo;
@@ -869,7 +863,12 @@ export interface call_expression {
     expression: expression;
     arguments: arguments;
 }
-export type arguments = arguments_$0[];
+export interface arguments {
+    kind: ASTKinds.arguments;
+    start: PosInfo;
+    arguments: arguments_$0[];
+    end: PosInfo;
+}
 export interface arguments_$0 {
     kind: ASTKinds.arguments_$0;
     expression: expression;
@@ -2405,7 +2404,7 @@ export class Parser {
         return this.run<defer_header>($$dpth,
             () => {
                 let $scope$start: Nullable<PosInfo>;
-                let $scope$arguments: Nullable<Nullable<defer_arguments>>;
+                let $scope$arguments: Nullable<Nullable<arguments>>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<defer_header> = null;
                 if (true
@@ -2413,7 +2412,7 @@ export class Parser {
                     && this.matchDEFER($$dpth + 1, $$cr) !== null
                     && this.noConsume<defer_header_$0>(() => this.matchdefer_header_$0($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$arguments = this.matchdefer_arguments($$dpth + 1, $$cr)) || true)
+                    && (($scope$arguments = this.matcharguments($$dpth + 1, $$cr)) || true)
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.defer_header, start: $scope$start, arguments: $scope$arguments, end: $scope$end};
@@ -2432,21 +2431,6 @@ export class Parser {
     }
     public matchdefer_header_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_header_$0_2> {
         return this.matchPAREN_OPEN($$dpth + 1, $$cr);
-    }
-    public matchdefer_arguments($$dpth: number, $$cr?: ErrorTracker): Nullable<defer_arguments> {
-        return this.run<defer_arguments>($$dpth,
-            () => {
-                let $scope$arguments: Nullable<arguments>;
-                let $$res: Nullable<defer_arguments> = null;
-                if (true
-                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
-                    && ($scope$arguments = this.matcharguments($$dpth + 1, $$cr)) !== null
-                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
-                ) {
-                    $$res = {kind: ASTKinds.defer_arguments, arguments: $scope$arguments};
-                }
-                return $$res;
-            });
     }
     public matchdollar_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<dollar_statement> {
         return this.run<dollar_statement>($$dpth,
@@ -2766,9 +2750,7 @@ export class Parser {
                 if (true
                     && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
                     && ($scope$arguments = this.matcharguments($$dpth + 1, $$cr)) !== null
-                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.call_expression, expression: $scope$expression, arguments: $scope$arguments};
                 }
@@ -2776,7 +2758,23 @@ export class Parser {
             });
     }
     public matcharguments($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments> {
-        return this.loop<arguments_$0>(() => this.matcharguments_$0($$dpth + 1, $$cr), 0, -1);
+        return this.run<arguments>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$arguments: Nullable<arguments_$0[]>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<arguments> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
+                    && ($scope$arguments = this.loop<arguments_$0>(() => this.matcharguments_$0($$dpth + 1, $$cr), 0, -1)) !== null
+                    && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.arguments, start: $scope$start, arguments: $scope$arguments, end: $scope$end};
+                }
+                return $$res;
+            });
     }
     public matcharguments_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<arguments_$0> {
         return this.run<arguments_$0>($$dpth,

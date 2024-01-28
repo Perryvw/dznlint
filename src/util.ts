@@ -48,6 +48,10 @@ export function isCompound(node: ASTNode): node is parser.compound {
     return node.kind === parser.ASTKinds.compound;
 }
 
+export function isEvent(node: ASTNode): node is parser.event {
+    return node.kind === parser.ASTKinds.event;
+}
+
 export function isFunctionDefinition(statement: ASTNode): statement is parser.function_definition {
     return statement.kind === parser.ASTKinds.function_definition;
 }

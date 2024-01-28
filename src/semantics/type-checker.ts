@@ -166,6 +166,8 @@ export class TypeChecker {
     }
 
     public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {
+        if (symbol.declaration === null) return ERROR_TYPE;
+
         const declaration = symbol.declaration;
 
         if (declaration.kind === parser.ASTKinds.instance) {
@@ -188,9 +190,7 @@ export class TypeChecker {
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === parser.ASTKinds.event) {
             const definition = declaration as parser.event;
-            const typeSymbol = this.symbolOfNode(definition.type_name);
-            if (!typeSymbol) return ERROR_TYPE;
-            return this.typeOfSymbol(typeSymbol);
+            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.event_name.text };
         } else if (symbol.declaration.kind === parser.ASTKinds.component) {
             const definition = declaration as parser.component;
             return { kind: TypeKind.Component, name: definition.name.text, declaration: definition };
@@ -204,6 +204,9 @@ export class TypeChecker {
             } else {
                 return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.name.text };
             }
+        } else if (symbol.declaration.kind === parser.ASTKinds.function_definition) {
+            const definition = declaration as parser.function_definition;
+            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
         } else if (symbol.declaration.kind === parser.ASTKinds.int) {
             const definition = declaration as parser.int;
             return { kind: TypeKind.IntegerRange, declaration: symbol.declaration, name: definition.name.text };

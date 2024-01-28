@@ -96,7 +96,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                     diagnostics.push(...checkExpressionNames(node.expression, "function", context));
                 }
 
-                for (const argument of node.arguments) {
+                for (const argument of node.arguments.arguments) {
                     diagnostics.push(...checkExpressionNames(argument.expression, "variable", context));
                 }
                 return diagnostics;
