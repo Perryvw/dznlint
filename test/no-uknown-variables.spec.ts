@@ -746,6 +746,37 @@ describe("in components", () => {
         });
     });
 
+    test("unknown member in return statement", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `            
+            component C {
+                behavior {
+                    enum MyEnum {
+                        A, B
+                    };
+                    MyEnum foo() {
+                        return MyEnum.D;
+                    }
+                }
+            }`,
+        });
+    });
+
+    test("unknown variable in return statement", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `            
+            component C {
+                behavior {
+                    MyEnum foo() {
+                        return MyEnum.A;
+                    }
+                }
+            }`,
+        });
+    });
+
     // https://github.com/Perryvw/dznlint/issues/9
     test("shared state variable in interface (#9)", () => {
         testdznlint({

@@ -149,6 +149,13 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             }
         );
 
+        factoryContext.registerRule<parser.return_statement>(
+            parser.ASTKinds.return_statement,
+            (node: parser.return_statement, context) => {
+                return node.expression ? checkExpressionNames(node.expression, "variable", context) : [];
+            }
+        );
+
         const createUnknownCompoundNameDiagnostic = (
             compoundName: parser.compound_name | parser.binding_expression,
             typeForMessage: string,
