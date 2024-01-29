@@ -31,7 +31,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                 const expectedCount = functionParameters.length;
 
                 if (argumentCount !== expectedCount) {
-                    let errorMessage = `Incorrect argument count. Expected ${expectedCount} arguments but got ${argumentCount}.`;
+                    let errorMessage = `Incorrect argument count. Expected ${expectedCount} argument(s) but got ${argumentCount}.`;
                     if (expectedCount > 0) {
                         errorMessage +=
                             "\nExpected parameters: " +

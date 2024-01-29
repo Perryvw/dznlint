@@ -32,6 +32,7 @@ import no_unknown_imports from "./rules/no-unknown-imports";
 import no_unknown_variables from "./rules/no-unknown-variables";
 import no_unused_parameters from "./rules/no-unused-parameter";
 import no_unused_variables from "./rules/no-unused-variables";
+import on_parameters_must_match from "./rules/on-parameters-must-match";
 import parameter_direction from "./rules/parameter-direction";
 import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
@@ -58,6 +59,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         no_unused_instances,
         no_unused_parameters,
         no_unused_variables,
+        on_parameters_must_match,
         parameter_direction,
         port_missing_redundant_blocking,
     ];

@@ -42,6 +42,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     no_unused_instances: "warning",
     no_unused_parameters: "warning",
     no_unused_variables: "warning",
+    on_parameters_must_match: "error",
     parameter_direction: "warning",
     port_missing_redundant_blocking: false,
 };

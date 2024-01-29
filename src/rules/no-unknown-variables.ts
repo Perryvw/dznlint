@@ -58,7 +58,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
         });
 
         factoryContext.registerRule<parser.on>(parser.ASTKinds.on, (node: parser.on, context) => {
-            const diagnostics = [];
+            const diagnostics: Diagnostic[] = [];
             for (const trigger of headTailToList(node.on_trigger_list)) {
                 if (context.typeChecker.symbolOfNode(trigger.name) === undefined) {
                     diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "port or event", context));

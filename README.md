@@ -216,6 +216,14 @@ Defined variables should be referenced at least once.
 
 ---
 
+## on_parameters_must_match
+
+Parameters in an `on` trigger must match the number of parameters specified by the triggering event.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## parameter_direction
 
 Parameter direction (in/out/inout) should always be specified.

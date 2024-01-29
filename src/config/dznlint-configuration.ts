@@ -37,6 +37,7 @@ export interface DznLintConfiguration {
     no_unused_instances: ConfigValue;
     no_unused_parameters: ConfigValue;
     no_unused_variables: ConfigValue;
+    on_parameters_must_match: ConfigValue;
     parameter_direction: ConfigValue;
     port_missing_redundant_blocking: ConfigValue;
 }

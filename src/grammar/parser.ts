@@ -52,7 +52,7 @@
 *     on_body := statement=statement
 *     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
 *     on_trigger := name=compound_name _ parameters=on_parameters?
-*     on_parameters := PAREN_OPEN _ parameters=on_parameter_list? _ PAREN_CLOSE
+*     on_parameters := start=@ PAREN_OPEN _ parameters=on_parameter_list? _ PAREN_CLOSE end=@
 *       on_parameter_list := head=on_parameter tail={ _ COMMA _ elem=on_parameter }*
 *         on_parameter := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
 *   guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
@@ -702,7 +702,9 @@ export interface on_trigger {
 }
 export interface on_parameters {
     kind: ASTKinds.on_parameters;
+    start: PosInfo;
     parameters: Nullable<on_parameter_list>;
+    end: PosInfo;
 }
 export interface on_parameter_list {
     kind: ASTKinds.on_parameter_list;
@@ -2151,16 +2153,20 @@ export class Parser {
     public matchon_parameters($$dpth: number, $$cr?: ErrorTracker): Nullable<on_parameters> {
         return this.run<on_parameters>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$parameters: Nullable<Nullable<on_parameter_list>>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<on_parameters> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && this.matchPAREN_OPEN($$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$parameters = this.matchon_parameter_list($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchPAREN_CLOSE($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.on_parameters, parameters: $scope$parameters};
+                    $$res = {kind: ASTKinds.on_parameters, start: $scope$start, parameters: $scope$parameters, end: $scope$end};
                 }
                 return $$res;
             });
