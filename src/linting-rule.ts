@@ -13,6 +13,7 @@ export interface RuleFactoryContext {
     registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
 }
 
+import call_arguments_must_match from "./rules/call-arguments-must-match";
 import dead_code from "./rules/dead-code";
 import implicit_illegal from "./rules/implicit-illegal";
 import inline_temporary_variables from "./rules/inline-temporary-variables";
@@ -25,17 +26,20 @@ import no_bool_out_parameters from "./rules/no-bool-out-parameters";
 import no_duplicate_parameters from "./rules/no-duplicate-parameters";
 import no_duplicate_port_binding from "./rules/no-duplicate-port-binding";
 import no_empty_defer_capture from "./rules/no-empty-defer-capture";
-import no_unknown_instance_binding from "./rules/no-unknown-instance-binding";
-import no_unknown_port_binding from "./rules/no-unknown-port-binding";
+import no_mismatching_binding_types from "./rules/no-mismatching-binding-types";
+import no_unconnected_ports from "./rules/no-unconnected-ports";
+import no_unknown_imports from "./rules/no-unknown-imports";
+import no_unknown_variables from "./rules/no-unknown-variables";
 import no_unused_parameters from "./rules/no-unused-parameter";
 import no_unused_variables from "./rules/no-unused-variables";
-import no_unused_ports from "./rules/no-unused-ports";
+import on_parameters_must_match from "./rules/on-parameters-must-match";
 import parameter_direction from "./rules/parameter-direction";
 import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
 
 export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
+        call_arguments_must_match,
         dead_code,
         implicit_illegal,
         inline_temporary_variables,
@@ -46,14 +50,16 @@ export function loadLinters(config: DznLintUserConfiguration) {
         no_duplicate_parameters,
         no_duplicate_port_binding,
         no_empty_defer_capture,
+        no_mismatching_binding_types,
         no_recursive_system,
         no_shadowing,
-        no_unknown_instance_binding,
-        no_unknown_port_binding,
+        no_unconnected_ports,
+        no_unknown_imports,
+        no_unknown_variables,
         no_unused_instances,
         no_unused_parameters,
-        no_unused_ports,
         no_unused_variables,
+        on_parameters_must_match,
         parameter_direction,
         port_missing_redundant_blocking,
     ];

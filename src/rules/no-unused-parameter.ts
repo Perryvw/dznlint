@@ -15,8 +15,8 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
-            if (node.parameters.formals) {
-                const parameterIdentifiers = headTailToList(node.parameters.formals).map(p => p.name);
+            if (node.parameters.parameters) {
+                const parameterIdentifiers = headTailToList(node.parameters.parameters).map(p => p.name);
                 return findUnusedParameters(parameterIdentifiers, node.body, context, config.severity);
             }
 
@@ -26,8 +26,8 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
         factoryContext.registerRule<on>(ASTKinds.on, (node, context) => {
             const parameterIdentifiers = [];
             for (const { parameters } of headTailToList(node.on_trigger_list)) {
-                if (parameters?.formals) {
-                    for (const { name, assignment } of headTailToList(parameters.formals)) {
+                if (parameters?.parameters) {
+                    for (const { name, assignment } of headTailToList(parameters.parameters)) {
                         // Skip parameters with <- assignment
                         if (!assignment) {
                             parameterIdentifiers.push(name);
@@ -36,7 +36,7 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
                 }
             }
 
-            return findUnusedParameters(parameterIdentifiers, node.statement, context, config.severity);
+            return findUnusedParameters(parameterIdentifiers, node.body.statement, context, config.severity);
         });
     }
 };

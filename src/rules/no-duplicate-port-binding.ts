@@ -2,9 +2,9 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, component, identifier } from "../grammar/parser";
+import { ASTKinds, binding_expression, component } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifierEndpoint, nodeToSourceRange, systemBindings } from "../util";
+import { nodeToSourceRange, systemBindings } from "../util";
 
 export const duplicatePortBinding = createDiagnosticsFactory();
 
@@ -16,24 +16,37 @@ export const no_duplicate_port_binding: RuleFactory = factoryContext => {
             if (node.body?.kind === ASTKinds.system) {
                 const system = node.body;
 
-                const seenPorts = new Map<string, identifier[]>();
+                const seenPorts = new Map<string, binding_expression[]>();
+
+                const bindingToString = (binding: binding_expression): string => {
+                    if (binding.kind === ASTKinds.identifier) {
+                        return binding.text;
+                    } else if (binding.kind === ASTKinds.binding_expression_$0) {
+                        const name = binding.name.kind === ASTKinds.asterisk_binding ? "*" : binding.name.text;
+                        return `${bindingToString(binding.compound)}.${name}`;
+                    } else if (binding.kind === ASTKinds.asterisk_binding) {
+                        return "*";
+                    }
+
+                    return "";
+                };
 
                 for (const binding of systemBindings(system)) {
-                    // If left-hand-side is a port, record it in the map
-                    if (isIdentifierEndpoint(binding.left)) {
-                        if (!seenPorts.has(binding.left.name.text)) {
-                            seenPorts.set(binding.left.name.text, [binding.left.name]);
+                    if (binding.left.kind !== ASTKinds.asterisk_binding) {
+                        const stringLeft = bindingToString(binding.left);
+                        if (seenPorts.has(stringLeft)) {
+                            seenPorts.get(stringLeft)?.push(binding.left);
                         } else {
-                            seenPorts.get(binding.left.name.text)?.push(binding.left.name);
+                            seenPorts.set(stringLeft, [binding.left]);
                         }
                     }
 
-                    // If right-hand-side is a port, record it in the map
-                    if (isIdentifierEndpoint(binding.right)) {
-                        if (!seenPorts.has(binding.right.name.text)) {
-                            seenPorts.set(binding.right.name.text, [binding.right.name]);
+                    if (binding.right.kind !== ASTKinds.asterisk_binding) {
+                        const stringRight = bindingToString(binding.right);
+                        if (seenPorts.has(stringRight)) {
+                            seenPorts.get(stringRight)?.push(binding.right);
                         } else {
-                            seenPorts.get(binding.right.name.text)?.push(binding.right.name);
+                            seenPorts.set(stringRight, [binding.right]);
                         }
                     }
                 }

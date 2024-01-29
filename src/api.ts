@@ -1,46 +1,93 @@
-import * as fs from "fs";
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
-import { Diagnostic } from "./diagnostic";
-import { ASTKinds } from "./grammar/parser";
-import { ASTNode, Linter, loadLinters } from "./linting-rule";
-import { parseDznSource } from "./parse";
+import { Diagnostic, DiagnosticSeverity, createDiagnosticsFactory } from "./diagnostic";
+import { loadLinters } from "./linting-rule";
 import { visitFile } from "./visitor";
+import { LinterHost, Program, SourceFile } from "./semantics/program";
 
-export function lintString(source: string, config?: DznLintUserConfiguration): Diagnostic[] {
-    const sources = [{ fileContent: source }];
-    return lint(sources, config);
-}
+export { LinterHost };
+export { Program };
 
-export function lintFiles(fileNames: string[], config?: DznLintUserConfiguration): Diagnostic[] {
-    const sources = fileNames.map(f => ({ fileName: f, fileContent: fs.readFileSync(f).toString() }));
-    return lint(sources, config);
-}
+export function lintString(
+    source: string,
+    config: DznLintUserConfiguration = {},
+    host?: Partial<LinterHost>
+): Diagnostic[] {
+    const program = new Program(host);
 
-export interface InputSource {
-    fileName?: string;
-    fileContent: string;
-}
-
-export function lint(sources: InputSource[], config: DznLintUserConfiguration = {}): Diagnostic[] {
-    const rules = loadLinters(config);
-    return sources.flatMap(s => lintSource(s, rules));
-}
-
-function lintSource(source: InputSource, rules: Map<ASTKinds, Linter<ASTNode>[]>): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
+    const sourceFile = program.parseFile("", source);
+    if (sourceFile) {
+        const rules = loadLinters(config);
+        diagnostics.push(...sourceFile.parseDiagnostics);
 
-    const { ast, diagnostics: parseDiagnostics } = parseDznSource(source);
-    diagnostics.push(...parseDiagnostics);
-
-    if (ast) {
-        if (ast) {
-            visitFile(ast, source, (node, context) => {
-                for (const linter of rules.get(node.kind) ?? []) {
-                    diagnostics.push(...linter(node, context));
-                }
-            });
+        if (sourceFile.ast) {
+            visitFile(
+                sourceFile.ast,
+                sourceFile.source,
+                (node, context) => {
+                    for (const linter of rules.get(node.kind) ?? []) {
+                        diagnostics.push(...linter(node, context));
+                    }
+                },
+                program
+            );
         }
     }
 
+    return diagnostics;
+}
+
+const couldNotReadFile = createDiagnosticsFactory();
+
+export function lintFiles(
+    fileNames: string[],
+    config: DznLintUserConfiguration = {},
+    host?: Partial<LinterHost>
+): Diagnostic[] {
+    const program = new Program(host);
+
+    const diagnostics: Diagnostic[] = [];
+    const files: SourceFile[] = [];
+    for (const fileName of fileNames) {
+        const sourceFile = program.parseFile(fileName);
+        if (sourceFile) {
+            files.push(sourceFile);
+        } else {
+            diagnostics.push(
+                couldNotReadFile(
+                    DiagnosticSeverity.Error,
+                    `Failed to read file ${fileName}`,
+                    { fileName, fileContent: "" },
+                    { from: { index: 0, line: 0, column: 0 }, to: { index: 0, line: 0, column: 0 } }
+                )
+            );
+        }
+    }
+
+    diagnostics.push(...lint(files, config, program));
+
+    return diagnostics;
+}
+
+export function lint(sourceFiles: SourceFile[], config: DznLintUserConfiguration = {}, program: Program): Diagnostic[] {
+    const diagnostics: Diagnostic[] = [];
+    const rules = loadLinters(config);
+
+    for (const sourceFile of sourceFiles) {
+        diagnostics.push(...sourceFile.parseDiagnostics);
+
+        if (sourceFile.ast) {
+            visitFile(
+                sourceFile.ast,
+                sourceFile.source,
+                (node, context) => {
+                    for (const linter of rules.get(node.kind) ?? []) {
+                        diagnostics.push(...linter(node, context));
+                    }
+                },
+                program
+            );
+        }
+    }
     return diagnostics;
 }

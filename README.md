@@ -45,6 +45,14 @@ For example:
 
 Default values are indicated in bold.
 
+## call_arguments_must_match
+
+Arguments passed to a function call must match the parameters of that function or event.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## dead_code
 
 No code allowed after return statements in functions.
@@ -152,6 +160,30 @@ Parameters and variables should not shadow (re-define) variables that already ex
 
 ---
 
+## no_unconnected_ports
+
+All ports in a system should be connected for the system to be valid.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
+## no_unknown_imports
+
+Imported dzn files should be resolvable by dznlint. This check might fail if the include directories are not properly set. If this check fails other linting rules might also fail, since they rely on type information.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
+## no_unknown_variables
+
+All referenced variables, members and types should be known.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## no_unknown_port_binding
 
 Bindings cannot bind to unknown ports.
@@ -176,19 +208,19 @@ Parameters should be referenced at least once, or escaped by prefixing (or repla
 
 ---
 
-## no_unused_ports
-
-System ports should be used in at least one binding.
-
-**Possible values:** "hint" | **"warning"** | "error"
-
----
-
 ## no_unused_variables
 
 Defined variables should be referenced at least once.
 
 **Possible values:** "hint" | **"warning"** | "error"
+
+---
+
+## on_parameters_must_match
+
+Parameters in an `on` trigger must match the number of parameters specified by the triggering event.
+
+**Possible values:** "hint" | "warning" | **"error"**
 
 ---
 

@@ -1,10 +1,10 @@
 // System ports can only be bound once
 
-import { InputSource } from "../api";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { ASTKinds, function_definition, identifier, on } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
+import { InputSource } from "../semantics/program";
 import { headTailToList, nodeToSourceRange } from "../util";
 
 export const duplicateParameter = createDiagnosticsFactory();
@@ -35,8 +35,8 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
 
             const seenNames = new Map<string, identifier>();
 
-            if (node.parameters.formals) {
-                for (const param of headTailToList(node.parameters.formals)) {
+            if (node.parameters.parameters) {
+                for (const param of headTailToList(node.parameters.parameters)) {
                     if (seenNames.has(param.name.text)) {
                         diagnostics.push(
                             ...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source)
@@ -56,8 +56,8 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
             for (const on of headTailToList(node.on_trigger_list)) {
                 const seenNames = new Map<string, identifier>();
 
-                if (on.parameters && on.parameters.formals) {
-                    for (const param of headTailToList(on.parameters.formals)) {
+                if (on.parameters && on.parameters.parameters) {
+                    for (const param of headTailToList(on.parameters.parameters)) {
                         if (seenNames.has(param.name.text)) {
                             diagnostics.push(
                                 ...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source)

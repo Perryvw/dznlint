@@ -1,6 +1,6 @@
 {
     "name": "dznlint",
-    "version": "0.0.27",
+    "version": "0.0.28-alpha.15",
     "description": "A linter for Dezyne .dzn files. Providing extra warnings and coding style analysis.",
     "repository": "https://github.com/Perryvw/dznlint",
     "files": [
@@ -23,13 +23,13 @@
     "devDependencies": {
         "@types/jest": "^29.5.8",
         "@types/node": "^20.8.3",
-        "@typescript-eslint/eslint-plugin": "^6.7.4",
-        "@typescript-eslint/parser": "^6.7.4",
-        "eslint": "^8.51.0",
+        "@typescript-eslint/eslint-plugin": "^6.19.0",
+        "@typescript-eslint/parser": "^6.19.0",
+        "eslint": "^8.56.0",
         "jest": "^29.7.0",
         "prettier": "^3.0.3",
         "ts-jest": "^29.1.1",
         "tspeg": "^3.3.1",
-        "typescript": "^5.2.2"
+        "typescript": "^5.3.3"
     }
 }

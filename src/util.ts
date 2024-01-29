@@ -1,29 +1,15 @@
 import { SourcePosition, SourceRange } from "./diagnostic";
-import {
-    ASTKinds,
-    binding,
-    identifier,
-    instance,
-    system,
-    PosInfo,
-    end_point,
-    on,
-    expression_statement,
-    behavior_statement,
-    function_definition,
-    call_expression,
-    compound,
-} from "./grammar/parser";
+import * as parser from "./grammar/parser";
 import { ASTNode } from "./linting-rule";
 
-export function nodeToSourceRange(node: { start: PosInfo; end: PosInfo }): SourceRange {
+export function nodeToSourceRange(node: { start: parser.PosInfo; end: parser.PosInfo }): SourceRange {
     return {
         from: posInfoToSourcePosition(node.start),
         to: posInfoToSourcePosition(node.end),
     };
 }
 
-export function posInfoToSourcePosition(pos: PosInfo): SourcePosition {
+export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
     return {
         index: pos.overallPos,
         line: pos.line,
@@ -34,50 +20,127 @@ export function posInfoToSourcePosition(pos: PosInfo): SourcePosition {
 export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
     const result = [];
     if (obj.head) {
-        result.push(obj.head as NonNullable<T>);
+        result.push(obj.head);
     }
     for (const { elem } of obj.tail) {
-        result.push(elem as NonNullable<T>);
+        if (elem) result.push(elem);
     }
     return result;
 }
 
-export function isIdentifier(node: ASTNode): node is identifier {
-    return node.kind === ASTKinds.identifier;
+export function isIdentifier(node: ASTNode): node is parser.identifier {
+    return node.kind === parser.ASTKinds.identifier;
 }
 
-export function isCallExpression(node: ASTNode): node is call_expression {
-    return node.kind === ASTKinds.call_expression;
+export function isCompoundName(node: ASTNode): node is parser.compound_name_$0 {
+    return node.kind === parser.ASTKinds.compound_name_$0;
 }
 
-export function isCompound(node: ASTNode): node is compound {
-    return node.kind === ASTKinds.compound;
+export function isCompoundBindingExpression(node: ASTNode): node is parser.binding_expression_$0 {
+    return node.kind === parser.ASTKinds.binding_expression_$0;
 }
 
-export function isExpressionStatement(node: ASTNode): node is expression_statement {
-    return node.kind === ASTKinds.expression_statement;
+export function isCallExpression(node: ASTNode): node is parser.call_expression {
+    return node.kind === parser.ASTKinds.call_expression;
 }
 
-export function isFunctionDefinition(statement: behavior_statement): statement is function_definition {
-    return statement.kind === ASTKinds.function_definition;
+export function isCompound(node: ASTNode): node is parser.compound {
+    return node.kind === parser.ASTKinds.compound;
 }
 
-export function isOnEvent(node: ASTNode): node is on {
-    return node.kind === ASTKinds.on;
+export function isEvent(node: ASTNode): node is parser.event {
+    return node.kind === parser.ASTKinds.event;
 }
 
-export function systemInstances(system: system): instance[] {
+export function isFunctionDefinition(statement: ASTNode): statement is parser.function_definition {
+    return statement.kind === parser.ASTKinds.function_definition;
+}
+
+export function isNamespace(node: ASTNode): node is parser.namespace {
+    return node.kind === parser.ASTKinds.namespace;
+}
+
+export function isSourceFile(node: ASTNode): node is parser.file {
+    return node.kind === parser.ASTKinds.file;
+}
+
+export function isPort(node: ASTNode): node is parser.port {
+    return node.kind === parser.ASTKinds.port;
+}
+
+export function isInjected(port: parser.port) {
+    return port.qualifiers?.some(q => q.qualifier === "injected") === true;
+}
+
+export function isExpressionStatement(node: ASTNode): node is parser.expression_statement {
+    return node.kind === parser.ASTKinds.expression_statement;
+}
+
+export type ScopedBlock = ASTNode &
+    (
+        | parser.behavior
+        | parser.behavior_compound
+        | parser.component
+        | parser.compound
+        | parser.function_body
+        | parser.interface_definition
+        | parser.namespace
+        | parser.on_body
+        | parser.system
+        | parser.file
+    );
+
+export function isScopedBlock(node: ASTNode): node is ScopedBlock {
+    return (
+        node.kind === parser.ASTKinds.behavior ||
+        node.kind === parser.ASTKinds.behavior_compound ||
+        node.kind === parser.ASTKinds.component ||
+        node.kind === parser.ASTKinds.compound ||
+        node.kind === parser.ASTKinds.function_body ||
+        node.kind === parser.ASTKinds.interface_definition ||
+        node.kind === parser.ASTKinds.namespace ||
+        node.kind === parser.ASTKinds.on_body ||
+        node.kind === parser.ASTKinds.system ||
+        node.kind === parser.ASTKinds.file
+    );
+}
+
+export function isOnStatement(node: ASTNode): node is parser.on {
+    return node.kind === parser.ASTKinds.on;
+}
+
+export function systemInstances(system: parser.system): parser.instance[] {
     return system.instances_and_bindings
         .map(e => e.instance_or_binding)
-        .filter(e => e.kind === ASTKinds.instance) as instance[];
+        .filter(e => e.kind === parser.ASTKinds.instance) as parser.instance[];
 }
 
-export function systemBindings(system: system): binding[] {
+export function systemBindings(system: parser.system): parser.binding[] {
     return system.instances_and_bindings
         .map(e => e.instance_or_binding)
-        .filter(e => e.kind === ASTKinds.binding) as binding[];
+        .filter(e => e.kind === parser.ASTKinds.binding) as parser.binding[];
 }
 
-export function isIdentifierEndpoint(endpoint: end_point): endpoint is end_point & { name: identifier } {
-    return typeof endpoint !== "string" && !endpoint.dot && endpoint.name.kind === ASTKinds.identifier;
+export function findFirstParent<T extends ASTNode>(
+    node: ASTNode,
+    predicate: (node: ASTNode) => node is T
+): T | undefined {
+    let n = node.parent;
+    while (n) {
+        if (predicate(n)) return n;
+        n = n.parent;
+    }
+    return undefined;
+}
+
+export function nameToString(name: parser.compound_name): string {
+    if (name.kind === parser.ASTKinds.identifier) {
+        return name.text;
+    } else {
+        if (name.compound) {
+            return `${nameToString(name.compound)}.${name.name.text}`;
+        } else {
+            return `.${name.name.text}`;
+        }
+    }
 }

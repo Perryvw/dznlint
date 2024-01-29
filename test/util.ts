@@ -1,11 +1,11 @@
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { Diagnostic, DiagnosticCode, formatDiagnostic } from "../src/diagnostic";
-import { lintString } from "../src";
+import { Program, lint, lintString } from "../src";
 import { failedToFullyParseFile } from "../src/parse";
 
 interface LintTest {
     diagnostic: DiagnosticCode;
-    pass?: string;
+    pass?: string | Record<string, string>;
     fail?: string;
     config?: DznLintUserConfiguration;
     debug?: boolean;
@@ -13,7 +13,19 @@ interface LintTest {
 
 export function testdznlint(test: LintTest) {
     if (test.pass) {
-        const passResult = lintString(test.pass, test.config);
+        let passResult: Diagnostic[] = [];
+
+        if (typeof test.pass === "string") {
+            passResult = lintString(test.pass, test.config);
+        } else {
+            const program = new Program();
+            const sourceFiles = Object.entries(test.pass).map(e => program.parseFile(e[0], e[1])!);
+
+            const entryFile = sourceFiles.find(f => f.source.fileName === "main.dzn");
+            if (!entryFile) throw `Could not find 'main.dzn' entry in test files: ${Object.keys(test.pass).join(", ")}`;
+
+            passResult = lint([entryFile], test.config, program);
+        }
 
         if (test.debug) {
             for (const d of passResult) {
@@ -39,16 +51,23 @@ export function testdznlint(test: LintTest) {
     }
 }
 
-function expectDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
+export function expectDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
     const diagnosticsOfType = diagnostics.filter(d => d.code === code);
     if (diagnosticsOfType.length === 0) {
-        const formattedDiagnostics = diagnosticsOfType.map(formatDiagnostic).join("\n");
-        expect(formattedDiagnostics).not.toEqual("");
+        expect(diagnostics.map(formatDiagnostic).join("\n")).toEqual(`A diagnostic with code ${code}`);
     }
 }
 
-function expectNoDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
+export function expectNoDiagnosticOfType(diagnostics: Diagnostic[], code: DiagnosticCode) {
     const diagnosticsOfType = diagnostics.filter(d => d.code === code);
+    if (diagnosticsOfType.length > 0) {
+        const formattedDiagnostics = diagnosticsOfType.map(formatDiagnostic).join("\n");
+        expect(formattedDiagnostics).toEqual("");
+    }
+}
+
+export function expectNoDiagnostics(diagnostics: Diagnostic[]) {
+    const diagnosticsOfType = diagnostics;
     if (diagnosticsOfType.length > 0) {
         const formattedDiagnostics = diagnosticsOfType.map(formatDiagnostic).join("\n");
         expect(formattedDiagnostics).toEqual("");

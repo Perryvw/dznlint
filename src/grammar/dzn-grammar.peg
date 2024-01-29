@@ -10,16 +10,16 @@ root_statement :=
   | sl_comment
   | statement
 
-extern_definition := EXTERN __ type=identifier __ literal=dollars _ SEMICOLON
+extern_definition := EXTERN __ name=identifier __ literal=dollars _ SEMICOLON
 
-import_statement := IMPORT __ file_name=file_name _ SEMICOLON
+import_statement := start=@ IMPORT __ file_name=file_name _ SEMICOLON end=@
   file_name := '[^;]+'
 
 type_definition := enum_definition | int | extern_definition
   enum_definition := ENUM __ name=identifier _ BRACE_OPEN _ fields=fields _ BRACE_CLOSE _ SEMICOLON
     fields := head=member_identifier? tail={_ COMMA _ elem=member_identifier?}*
 
-  int := SUBINT __ name=compound_name _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
+  int := SUBINT __ name=identifier _ BRACE_OPEN _ range=range _ BRACE_CLOSE _ SEMICOLON
     range := from=NUMBER _ DOTDOT _ to=NUMBER
 
 namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
@@ -38,29 +38,32 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
       instances_and_bindings := {_{instance | binding}_}*
         instance := type=compound_name _ name=identifier _ SEMICOLON
-        binding := left=end_point _ BIND _ right=end_point _ SEMICOLON
-          end_point := name=expression _ dot={DOT ASTERISK}? | ASTERISK
+        binding := start=@ left=binding_expression _ BIND _ right=binding_expression _ SEMICOLON end=@
+          binding_expression := {start=@ compound=binding_expression DOT name={ asterisk_binding | member_identifier} end=@} | identifier | asterisk_binding
+          asterisk_binding := start=@ ASTERISK end=@
 
   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
     port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
-    formals := PAREN_OPEN _ formals=formal_list? _ PAREN_CLOSE
-      formal_list := head=formal tail={ _ COMMA _ elem=formal }*
-      formal := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
+    parameters := PAREN_OPEN _ parameters=parameter_list? _ PAREN_CLOSE
+      parameter_list := head=function_parameter tail={ _ COMMA _ elem=function_parameter }*
+      function_parameter := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
 
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
     behavior_statements := {_ statement=behavior_statement _}*
       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-        function_definition := return_type=compound_name _ name=identifier _ parameters=formals _ body=compound
+        function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=function_body
+        function_body := compound=compound
 
 declarative_statement := on | guard | compound
-  on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ statement=statement end=@
+  on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ body=on_body end=@
+    on_body := statement=statement
     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
-    on_trigger := name=compound_name _ parameters=on_formals?
-    on_formals := PAREN_OPEN _ formals=on_formal_list? _ PAREN_CLOSE
-      on_formal_list := head=on_formal tail={ _ COMMA _ elem=on_formal }*
-        on_formal := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
+    on_trigger := name=compound_name _ parameters=on_parameters?
+    on_parameters := start=@ PAREN_OPEN _ parameters=on_parameter_list? _ PAREN_CLOSE end=@
+      on_parameter_list := head=on_parameter tail={ _ COMMA _ elem=on_parameter }*
+        on_parameter := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
   guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
 
 compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
@@ -70,26 +73,24 @@ compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BR
 imperative_statement :=  if_statement | return_statement | variable_definition | assignment | defer_statement | expression_statement | dollar_statement | compound
   assignment            := start=@ left=identifier _ ASSIGN _ right=expression _ SEMICOLON end=@
   defer_statement       := start=@ header=defer_header _ statement=imperative_statement end=@
-    defer_header        := start=@ DEFER _ arguments=defer_arguments? end=@
-    defer_arguments     := PAREN_OPEN arguments=arguments PAREN_CLOSE
+    defer_header        := start=@ DEFER &{'\s' | PAREN_OPEN} _ arguments=arguments? end=@
   dollar_statement      := start=@ expression=dollars end=@
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _
   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
-  return_statement      := start=@ RETURN _ expression=expression? _ SEMICOLON end=@
+  return_statement      := start=@ RETURN &{'\s' | SEMICOLON } _ expression=expression? _ SEMICOLON end=@
 
 expression := binary_expression | unary_expression
   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
 
-unary_expression := parenthesized_expression | property_expression | call_expression | dollars | ILLEGAL | identifier | numeric_literal | unary_operator_expression
-  call_expression             := expression=expression _ PAREN_OPEN arguments=arguments PAREN_CLOSE
-    arguments                 := {_ expression=expression _ COMMA?}*
+unary_expression := parenthesized_expression | call_expression | dollars | ILLEGAL | compound_name | numeric_literal | unary_operator_expression
+  call_expression             := expression=expression _ arguments=arguments
+    arguments                 := start=@ PAREN_OPEN arguments={_ expression=expression _ COMMA?}* PAREN_CLOSE end=@
   dollars                     := DOLLAR value='[^$]*' DOLLAR
   numeric_literal             := text=NUMBER
   parenthesized_expression    := PAREN_OPEN _ expression=expression _ PAREN_CLOSE
-  property_expression         := expression=expression? DOT access_name=member_identifier
   unary_operator_expression   := operator=unary_operator _ expression=expression
     unary_operator            := NOT
 
@@ -164,7 +165,7 @@ NEWLINE             := '\n'
 
 
 sl_comment          := text='//[^\n]*' {'\n' | $}
-ml_comment          := '/\*' text={!ml_comment_end '.'}* ml_comment_end
+ml_comment          := '/\*' text={!ml_comment_end '(.|\s)\s*'}* ml_comment_end
   ml_comment_end    := '\*' '/'
 _                   := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s*'
 __                  := {'\s*' sl_comment _} | {'\s*' ml_comment _} | '\s+'

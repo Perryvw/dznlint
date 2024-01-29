@@ -1,11 +1,14 @@
 import * as path from "path";
 import { formatDiagnostic } from "../src/diagnostic";
-import { DiagnosticCode, lintFiles, lintString } from "../src";
+import { DiagnosticCode, LinterHost, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
+import { expectNoDiagnostics } from "./util";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
+    no_unknown_imports: false,
+    no_unknown_variables: false,
     no_unused_parameters: false,
     no_unused_instances: false,
     no_unused_variables: false,
@@ -14,10 +17,7 @@ const parseOnlyConfiguration: DznLintUserConfiguration = {
 test.each(["component.dzn", "interface.dzn", "system.dzn"])("can parse file without diagnostics (%p)", fileName => {
     const filePath = path.join(__dirname, "files", fileName);
     const result = lintFiles([filePath], parseOnlyConfiguration);
-    for (const diagnostic of result) {
-        console.log(formatDiagnostic(diagnostic));
-    }
-    expect(result).toHaveLength(0);
+    expectNoDiagnostics(result);
 });
 
 test("empty file", () => {
@@ -79,6 +79,20 @@ test("comment inside statement", () => {
             behavior // d
             {
                 int myInt = $123$;
+            }
+        }
+    `);
+});
+
+test("multiline comment", () => {
+    expectCanParseWithoutDiagnostics(`
+        component MyComponent
+        {
+            /* Hello:
+             * bla
+             */
+            behavior
+            {
             }
         }
     `);
@@ -377,6 +391,22 @@ test("guard inside expression (#4)", () => {
     `);
 });
 
+// https://github.com/Perryvw/dznlint/issues/10
+test("multi-line comment (#10)", () => {
+    expectCanParseWithoutDiagnostics(`
+        /*
+        * bla
+        */
+    `);
+});
+
+// https://github.com/Perryvw/dznlint/issues/10
+test("empty multi-line comment (#10)", () => {
+    expectCanParseWithoutDiagnostics(`
+        /**/
+    `);
+});
+
 test("dollars statement", () => {
     expectCanParseWithoutDiagnostics(`
         import abc.dzn;
@@ -388,7 +418,19 @@ test("dollars statement", () => {
 });
 
 function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
-    const result = lintString(dzn, parseOnlyConfiguration);
+    const parseOnlyHost: LinterHost = {
+        includePaths: [],
+        fileExists() {
+            return false;
+        },
+        readFile() {
+            return "";
+        },
+        resolveImport() {
+            return undefined;
+        },
+    };
+    const result = lintString(dzn, parseOnlyConfiguration, parseOnlyHost);
 
     const ignoreCodesSet = new Set(ignoreCodes);
     const filteredDiagnostics = result.filter(d => !ignoreCodesSet.has(d.code));
