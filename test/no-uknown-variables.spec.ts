@@ -850,4 +850,60 @@ describe("in components", () => {
             }`,
         });
     });
+
+    // https://github.com/Perryvw/dznlint/issues/15
+    test("identifier in if condition (#15)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {                
+                behavior {
+                    void foo() {
+                        bool bar = true;
+                        if (bar) {
+                        }
+                    }
+                }
+            }`,
+            fail: `
+            component C {                
+                behavior {
+                    void foo() {
+                        if (bar) {
+                        }
+                    }
+                }
+            }`,
+        });
+    });
+
+    // https://github.com/Perryvw/dznlint/issues/15
+    test("identifier in else-if condition (#15)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {                
+                behavior {
+                    void foo() {
+                        bool bar = true;
+                        if (false) {
+                        }
+                        else if (bar) {
+                        }
+                    }
+                }
+            }`,
+            fail: `
+            component C {                
+                behavior {
+                    void foo() {
+                        if (false) {
+                        }
+                        else if (bar) {
+                        }
+                    }
+                }
+            }`,
+        });
+    });
 });

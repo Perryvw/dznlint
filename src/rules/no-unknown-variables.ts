@@ -149,6 +149,25 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             }
         );
 
+        factoryContext.registerRule<parser.if_statement>(
+            parser.ASTKinds.if_statement,
+            (node: parser.if_statement, context) => {
+                // Check main condition
+                const diagnostics = checkExpressionNames(node.expression, "if condition", context);
+
+                // Check conditions of all following else clauses
+                for (const elseStatement of node.else_statements) {
+                    if (elseStatement.elseif) {
+                        diagnostics.push(
+                            ...checkExpressionNames(elseStatement.elseif.expression, "if condition", context)
+                        );
+                    }
+                }
+
+                return diagnostics;
+            }
+        );
+
         factoryContext.registerRule<parser.return_statement>(
             parser.ASTKinds.return_statement,
             (node: parser.return_statement, context) => {
