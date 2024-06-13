@@ -15,6 +15,12 @@ export const no_unused_variables: RuleFactory = factoryContext => {
     if (config.isEnabled) {
         factoryContext.registerRule<variable_definition>(ASTKinds.variable_definition, (node, context) => {
             const name = node.name.text;
+
+            if (name[0] === "_") {
+                // Skip if name is escaped with _
+                return [];
+            }
+
             let found = false;
             context.visit(context.currentScope().root, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
@@ -27,7 +33,7 @@ export const no_unused_variables: RuleFactory = factoryContext => {
                 return [
                     unusedVariable(
                         config.severity,
-                        "This variable is never used.",
+                        `This variable is never used. You can discard it by renaming to _${name}.`,
                         context.source,
                         nodeToSourceRange(node.name)
                     ),
