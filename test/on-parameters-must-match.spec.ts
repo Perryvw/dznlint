@@ -56,7 +56,6 @@ test("on parameters must not be less than the event parameters", () => {
 test("on parameters are checked in multiple triggers lists too", () => {
     testdznlint({
         diagnostic: incorrectOnParameterCount.code,
-        debug: true,
         pass: `
             interface I {
                 in void foo(bool a, bool b);
