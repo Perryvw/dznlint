@@ -83,3 +83,16 @@ test("illegal is not unused variable", () => {
         }`,
     });
 });
+
+test("unused variable can be ignored with underscore", () => {
+    testdznlint({
+        diagnostic: unusedVariable.code,
+        pass: `component A {
+            behavior {
+                void foo() {
+                    Result _r = doSomething();
+                }
+            }
+        }`,
+    });
+});
