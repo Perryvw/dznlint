@@ -120,6 +120,13 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             }
         );
 
+        factoryContext.registerRule<parser.expression_statement>(
+            parser.ASTKinds.expression_statement,
+            (node: parser.expression_statement, context) => {
+                return checkExpressionNames(node.expression, "name", context);
+            }
+        );
+
         factoryContext.registerRule<parser.component>(parser.ASTKinds.component, (node: parser.component, context) => {
             const diagnostics = [];
 

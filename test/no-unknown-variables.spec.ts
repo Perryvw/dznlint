@@ -906,4 +906,20 @@ describe("in components", () => {
             }`,
         });
     });
+
+    // https://github.com/Perryvw/dznlint/issues/17
+    test("identifier expression (#17)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `
+            interface I {
+                behavior {
+                    on inevitable:
+                    {
+                        Unknown;
+                    }
+                }
+            }`,
+        });
+    });
 });
