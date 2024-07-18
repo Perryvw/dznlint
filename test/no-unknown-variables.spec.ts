@@ -172,6 +172,22 @@ describe("in interfaces", () => {
             }`,
         });
     });
+
+    // https://github.com/Perryvw/dznlint/issues/17
+    test("identifier expression (#17)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `
+            interface I {
+                behavior {
+                    on inevitable:
+                    {
+                        Unknown;
+                    }
+                }
+            }`,
+        });
+    });
 });
 
 describe("in components", () => {
@@ -906,18 +922,144 @@ describe("in components", () => {
             }`,
         });
     });
+});
 
-    // https://github.com/Perryvw/dznlint/issues/17
-    test("identifier expression (#17)", () => {
+// https://github.com/Perryvw/dznlint/issues/23
+describe("used variables missing from on triggers (#23)", () => {
+    test("differing parameter count", () => {
         testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
             interface I {
+                in void foo();
+                in void bar(in bool b);
+            }
+            component C {
+                provides I api;
+                
                 behavior {
-                    on inevitable:
-                    {
-                        Unknown;
+                    on api.foo(), api.bar(b): {
+                        DoSomething(b);
+                        DoSomething(b);
                     }
+
+                    void DoSomething(bool b) {}
+                }
+            }`,
+            pass: `
+            interface I {
+                in void foo(in bool b);
+                in void bar(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.foo(b), api.bar(b): {
+                        DoSomething(b);
+                    }
+
+                    void DoSomething(bool b) {}
+                }
+            }`,
+        });
+    });
+
+    test("differing parameter count", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `
+            interface I {
+                in void foo(in bool a, in bool b);
+                in void bar(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.foo(a, b), api.bar(b): {
+                        DoSomething(a);
+                    }
+
+                    void DoSomething(bool b) {}
+                }
+            }`,
+            pass: `
+            interface I {
+                in void foo(in bool a, in bool b);
+                in void bar(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.foo(a, b), api.bar(b): {
+                        DoSomething(b);
+                    }
+
+                    void DoSomething(bool b) {}
+                }
+            }`,
+        });
+    });
+
+    test("differing parameter names", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `
+            interface I {
+                in void foo(in bool a);
+                in void bar(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.foo(a), api.bar(b): {
+                        DoSomething(b);
+                    }
+
+                    void DoSomething(bool b) {}
+                }
+            }`,
+            pass: `
+            interface I {
+                in void foo(in bool a);
+                in void bar(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.foo(b), api.bar(b): {
+                        DoSomething(b);
+                    }
+
+                    void DoSomething(bool b) {}
+                }
+            }`,
+        });
+    });
+
+    test("many other triggers", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            fail: `
+            interface I {
+                in void foo(in bool b);
+                in void bar(in bool b);
+                in void baz(in bool b);
+                in void buzz(in bool b);
+            }
+            component C {
+                provides I api;
+                
+                behavior {
+                    on api.foo(a), api.bar(b), api.baz(a), api.buzz(a): {
+                        DoSomething(b);
+                    }
+
+                    void DoSomething(bool b) {}
                 }
             }`,
         });
