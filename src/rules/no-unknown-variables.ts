@@ -4,8 +4,8 @@ import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import * as parser from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { headTailToList, isIdentifier, nodeToSourceRange } from "../util";
-import { VisitorContext } from "../visitor";
+import { headTailToList, isIdentifier, nameToString, nodeToSourceRange } from "../util";
+import { VisitorContext, VisitResult } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();
 
@@ -59,11 +59,63 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
 
         factoryContext.registerRule<parser.on>(parser.ASTKinds.on, (node: parser.on, context) => {
             const diagnostics: Diagnostic[] = [];
-            for (const trigger of headTailToList(node.on_trigger_list)) {
+            const triggerList = headTailToList(node.on_trigger_list);
+            for (const trigger of triggerList) {
                 if (context.typeChecker.symbolOfNode(trigger.name) === undefined) {
                     diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "port or event", context));
                 }
             }
+
+            // Find used parameters that are not present in each on trigger:
+
+            // First get all parameters not escaped with _ that are not shared by all triggers
+            const occurrences: Record<string, parser.on_trigger[]> = {};
+            for (const trigger of triggerList) {
+                if (trigger.parameters?.parameters) {
+                    for (const param of headTailToList(trigger.parameters.parameters)) {
+                        if (param.name.text.startsWith("_")) continue;
+
+                        if (!occurrences[param.name.text]) {
+                            occurrences[param.name.text] = [trigger];
+                        } else {
+                            occurrences[param.name.text].push(trigger);
+                        }
+                    }
+                }
+            }
+            // Get all parameters not escaped with _ that do not show up in all triggers:
+            const triggerCount = triggerList.length;
+            const parametersAtRisk = Object.entries(occurrences).filter(
+                ([_, triggers]) => triggers.length < triggerCount
+            );
+
+            // For each parameter at risk, check if it is actually used or not
+            for (const [parameterName, triggers] of parametersAtRisk) {
+                // Check if parameter occurs in on body
+                let parameterReferences: parser.identifier[] = [];
+                context.visit(node.body, subNode => {
+                    if (isIdentifier(subNode) && subNode.text === parameterName) {
+                        parameterReferences.push(subNode);
+                    }
+                });
+
+                // If parameter is used, generate diagnostics on all uses of that parameter
+                if (parameterReferences.length > 0) {
+                    const missingTriggers = triggerList.filter(t => !triggers.includes(t));
+                    const missingTriggersString = missingTriggers.map(stringifyTrigger).join("\n");
+                    for (const reference of parameterReferences) {
+                        diagnostics.push(
+                            unknownVariable(
+                                config.severity,
+                                `Parameter ${parameterName} is undefined in some of the events in the event list! Parameter missing in: \n${missingTriggersString}`,
+                                context.source,
+                                nodeToSourceRange(reference)
+                            )
+                        );
+                    }
+                }
+            }
+
             return diagnostics;
         });
 
@@ -267,6 +319,16 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                 result.push(expr);
             }
             return result;
+        };
+
+        const stringifyTrigger = (trigger: parser.on_trigger): string => {
+            let params = "";
+            if (trigger.parameters?.parameters) {
+                params = headTailToList(trigger.parameters.parameters)
+                    .map(p => p.name.text)
+                    .join(", ");
+            }
+            return `${nameToString(trigger.name)}(${params})`;
         };
     }
 };
