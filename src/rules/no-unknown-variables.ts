@@ -5,7 +5,7 @@ import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import * as parser from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { headTailToList, isIdentifier, nameToString, nodeToSourceRange } from "../util";
-import { VisitorContext, VisitResult } from "../visitor";
+import { VisitorContext } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();
 
@@ -86,13 +86,13 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             // Get all parameters not escaped with _ that do not show up in all triggers:
             const triggerCount = triggerList.length;
             const parametersAtRisk = Object.entries(occurrences).filter(
-                ([_, triggers]) => triggers.length < triggerCount
+                ([, triggers]) => triggers.length < triggerCount
             );
 
             // For each parameter at risk, check if it is actually used or not
             for (const [parameterName, triggers] of parametersAtRisk) {
                 // Check if parameter occurs in on body
-                let parameterReferences: parser.identifier[] = [];
+                const parameterReferences: parser.identifier[] = [];
                 context.visit(node.body, subNode => {
                     if (isIdentifier(subNode) && subNode.text === parameterName) {
                         parameterReferences.push(subNode);
