@@ -208,6 +208,14 @@ Parameters should be referenced at least once, or escaped by prefixing (or repla
 
 ---
 
+## no_unused_ports
+
+Pports should be referenced at least once.
+
+**Possible values:** "hint" | **"warning"**| "error"
+
+---
+
 ## no_unused_variables
 
 Defined variables should be referenced at least once.
