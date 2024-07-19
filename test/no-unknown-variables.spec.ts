@@ -922,6 +922,39 @@ describe("in components", () => {
             }`,
         });
     });
+
+    // https://github.com/Perryvw/dznlint/issues/25
+    test("enum use in function (#25)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+            component C {                
+                behavior {
+                    enum MyEnum {
+                        A,
+                        B
+                    };
+                    void foo(MyEnum e) {
+                        if (e.B) {
+                        }
+                        else {
+                        }
+                    }
+                }
+            }`,
+            fail: `
+            component C {                
+                behavior {
+                    void foo(MyEnum e) {
+                        if (e.B) {
+                        }
+                        else {
+                        }
+                    }
+                }
+            }`,
+        });
+    });
 });
 
 // https://github.com/Perryvw/dznlint/issues/23

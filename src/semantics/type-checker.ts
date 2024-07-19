@@ -180,6 +180,11 @@ export class TypeChecker {
             const typeSymbol = this.symbolOfNode(definition.type_name);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
+        } else if (declaration.kind === parser.ASTKinds.function_parameter) {
+            const definition = declaration as parser.function_parameter;
+            const typeSymbol = this.symbolOfNode(definition.type_name);
+            if (!typeSymbol) return ERROR_TYPE;
+            return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === parser.ASTKinds.enum_definition) {
             const definition = declaration as parser.enum_definition;
             return { kind: TypeKind.Enum, declaration: definition, name: definition.name.text };

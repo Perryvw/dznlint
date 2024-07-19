@@ -2,6 +2,7 @@ import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { Diagnostic, DiagnosticCode, formatDiagnostic } from "../src/diagnostic";
 import { Program, lint, lintString } from "../src";
 import { failedToFullyParseFile } from "../src/parse";
+import { dznLintExceptionThrown } from "../src/linting-rule";
 
 interface LintTest {
     diagnostic: DiagnosticCode;
@@ -34,6 +35,7 @@ export function testdznlint(test: LintTest) {
         }
 
         expectNoDiagnosticOfType(passResult, failedToFullyParseFile.code);
+        expectNoDiagnosticOfType(passResult, dznLintExceptionThrown.code);
         expectNoDiagnosticOfType(passResult, test.diagnostic);
     }
 
