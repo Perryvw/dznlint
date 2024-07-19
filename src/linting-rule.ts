@@ -1,5 +1,5 @@
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
-import { Diagnostic } from "./diagnostic";
+import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity, SourceRange } from "./diagnostic";
 import { VisitorContext } from "./visitor";
 import * as parser from "./grammar/parser";
 
@@ -36,6 +36,7 @@ import on_parameters_must_match from "./rules/on-parameters-must-match";
 import parameter_direction from "./rules/parameter-direction";
 import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
+import { nodeToSourceRange } from "./util";
 
 export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
@@ -73,7 +74,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
                 linters.set(kind, []);
             }
 
-            linters.get(kind)?.push(rule as Linter<ASTNode>);
+            linters.get(kind)?.push(wrapErrorHandling(rule as Linter<ASTNode>));
         },
     };
 
@@ -82,4 +83,34 @@ export function loadLinters(config: DznLintUserConfiguration) {
     }
 
     return linters;
+}
+
+export const dznLintExceptionThrown = createDiagnosticsFactory();
+
+function wrapErrorHandling(linter: Linter<ASTNode>): Linter<ASTNode> {
+    return (node, context) => {
+        try {
+            return linter(node, context);
+        } catch (exception) {
+            const range: SourceRange =
+                "start" in node && "end" in node
+                    ? nodeToSourceRange(node as { start: parser.PosInfo; end: parser.PosInfo })
+                    : {
+                          from: { index: 0, line: 0, column: 0 },
+                          to: {
+                              index: context.source.fileContent.indexOf("\n"), // fall back to first line of file
+                              line: 0,
+                              column: context.source.fileContent.indexOf("\n"),
+                          },
+                      };
+            return [
+                dznLintExceptionThrown(
+                    DiagnosticSeverity.Error,
+                    `Exception occurred in dznlint: ${exception}`,
+                    context.source,
+                    range
+                ),
+            ];
+        }
+    };
 }
