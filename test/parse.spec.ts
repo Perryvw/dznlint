@@ -10,6 +10,7 @@ const parseOnlyConfiguration: DznLintUserConfiguration = {
     no_unknown_imports: false,
     no_unknown_variables: false,
     no_unused_parameters: false,
+    no_unused_ports: false,
     no_unused_instances: false,
     no_unused_variables: false,
 };
