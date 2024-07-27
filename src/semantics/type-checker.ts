@@ -58,7 +58,10 @@ export class TypeChecker {
 
     public typeOfNode(node: ASTNode): Type {
         const symbol = this.symbolOfNode(node);
-        if (!symbol) return ERROR_TYPE;
+        if (!symbol) {
+            console.log("Could not find symbol for node", node);
+            return ERROR_TYPE;
+        }
         return this.typeOfSymbol(symbol);
     }
 
@@ -108,6 +111,7 @@ export class TypeChecker {
                 }
                 scope = findFirstParent(scope, isScopedBlock);
             }
+            console.log("Could not find symbol in scope for identifier", node.text, node);
             return undefined;
         } else if (isCompoundName(node) && node.compound !== null) {
             const ownerType = this.typeOfNode(node.compound);
@@ -166,24 +170,36 @@ export class TypeChecker {
     }
 
     public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {
-        if (symbol.declaration === null) return ERROR_TYPE;
+        if (symbol.declaration === null) {
+            console.log("Could not find declaration for symbol", symbol);
+            return ERROR_TYPE;
+        }
 
         const declaration = symbol.declaration;
 
         if (declaration.kind === parser.ASTKinds.instance) {
             const instance = declaration as parser.instance;
             const typeSymbol = this.symbolOfNode(instance.type);
-            if (!typeSymbol) return ERROR_TYPE;
+            if (!typeSymbol) {
+                console.log("could not find symbol for type", instance.type);
+                return ERROR_TYPE;
+            }
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === parser.ASTKinds.variable_definition) {
             const definition = declaration as parser.variable_definition;
             const typeSymbol = this.symbolOfNode(definition.type_name);
-            if (!typeSymbol) return ERROR_TYPE;
+            if (!typeSymbol) {
+                console.log("could not find symbol for type", definition.type_name);
+                return ERROR_TYPE;
+            }
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === parser.ASTKinds.function_parameter) {
             const definition = declaration as parser.function_parameter;
             const typeSymbol = this.symbolOfNode(definition.type_name);
-            if (!typeSymbol) return ERROR_TYPE;
+            if (!typeSymbol) {
+                console.log("could not find symbol for type", definition.type_name);
+                return ERROR_TYPE;
+            }
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === parser.ASTKinds.enum_definition) {
             const definition = declaration as parser.enum_definition;
@@ -191,7 +207,10 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === parser.ASTKinds.port) {
             const definition = declaration as parser.port;
             const typeSymbol = this.symbolOfNode(definition.type);
-            if (!typeSymbol) return ERROR_TYPE;
+            if (!typeSymbol) {
+                console.log("could not find symbol for type", definition.type);
+                return ERROR_TYPE;
+            }
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === parser.ASTKinds.event) {
             const definition = declaration as parser.event;
