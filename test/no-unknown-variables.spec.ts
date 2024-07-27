@@ -955,6 +955,37 @@ describe("in components", () => {
             }`,
         });
     });
+
+    //https://github.com/Perryvw/dznlint/issues/22
+    test("shared state enum in other file behavior (#22)", () => {
+        testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: {
+                ["main.dzn"]: `
+                    import IEnableSeq.dzn;
+
+                    component C {
+                        provides I i;
+
+                        behavior {
+                            [i.s.A] {}
+                        }
+                    }
+                `,
+                ["IEnableSeq.dzn"]: `
+                    interface I {
+                        behavior {
+                            enum State {
+                                A,
+                                B
+                            };
+                            State s = State.A;
+                        }
+                    }
+                `,
+            },
+        });
+    });
 });
 
 // https://github.com/Perryvw/dznlint/issues/23

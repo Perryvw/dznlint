@@ -5,6 +5,7 @@ import * as parser from "../grammar/parser";
 import { Diagnostic } from "../diagnostic";
 import { parseDznSource } from "../parse";
 import { normalizePath, resolveImport } from "../resolve-imports";
+import { setParentVisitor, visitFile } from "../visitor";
 
 export interface LinterHost {
     includePaths: string[];
@@ -40,7 +41,7 @@ export class Program {
         if (this.parsedFiles.has(path)) return this.parsedFiles.get(path)!;
 
         if (this.host.fileExists(path)) {
-            const sf = new SourceFile({ fileName: path, fileContent: this.host.readFile(path) });
+            const sf = new SourceFile({ fileName: path, fileContent: this.host.readFile(path) }, this);
             this.parsedFiles.set(path, sf);
             return sf;
         }
@@ -53,7 +54,7 @@ export class Program {
         if (content === undefined) {
             return this.getSourceFile(path);
         } else {
-            const sf = new SourceFile({ fileName: path, fileContent: content });
+            const sf = new SourceFile({ fileName: path, fileContent: content }, this);
             this.parsedFiles.set(path, sf);
             return sf;
         }
@@ -81,9 +82,15 @@ export class SourceFile {
     public parseDiagnostics: Diagnostic[];
     public ast?: parser.file;
 
-    public constructor(public source: InputSource) {
+    public constructor(
+        public source: InputSource,
+        program: Program
+    ) {
         const { ast, diagnostics } = parseDznSource(source);
         this.parseDiagnostics = diagnostics;
-        this.ast = ast;
+        if (ast) {
+            visitFile(ast, source, setParentVisitor, program);
+            this.ast = ast;
+        }
     }
 }
