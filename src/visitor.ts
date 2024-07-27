@@ -353,7 +353,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = {
+const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> = {
     // Root node
     [parser.ASTKinds.file]: (node: parser.file) => {
         for (const { statement } of node.statements) {
@@ -564,9 +564,11 @@ const setParentVisitor: Partial<Record<parser.ASTKinds, (node: any) => void>> = 
 
 export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback, program: Program) {
     const context = new VisitorContext(source, program);
-    context.visit(file, n => setParentVisitor[n.kind]?.(n));
     context.visit(file, callback);
 }
+
+export const setParentVisitor: VisitorCallback = (node, context) =>
+    context.visit(node, n => setParentVisitors[n.kind]?.(n));
 
 function setParent(node: ASTNode, parent: ASTNode) {
     node.parent = parent;
