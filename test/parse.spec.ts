@@ -4,6 +4,7 @@ import { DiagnosticCode, LinterHost, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 import { expectNoDiagnostics } from "./util";
+import { TreeSitterNode, treeSitterParse } from "../src/parse";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
@@ -21,20 +22,20 @@ test.each(["component.dzn", "interface.dzn", "system.dzn"])("can parse file with
     expectNoDiagnostics(result);
 });
 
-test("empty file", () => {
-    expectCanParseWithoutDiagnostics("");
+test("empty file", async () => {
+    await expectCanParseWithoutDiagnostics("");
 });
 
-test("whitespace only file", () => {
-    expectCanParseWithoutDiagnostics(" \n\n \n");
+test("whitespace only file", async () => {
+    await expectCanParseWithoutDiagnostics(" \n\n \n");
 });
 
-test("extern statement", () => {
-    expectCanParseWithoutDiagnostics("extern int $2131$;");
+test("extern statement", async () => {
+    await expectCanParseWithoutDiagnostics("extern int $2131$;");
 });
 
-test("dollars variable declaration expression", () => {
-    expectCanParseWithoutDiagnostics(`
+test("dollars variable declaration expression", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             behavior {
                 int myInt = $123$;
@@ -43,8 +44,8 @@ test("dollars variable declaration expression", () => {
     `);
 });
 
-test("component with event", () => {
-    expectCanParseWithoutDiagnostics(`
+test("component with event", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component MyComponent {
             behavior {
                 on event(mydata): {}
@@ -53,8 +54,8 @@ test("component with event", () => {
     `);
 });
 
-test("on with multiple events", () => {
-    expectCanParseWithoutDiagnostics(`
+test("on with multiple events", async () => {
+    await expectCanParseWithoutDiagnostics(`
         interface MyInterface {
             behavior {
                 on event1, event2: {}
@@ -63,8 +64,8 @@ test("on with multiple events", () => {
     `);
 });
 
-test("blocking on with assignment", () => {
-    expectCanParseWithoutDiagnostics(`
+test("blocking on with assignment", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component MyComponent {
             behavior {
                 blocking on event(outVar <- myData): {}
@@ -73,8 +74,8 @@ test("blocking on with assignment", () => {
     `);
 });
 
-test("comment inside statement", () => {
-    expectCanParseWithoutDiagnostics(`
+test("comment inside statement", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component MyComponent /* a */ /* b */ // c
         {
             behavior // d
@@ -85,8 +86,8 @@ test("comment inside statement", () => {
     `);
 });
 
-test("multiline comment", () => {
-    expectCanParseWithoutDiagnostics(`
+test("multiline comment", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component MyComponent
         {
             /* Hello:
@@ -99,8 +100,8 @@ test("multiline comment", () => {
     `);
 });
 
-test("parenthesized expression", () => {
-    expectCanParseWithoutDiagnostics(`
+test("parenthesized expression", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component MyComponent
         {
             behavior
@@ -115,27 +116,27 @@ test("parenthesized expression", () => {
     `);
 });
 
-test.each(["component", "interface"])("empty %s", type => {
-    expectCanParseWithoutDiagnostics(`${type} abc{}`);
+test.each(["component", "interface"])("empty %s", async type => {
+    await expectCanParseWithoutDiagnostics(`${type} abc{}`);
 });
 
-test("root extern", () => {
-    expectCanParseWithoutDiagnostics("extern uint $uint$;");
+test("root extern", async () => {
+    await expectCanParseWithoutDiagnostics("extern uint $uint$;");
 });
 
-test("root subint", () => {
-    expectCanParseWithoutDiagnostics("subint foo {1..10};");
+test("root subint", async () => {
+    await expectCanParseWithoutDiagnostics("subint foo {1..10};");
 });
 
-test("numeric enum values", () => {
-    expectCanParseWithoutDiagnostics(`
+test("numeric enum values", async () => {
+    await expectCanParseWithoutDiagnostics(`
         enum MyEnum{1,2,3};
         MyEnum m = MyEnum.2;
     `);
 });
 
-test("namespaced enum", () => {
-    expectCanParseWithoutDiagnostics(`
+test("namespaced enum", async () => {
+    await expectCanParseWithoutDiagnostics(`
         namespace ns { enum MyEnum{a,b,c}; }
         ns.MyEnum m = ns.MyEnum.b;
 
@@ -145,12 +146,12 @@ test("namespaced enum", () => {
     `);
 });
 
-test("namespaced shortcut", () => {
-    expectCanParseWithoutDiagnostics("MyEnum test = .MyEnum.a;");
+test("namespaced shortcut", async () => {
+    await expectCanParseWithoutDiagnostics("MyEnum test = .MyEnum.a;");
 });
 
-test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", comparison => {
-    expectCanParseWithoutDiagnostics(`
+test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", async comparison => {
+    await expectCanParseWithoutDiagnostics(`
         interface MyInterface {
             behavior {
                 [a ${comparison} b] on event: {}
@@ -159,8 +160,8 @@ test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", comparison 
     `);
 });
 
-test("if statement", () => {
-    expectCanParseWithoutDiagnostics(`component MyComponent {
+test("if statement", async () => {
+    await expectCanParseWithoutDiagnostics(`component MyComponent {
         behavior {
             on event(mydata): {
                 if (mydata) {
@@ -170,8 +171,8 @@ test("if statement", () => {
     }`);
 });
 
-test("if short form", () => {
-    expectCanParseWithoutDiagnostics(`component MyComponent {
+test("if short form", async () => {
+    await expectCanParseWithoutDiagnostics(`component MyComponent {
         behavior {
             on event(mydata): {
                 if (mydata) return;
@@ -180,8 +181,8 @@ test("if short form", () => {
     }`);
 });
 
-test("if-else statement", () => {
-    expectCanParseWithoutDiagnostics(`component MyComponent {
+test("if-else statement", async () => {
+    await expectCanParseWithoutDiagnostics(`component MyComponent {
         behavior {
             on event(mydata): {
                 if (mydata) {
@@ -193,8 +194,8 @@ test("if-else statement", () => {
     }`);
 });
 
-test("if-elseif-else statement", () => {
-    expectCanParseWithoutDiagnostics(`component MyComponent {
+test("if-elseif-else statement", async () => {
+    await expectCanParseWithoutDiagnostics(`component MyComponent {
         behavior {
             on event(mydata): {
                 if (mydata) {
@@ -208,8 +209,8 @@ test("if-elseif-else statement", () => {
     }`);
 });
 
-test.each(["+", "-", "&&", "||"])("binary statement (%p)", operator => {
-    expectCanParseWithoutDiagnostics(`component MyComponent {
+test.each(["+", "-", "&&", "||"])("binary statement (%p)", async operator => {
+    await expectCanParseWithoutDiagnostics(`component MyComponent {
         behavior {
             on event(mydata): {
                 a = b ${operator} c;
@@ -218,8 +219,8 @@ test.each(["+", "-", "&&", "||"])("binary statement (%p)", operator => {
     }`);
 });
 
-test("complex if statement", () => {
-    expectCanParseWithoutDiagnostics(`
+test("complex if statement", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component MyComponent {
             behavior {
                 on event(mydata): {
@@ -232,8 +233,8 @@ test("complex if statement", () => {
     `);
 });
 
-test("2.15 blocking ports", () => {
-    expectCanParseWithoutDiagnostics(`
+test("2.15 blocking ports", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             provides blocking IPort port;
             provides IPort2 port2;
@@ -243,8 +244,8 @@ test("2.15 blocking ports", () => {
     `);
 });
 
-test("blocking with guard", () => {
-    expectCanParseWithoutDiagnostics(`
+test("blocking with guard", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             provides blocking IPort port;
 
@@ -255,8 +256,8 @@ test("blocking with guard", () => {
     `);
 });
 
-test("defer statement", () => {
-    expectCanParseWithoutDiagnostics(
+test("defer statement", async () => {
+    await expectCanParseWithoutDiagnostics(
         `
         component c {
             provides blocking IPort port;
@@ -272,8 +273,8 @@ test("defer statement", () => {
     );
 });
 
-test("defer with empty capture", () => {
-    expectCanParseWithoutDiagnostics(
+test("defer with empty capture", async () => {
+    await expectCanParseWithoutDiagnostics(
         `
         component c {
             provides blocking IPort port;
@@ -289,8 +290,8 @@ test("defer with empty capture", () => {
     );
 });
 
-test("defer with capture", () => {
-    expectCanParseWithoutDiagnostics(`
+test("defer with capture", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             provides blocking IPort port;
 
@@ -303,8 +304,8 @@ test("defer with capture", () => {
     `);
 });
 
-test("defer block", () => {
-    expectCanParseWithoutDiagnostics(
+test("defer block", async () => {
+    await expectCanParseWithoutDiagnostics(
         `
         component c {
             provides blocking IPort port;
@@ -323,8 +324,8 @@ test("defer block", () => {
     );
 });
 
-test("parameter types", () => {
-    expectCanParseWithoutDiagnostics(
+test("parameter types", async () => {
+    await expectCanParseWithoutDiagnostics(
         `
         interface foo {
             in void bar(in Type inparam);
@@ -336,20 +337,20 @@ test("parameter types", () => {
     );
 });
 
-test("namespace brackets", () => {
-    expectCanParseWithoutDiagnostics(`
+test("namespace brackets", async () => {
+    await expectCanParseWithoutDiagnostics(`
         namespace My { namespace Project {
         }}
     `);
 });
 
-test("no trailing whiteline brackets", () => {
-    expectCanParseWithoutDiagnostics(`namespace MyNamespace{} // hello`);
+test("no trailing whiteline brackets", async () => {
+    await expectCanParseWithoutDiagnostics(`namespace MyNamespace{} // hello`);
 });
 
 // https://github.com/Perryvw/dznlint/issues/2
-test("if without braces (#2)", () => {
-    expectCanParseWithoutDiagnostics(`
+test("if without braces (#2)", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             provides blocking IPort port;
 
@@ -365,8 +366,8 @@ test("if without braces (#2)", () => {
 });
 
 // https://github.com/Perryvw/dznlint/issues/2
-test("if mixed with without braces (#2)", () => {
-    expectCanParseWithoutDiagnostics(`
+test("if mixed with without braces (#2)", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             provides blocking IPort port;
 
@@ -382,8 +383,8 @@ test("if mixed with without braces (#2)", () => {
 });
 
 // https://github.com/Perryvw/dznlint/issues/4
-test("guard inside expression (#4)", () => {
-    expectCanParseWithoutDiagnostics(`
+test("guard inside expression (#4)", async () => {
+    await expectCanParseWithoutDiagnostics(`
         component c {
             behavior {
                 on port.foo(): [guard] Y;
@@ -393,8 +394,8 @@ test("guard inside expression (#4)", () => {
 });
 
 // https://github.com/Perryvw/dznlint/issues/10
-test("multi-line comment (#10)", () => {
-    expectCanParseWithoutDiagnostics(`
+test("multi-line comment (#10)", async () => {
+    await expectCanParseWithoutDiagnostics(`
         /*
         * bla
         */
@@ -402,14 +403,14 @@ test("multi-line comment (#10)", () => {
 });
 
 // https://github.com/Perryvw/dznlint/issues/10
-test("empty multi-line comment (#10)", () => {
-    expectCanParseWithoutDiagnostics(`
+test("empty multi-line comment (#10)", async () => {
+    await expectCanParseWithoutDiagnostics(`
         /**/
     `);
 });
 
-test("dollars statement", () => {
-    expectCanParseWithoutDiagnostics(`
+test("dollars statement", async () => {
+    await expectCanParseWithoutDiagnostics(`
         import abc.dzn;
 
         $#include "myHeader.h"$
@@ -418,27 +419,71 @@ test("dollars statement", () => {
     `);
 });
 
-function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
-    const parseOnlyHost: LinterHost = {
-        includePaths: [],
-        fileExists() {
-            return false;
-        },
-        readFile() {
-            return "";
-        },
-        resolveImport() {
-            return undefined;
-        },
-    };
-    const result = lintString(dzn, parseOnlyConfiguration, parseOnlyHost);
+// test.only("parser-test", async () => {
+//     await expectCanParseWithoutDiagnostics(`
+//         interface I { behavior {} }
+//     `);
+// });
 
-    const ignoreCodesSet = new Set(ignoreCodes);
-    const filteredDiagnostics = result.filter(d => !ignoreCodesSet.has(d.code));
+async function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
+    // const parseOnlyHost: LinterHost = {
+    //     includePaths: [],
+    //     fileExists() {
+    //         return false;
+    //     },
+    //     readFile() {
+    //         return "";
+    //     },
+    //     resolveImport() {
+    //         return undefined;
+    //     },
+    // };
+    // const result = lintString(dzn, parseOnlyConfiguration, parseOnlyHost);
 
-    for (const diagnostic of filteredDiagnostics) {
-        console.log(formatDiagnostic(diagnostic));
-    }
+    // const ignoreCodesSet = new Set(ignoreCodes);
+    // const filteredDiagnostics = result.filter(d => !ignoreCodesSet.has(d.code));
 
-    expect(filteredDiagnostics).toHaveLength(0);
+    // for (const diagnostic of filteredDiagnostics) {
+    //     console.log(formatDiagnostic(diagnostic));
+    // }
+
+    // expect(filteredDiagnostics).toHaveLength(0);
+    const root = await treeSitterParse({ fileContent: dzn });
+    let errors: string[] = [];
+    walkAllNodes(root, (node) => {
+        if (node.isError)
+        {
+            errors.push(dzn.substring(node.startIndex, node.endIndex));
+        }
+    });
+    expect(errors).toHaveLength(0);
+}
+
+function walkAllNodes(node: TreeSitterNode, callback: (node: TreeSitterNode) => void)
+{
+    const cursor = node.walk();
+
+    let recurse = true;
+    let finished = false;
+    do {
+        // enter child
+        if (recurse && cursor.gotoFirstChild()) {
+            recurse = true;
+            //enter(node);
+            callback(cursor.currentNode);
+        } else {
+            //exit(node)
+
+            // go to sibling
+            if (cursor.gotoNextSibling()) {
+                recurse = true;
+                callback(cursor.currentNode)
+                //enter(node);
+            } else if (cursor.gotoParent()) {
+                recurse = false;
+            } else {
+                finished = true;
+            }
+        }
+    } while(!finished);
 }
