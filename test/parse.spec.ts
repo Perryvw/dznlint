@@ -4,7 +4,8 @@ import { DiagnosticCode, LinterHost, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 import { expectNoDiagnostics } from "./util";
-import { TreeSitterNode, treeSitterParse } from "../src/parse";
+import { treeSitterParse } from "../src/parse";
+import { walkAllNodes } from "../src/grammar/tree-sitter-util";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
@@ -450,40 +451,10 @@ async function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: Diagno
     // expect(filteredDiagnostics).toHaveLength(0);
     const root = await treeSitterParse({ fileContent: dzn });
     let errors: string[] = [];
-    walkAllNodes(root, (node) => {
-        if (node.isError)
-        {
-            errors.push(dzn.substring(node.startIndex, node.endIndex));
+    walkAllNodes(root, node => {
+        if (node.isError) {
+            errors.push(node.text);
         }
     });
     expect(errors).toHaveLength(0);
-}
-
-function walkAllNodes(node: TreeSitterNode, callback: (node: TreeSitterNode) => void)
-{
-    const cursor = node.walk();
-
-    let recurse = true;
-    let finished = false;
-    do {
-        // enter child
-        if (recurse && cursor.gotoFirstChild()) {
-            recurse = true;
-            //enter(node);
-            callback(cursor.currentNode);
-        } else {
-            //exit(node)
-
-            // go to sibling
-            if (cursor.gotoNextSibling()) {
-                recurse = true;
-                callback(cursor.currentNode)
-                //enter(node);
-            } else if (cursor.gotoParent()) {
-                recurse = false;
-            } else {
-                finished = true;
-            }
-        }
-    } while(!finished);
 }

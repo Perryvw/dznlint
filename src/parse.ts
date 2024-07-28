@@ -27,12 +27,8 @@ import * as Parser from "web-tree-sitter";
 
 let treeSitterParser: Parser | undefined;
 
-export type TreeSitterNode = Parser.SyntaxNode; 
-export type TreeSitterCursor = Parser.TreeCursor; 
-
-export async function treeSitterParse(source: InputSource): Promise<TreeSitterNode> {
-    if (treeSitterParser === undefined)
-    {
+export async function treeSitterParse(source: InputSource): Promise<Parser.SyntaxNode> {
+    if (treeSitterParser === undefined) {
         await Parser.init();
         treeSitterParser = new Parser();
         const language = await Parser.Language.load(`${__dirname}/grammar/tree-sitter-dezyne.wasm`);
@@ -47,6 +43,6 @@ function visitFile(n: Parser.SyntaxNode): parser.file {
     console.log(n.toString());
     return {
         kind: parser.ASTKinds.file,
-        statements: []
+        statements: [],
     };
 }

@@ -1,0 +1,178 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`format 1`] = `
+"interface I
+{
+    enum E
+    {
+        A,
+        B
+    };
+}
+"
+`;
+
+exports[`format file files/component.dzn 1`] = `
+"import interface.dzn;
+component HelloWorld
+{
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+                [s.Hello]
+        {
+                        on api():
+            {
+                s = State.World;
+            }
+        }
+                [s.World]
+        {
+                        on api():
+            {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`format file files/demo.dzn 1`] = `
+"extern int int
+interface HelloWorld
+{
+    in void hello();
+    in void world();
+    out void helloWorld();
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+                [s.Hello]
+        {
+                        on hello():
+            {
+                s = State.World;
+            }
+                        on world(): {}
+        }
+                [s.World]
+        {
+                        on world():
+            {
+                helloWorld;
+                s = State.Hello;
+            }
+        }
+    }
+}
+component HelloWorld
+{
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+                [s.Hello]
+        {
+                        on api():
+            {
+                s = State.World;
+            }
+                        on api():
+            {
+                s = State.World;
+                Result r = doSomething();
+            }
+        }
+                [s.World]
+        {
+                        on api():
+            {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+        int myFunction()
+        {
+            return 4;
+            api.foo();
+        }
+        int myOtherFunction() {}
+    }
+}
+component HelloWorldSystem
+{
+    system
+    {
+        HelloWorld helloWorld;
+        MyType myinstance;
+        api <=> helloWold.api;
+        blabla <=> helloWorld.api;
+        HelloWorldSystem recursiveSystem;
+    }
+}
+"
+`;
+
+exports[`format file files/interface.dzn 1`] = `
+"interface IHelloWorld
+{
+    in void hello();
+    in void world();
+    out void helloWorld();
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+                [s.Hello]
+        {
+                        on hello():
+            {
+                s = State.World;
+            }
+        }
+                [s.World]
+        {
+                        on world():
+            {
+                helloWorld;
+                s = State.Hello;
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`format file files/system.dzn 1`] = `
+"import component.dzn;
+component HelloWorldSystem
+{
+    system
+    {
+        HelloWorld helloWorld;
+        api <=> helloWorld.api;
+        helloWorld.required <=> required;
+    }
+}
+"
+`;
