@@ -26,17 +26,23 @@ component HelloWorld
         State s = State.Hello;
                 [s.Hello]
         {
-                        on api():
+            
             {
-                s = State.World;
+            on hello():             
+            {
+            s = State.World;
+            }
             }
         }
                 [s.World]
         {
-                        on api():
+            
             {
-                api.helloWorld();
-                s = State.Hello;
+            on world():             
+            {
+            api.helloWorld();
+            s = State.Hello;
+            }
             }
         }
     }
@@ -61,18 +67,24 @@ interface HelloWorld
         State s = State.Hello;
                 [s.Hello]
         {
-                        on hello():
+            
             {
-                s = State.World;
+            on hello:             
+            {
+            s = State.World;
             }
-                        on world(): {}
+            on world: illegal
+            }
         }
                 [s.World]
         {
-                        on world():
+            
             {
-                helloWorld;
-                s = State.Hello;
+            on world:             
+            {
+            helloWorld;
+            s = State.Hello;
+            }
             }
         }
     }
@@ -89,22 +101,28 @@ component HelloWorld
         State s = State.Hello;
                 [s.Hello]
         {
-                        on api():
+            
             {
-                s = State.World;
+            on hello():             
+            {
+            s = State.World;
             }
-                        on api():
+            on hello():             
             {
-                s = State.World;
-                Result r = doSomething();
+            s = State.World;
+            Result r = doSomething();
+            }
             }
         }
                 [s.World]
         {
-                        on api():
+            
             {
-                api.helloWorld();
-                s = State.Hello;
+            on world():             
+            {
+            api.helloWorld();
+            s = State.Hello;
+            }
             }
         }
         int myFunction()
@@ -145,17 +163,23 @@ exports[`format file files/interface.dzn 1`] = `
         State s = State.Hello;
                 [s.Hello]
         {
-                        on hello():
+            
             {
-                s = State.World;
+            on hello:             
+            {
+            s = State.World;
+            }
             }
         }
                 [s.World]
         {
-                        on world():
+            
             {
-                helloWorld;
-                s = State.Hello;
+            on world:             
+            {
+            helloWorld;
+            s = State.Hello;
+            }
             }
         }
     }

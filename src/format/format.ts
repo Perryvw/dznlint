@@ -1,15 +1,15 @@
 import { treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
-import * as Parser from "web-tree-sitter";
+import * as Grammar from "./tree-sitter-types";
 
 export async function format(source: InputSource): Promise<string> {
     const tree = await treeSitterParse(source);
-    return formatRoot(tree);
+    return formatRoot(tree as unknown as Grammar.root_Node);
 }
 
 // Statements
 
-function formatStatement(node: Parser.SyntaxNode, indent: string): string {
+function formatStatement(node: Grammar.AllNodes, indent: string): string {
     if (node.isError) {
         throw `Cannot format error node ${node.text}`;
     }
@@ -41,8 +41,12 @@ function formatStatement(node: Parser.SyntaxNode, indent: string): string {
             return formatReturn(node, indent);
         case "function":
             return formatFunction(node, indent);
+        case "compound":
+            return formatCompound(node, indent);
         case "behavior":
             return formatBehavior(node, indent);
+        case "illegal":
+            return "illegal";
         case "system":
             return formatSystem(node, indent);
         case "interface":
@@ -59,13 +63,13 @@ function formatStatement(node: Parser.SyntaxNode, indent: string): string {
     }
 }
 
-function formatRoot(root: Parser.SyntaxNode): string {
-    return root.children.map(n => formatStatement(n, "")).join("\n") + "\n";
+function formatRoot(root: Grammar.root_Node): string {
+    return root.children.map(n => formatStatement(n as Grammar.AllNodes, "")).join("\n") + "\n";
 }
 
-function formatVariable(node: Parser.SyntaxNode, indent: string): string {
-    const type = node.childForFieldName("type_name")!;
-    const name = node.childForFieldName("name")!;
+function formatVariable(node: Grammar.variable_Node, indent: string): string {
+    const type = node.childForFieldName("type_name");
+    const name = node.childForFieldName("name");
     const expression = node.childForFieldName("expression");
 
     if (expression) {
@@ -75,146 +79,164 @@ function formatVariable(node: Parser.SyntaxNode, indent: string): string {
     }
 }
 
-function formatEnum(node: Parser.SyntaxNode, indent: string): string {
-    const name = node.childForFieldName("name")!;
-    const fields = node.childForFieldName("fields")!;
+function formatEnum(node: Grammar.enum_Node, indent: string): string {
+    const name = node.childForFieldName("name");
+    const fields = node.childForFieldName("fields");
     const memberIndent = pushIndent(indent);
-    const members = fields.children
-        .filter(f => f.type === "name")
+    const members = fields
+        .childrenForFieldName("name")
         .map((f, i, l) => (i < l.length - 1 ? memberIndent + f.text + "," : memberIndent + f.text));
     return formatScopedBlock(`enum ${formatExpression(name)}`, members, indent) + ";";
 }
 
-function formatAction(node: Parser.SyntaxNode, indent: string): string {
-    const portName = node.childForFieldName("port_name")!;
-    const actionName = node.childForFieldName("name")!;
-    const actionArguments = node.childForFieldName("arguments")!.childrenForFieldName("argument");
-    return `${indent}${formatExpression(portName)}.${formatExpression(actionName)}(${actionArguments.map(formatExpression).join(", ")});`;
+function formatAction(node: Grammar.action_Node, indent: string): string {
+    const portName = node.childForFieldName("port_name");
+    const actionName = node.childForFieldName("name");
+    const actionArguments = node.childForFieldName("arguments").childrenForFieldName("expression") ?? [];
+    return `${indent}${formatExpression(portName)}.${formatExpression(actionName)}(${actionArguments
+        .map(formatExpression)
+        .join(", ")});`;
 }
 
-function formatInterfaceAction(node: Parser.SyntaxNode, indent: string): string {
+function formatInterfaceAction(node: Grammar.interface_action_Node, indent: string): string {
     return `${indent}${node.text};`;
 }
 
-function formatAssign(node: Parser.SyntaxNode, indent: string): string {
-    const lhs = node.childForFieldName("left")!;
-    const rhs = node.childForFieldName("right")!;
+function formatAssign(node: Grammar.assign_Node, indent: string): string {
+    const lhs = node.childForFieldName("left");
+    const rhs = node.childForFieldName("right");
     return `${indent}${formatExpression(lhs)} = ${formatExpression(rhs)};`;
 }
 
-function formatEvent(node: Parser.SyntaxNode, indent: string): string {
-    const direction = node.childForFieldName("direction")!;
-    const typeName = node.childForFieldName("type_name")!;
-    const eventName = node.childForFieldName("event_name")!;
-    const formals = node.childForFieldName("formals")!.childrenForFieldName("formal");
+function formatEvent(node: Grammar.event_Node, indent: string): string {
+    const direction = node.childForFieldName("direction");
+    const typeName = node.childForFieldName("type_name");
+    const eventName = node.childForFieldName("event_name");
+    const formals = node.childForFieldName("formals").childrenForFieldName("formal") ?? [];
 
-    return `${indent}${direction.text} ${formatExpression(typeName)} ${formatExpression(eventName)}(${formals.map(formatExpression).join(", ")});`;
+    return `${indent}${direction.text} ${formatExpression(typeName)} ${formatExpression(eventName)}(${formals
+        .map(formatExpression)
+        .join(", ")});`;
 }
 
-function formatOn(node: Parser.SyntaxNode, indent: string): string {
-    const triggers = node.childForFieldName("triggers")!.childrenForFieldName("trigger");
-    const body = node.childForFieldName("body")!;
-    const childIndent = pushIndent(indent);
-    return formatScopedBlock(
-        `${indent}on ${triggers.map(formatExpression).join(", ")}:`,
-        body.children.filter(c => c.isNamed).map(c => formatStatement(c, childIndent)),
-        indent
-    );
+function formatOn(node: Grammar.on_Node, indent: string): string {
+    const triggers = node.childForFieldName("triggers").childrenForFieldName("trigger");
+    const body = node.childrenForFieldName("body");
+    return `${indent}on ${triggers.map(formatExpression).join(", ")}: ${body.map(s =>
+        formatStatement(s as Grammar.AllNodes, indent)
+    )}`;
 }
 
-function formatGuard(node: Parser.SyntaxNode, indent: string): string {
-    const condition = node.childForFieldName("condition")!;
-    const body = node.childForFieldName("body")!;
+function formatGuard(node: Grammar.guard_Node, indent: string): string {
+    const condition = node.childForFieldName("condition");
+    const body = node.childrenForFieldName("body");
     const childIndent = pushIndent(indent);
     return formatScopedBlock(
         `${indent}[${formatExpression(condition)}]`,
-        body.children.filter(c => c.isNamed).map(n => formatStatement(n, childIndent)),
+        body.filter(c => c.isNamed).map(n => formatStatement(n as Grammar.AllNodes, childIndent)),
         indent
     );
 }
 
-function formatBinding(node: Parser.SyntaxNode, indent: string): string {
-    const left = node.childForFieldName("left")!;
-    const right = node.childForFieldName("right")!;
+function formatBinding(node: Grammar.binding_Node, indent: string): string {
+    const left = node.childForFieldName("left");
+    const right = node.childForFieldName("right");
     return `${indent}${formatExpression(left)} <=> ${formatExpression(right)};`;
 }
 
-function formatInstance(node: Parser.SyntaxNode, indent: string): string {
-    const type = node.childForFieldName("type")!;
-    const name = node.childForFieldName("name")!;
+function formatInstance(node: Grammar.instance_Node, indent: string): string {
+    const type = node.childForFieldName("type");
+    const name = node.childForFieldName("name");
     return `${indent}${formatExpression(type)} ${formatExpression(name)};`;
 }
 
-function formatReturn(node: Parser.SyntaxNode, indent: string): string {
-    const expression = node.childForFieldName("expression")!;
-    return `${indent}return ${formatExpression(expression)};`;
+function formatReturn(node: Grammar.return_Node, indent: string): string {
+    const expression = node.childForFieldName("expression");
+    if (expression) {
+        return `${indent}return ${formatExpression(expression)};`;
+    } else {
+        return `${indent}return;`;
+    }
 }
 
-function formatFunction(node: Parser.SyntaxNode, indent: string): string {
-    const type = node.childForFieldName("return_type")!;
-    const name = node.childForFieldName("name")!;
+function formatFunction(node: Grammar.function_Node, indent: string): string {
+    const type = node.childForFieldName("return_type");
+    const name = node.childForFieldName("name");
     const formals = node.childForFieldName("formals");
-    const body = node.childForFieldName("body")!;
+    const body = node.childForFieldName("body").childrenForFieldName("statement");
     const childIndent = pushIndent(indent);
-    return formatScopedBlock(`${formatExpression(type)} ${formatExpression(name)}()`, body.children.filter(c => c.isNamed).map(n => formatStatement(n, childIndent)), indent);
+    return formatScopedBlock(
+        `${formatExpression(type)} ${formatExpression(name)}()`,
+        (body ?? []).filter(c => c.isNamed).map(n => formatStatement(n as Grammar.AllNodes, childIndent)),
+        indent
+    );
 }
 
-function formatInterface(node: Parser.SyntaxNode, indent: string): string {
-    const name = node.childForFieldName("name")!;
-    const body = node.childForFieldName("body")!;
+function formatCompound(node: Grammar.compound_Node, indent: string): string {
+    const statements = node.childrenForFieldName("statement") ?? [];
+    return formatScopedBlock(
+        "",
+        statements.filter(s => s.isNamed).map(s => formatStatement(s as Grammar.AllNodes, indent)),
+        indent
+    );
+}
+
+function formatInterface(node: Grammar.interface_Node, indent: string): string {
+    const name = node.childForFieldName("name");
+    const body = node.childForFieldName("body");
     const childIndent = pushIndent(indent);
     return formatScopedBlock(
         `interface ${formatExpression(name)}`,
-        body.children.filter(c => c.isNamed).map(n => formatStatement(n, childIndent)),
+        body.children.filter(c => c.isNamed).map(n => formatStatement(n as Grammar.AllNodes, childIndent)),
         indent
     );
 }
 
-function formatComponent(node: Parser.SyntaxNode, indent: string): string {
-    const name = node.childForFieldName("name")!;
-    const body = node.childForFieldName("body")!;
+function formatComponent(node: Grammar.component_Node, indent: string): string {
+    const name = node.childForFieldName("name");
+    const behaviorOrSystem = node.childForFieldName("body")?.child(0);
     const childIndent = pushIndent(indent);
     return formatScopedBlock(
         `component ${formatExpression(name)}`,
-        body.children.filter(c => c.isNamed).map(n => formatStatement(n, childIndent)),
+        behaviorOrSystem ? [formatStatement(behaviorOrSystem, childIndent)] : [],
         indent
     );
 }
 
-function formatBehavior(node: Parser.SyntaxNode, indent: string): string {
-    const body = node.childForFieldName("body")!;
+function formatBehavior(node: Grammar.behavior_Node, indent: string): string {
+    const body = node.childForFieldName("body");
     const childIndent = pushIndent(indent);
     return formatScopedBlock(
         `behavior`,
-        body.children.filter(c => c.isNamed).map(n => formatStatement(n, childIndent)),
+        body.children.filter(c => c.isNamed).map(n => formatStatement(n as Grammar.AllNodes, childIndent)),
         indent
     );
 }
 
-function formatSystem(node: Parser.SyntaxNode, indent: string): string {
-    const body = node.childForFieldName("body")!;
+function formatSystem(node: Grammar.system_Node, indent: string): string {
+    const body = node.childForFieldName("body");
     const childIndent = pushIndent(indent);
     return formatScopedBlock(
         `system`,
-        body.children.filter(c => c.isNamed).map(n => formatStatement(n, childIndent)),
+        body.children.filter(c => c.isNamed).map(n => formatStatement(n as Grammar.AllNodes, childIndent)),
         indent
     );
 }
 
-function formatImport(node: Parser.SyntaxNode, indent: string): string {
-    const fileName = node.childForFieldName("file_name")!;
+function formatImport(node: Grammar.import_Node, indent: string): string {
+    const fileName = node.childForFieldName("file_name");
     return `${indent}import ${fileName.text};`;
 }
 
-function formatExtern(node: Parser.SyntaxNode, indent: string): string {
-    const name = node.childForFieldName("name")!;
-    const value = node.childForFieldName("value")!;
+function formatExtern(node: Grammar.extern_Node, indent: string): string {
+    const name = node.childForFieldName("name");
+    const value = node.childForFieldName("value");
     return `${indent}extern ${formatExpression(name)} ${formatExpression(value)}`;
 }
 
 // Expressions
 
-function formatExpression(node: Parser.SyntaxNode): string {
+function formatExpression(node: Grammar.AllNodes): string {
     if (node.isError) {
         throw `Cannot format error node ${node.text}`;
     }
@@ -232,10 +254,12 @@ function formatExpression(node: Parser.SyntaxNode): string {
             return formatScopedName(node);
         case "call":
             return formatCall(node);
+        case "port_event":
+            return formatPortEvent(node);
         case "literal":
             return formatLiteral(node);
         case "trigger":
-            return formatTrigger(node);
+            return formatExpression(node.child(0));
         case "dollars_content":
             return formatDollars(node);
         default:
@@ -244,29 +268,43 @@ function formatExpression(node: Parser.SyntaxNode): string {
     }
 }
 
-function formatScopedName(node: Parser.SyntaxNode): string {
+function formatScopedName(
+    node:
+        | Grammar.compound_name_Node
+        | Grammar.end_point_Node
+        | Grammar.event_name_Node
+        | Grammar.name_Node
+        | Grammar.scoped_name_Node
+        | Grammar.port_name_Node
+        | Grammar.type_name_Node
+        | Grammar.var_Node
+        | Grammar.var_name_Node
+): string {
     return node.text.replace(/\s/g, "");
 }
 
-function formatCall(node: Parser.SyntaxNode): string {
-    const name = node.childForFieldName("name")!;
-    const callArgs = node.childForFieldName("arguments")!.childrenForFieldName("argument");
+function formatCall(node: Grammar.call_Node): string {
+    const name = node.childForFieldName("name");
+    const callArgs = node.childForFieldName("arguments").childrenForFieldName("expression") ?? [];
     return `${formatExpression(name)}(${callArgs.map(formatExpression).join(", ")})`;
 }
 
-function formatLiteral(node: Parser.SyntaxNode): string {
+function formatLiteral(node: Grammar.literal_Node): string {
     return node.text;
 }
 
-function formatTrigger(node: Parser.SyntaxNode): string {
-    const portEvent = node.child(0)!;
-    const name = portEvent.childForFieldName("port") ?? portEvent;
-    const formals = portEvent.childForFieldName("formals")?.children.filter(c => c.isNamed) ?? [];
+function formatPortEvent(node: Grammar.port_event_Node): string {
+    const port = node.childForFieldName("port");
+    const name = node.childForFieldName("name");
+    const formals = node.childForFieldName("formals");
 
-    return `${formatExpression(name)}(${formals.map(formatExpression).join(", ")})`;
+    return `${formatExpression(name)}(${formals.children
+        .filter(c => c.isNamed)
+        .map(n => formatExpression(n as Grammar.AllNodes))
+        .join(", ")})`;
 }
 
-function formatDollars(node: Parser.SyntaxNode): string {
+function formatDollars(node: Grammar.dollars_content_Node): string {
     return node.text;
 }
 
