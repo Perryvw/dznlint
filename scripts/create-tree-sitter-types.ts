@@ -21,6 +21,12 @@ interface UnnamedNode<T extends string> extends Parser.SyntaxNode {
     isNamed: false;
 }`);
 
+result.push(`
+interface TypedCursor<TNodes extends { type: string }> extends Parser.TreeCursor
+{
+    nodeType: TNodes["type"];
+}`);
+
 for (const node of nodeTypes.filter(n => n.named)) {
     result.push(
         `interface ${nameOfTypeNode(

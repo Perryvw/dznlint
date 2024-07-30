@@ -527,6 +527,17 @@ interface int_Node
     childForFieldName(kind: "name"): scoped_name_Node;
     childForFieldName(kind: "to"): number_Node;
 }
+
+interface SpecificTypedCursor<N extends AllNodes> {
+    nodeType: N["type"];
+    currentNode: N;
+}
+
+type PickType<Node extends AllNodes, T extends string> = Node extends { type: T } ? Node : never;
+
+type CursorRecord = { [K in AllNodes["type"]]: SpecificTypedCursor<PickType<AllNodes, K>> };
+type TypedCursor = CursorRecord[keyof CursorRecord];
+
 interface interface_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -535,6 +546,7 @@ interface interface_Node
     type: "interface";
     childForFieldName(kind: "body"): interface_body_Node;
     childForFieldName(kind: "name"): scoped_name_Node;
+    //walk(): TypedCursor<interface_body_Node | scoped_name_Node>;
 }
 interface interface_action_Node
     extends Omit<

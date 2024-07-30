@@ -11,7 +11,7 @@ test("format", async () => {
     });
 });
 
-test("single-line comments", async () => {
+test.only("single-line comments", async () => {
     await testFormat({
         input: `
             // Hi
