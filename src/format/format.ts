@@ -15,8 +15,8 @@ function formatStatement(node: Grammar.AllNodes, indent: string): string {
     }
 
     switch (node.type) {
-        case "root":
-            return formatRoot(node);
+        case "comment":
+            return formatComment(node, indent);
         case "variable":
             return formatVariable(node, indent);
         case "enum":
@@ -57,10 +57,17 @@ function formatStatement(node: Grammar.AllNodes, indent: string): string {
             return formatImport(node, indent);
         case "extern":
             return formatExtern(node, indent);
+        case "root":
+            return formatRoot(node);
         default:
             console.log(node.toString());
             throw `Don't know how to format statements of type ${node.type}`;
     }
+}
+
+function formatComment(node: Grammar.comment_Node, indent: string): string {
+    const isMultiline = node.text.startsWith("//");
+    return `${indent}${node.text}`;
 }
 
 function formatRoot(root: Grammar.root_Node): string {

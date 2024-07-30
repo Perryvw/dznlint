@@ -11,6 +11,48 @@ test("format", async () => {
     });
 });
 
+test("single-line comments", async () => {
+    await testFormat({
+        input: `
+            // Hi
+            interface I // Hello
+            {
+                enum E { 
+                    // Foo
+                    A,
+                     B //Bar
+                     };
+
+                // Trailing E
+            }
+            // Trailing I
+        `,
+    });
+});
+
+test("multi-line comments", async () => {
+    await testFormat({
+        input: `
+            /* Hi
+             * Hello
+             */
+            interface I /* sup */
+            {
+                enum E { 
+                    /* foo */
+                    A,
+                     B /*bar*/
+                     };
+
+                /* Trailing E */
+            }
+            /*
+            * Trailing I
+            */
+        `,
+    });
+});
+
 test.each(["files/component.dzn", "files/demo.dzn", "files/interface.dzn", "files/system.dzn"])(
     "format file %s",
     async fileName => {

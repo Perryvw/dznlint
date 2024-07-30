@@ -16,15 +16,16 @@ const result = [];
 result.push('import type * as Parser from "web-tree-sitter";');
 
 result.push(`
-interface UnnamedType extends Parser.SyntaxNode {
+interface UnnamedNode<T extends string> extends Parser.SyntaxNode {
+    type: T;
     isNamed: false;
 }`);
 
 for (const node of nodeTypes.filter(n => n.named)) {
     result.push(
         `interface ${nameOfTypeNode(
-            node.type
-        )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "children"> {`
+            node
+        )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstChild"> {`
     );
     result.push(`    type: "${node.type}";`);
 
@@ -38,11 +39,13 @@ for (const node of nodeTypes.filter(n => n.named)) {
 
     if (node.children) {
         if (node.children.multiple) {
-            const namedTypes = node.children.types.filter(t => t.named).map(t => nameOfTypeNode(t.type));
+            const namedTypes = node.children.types.map(nameOfTypeNode);
             result.push(`    child(i: number): ${namedTypes.join(" | ")} | undefined;`);
             result.push(`    children: Array<${namedTypes.join(" | ")}>;`);
         } else {
             result.push(`    child(i: 0): ${fieldType(node.children)};`);
+            result.push(`    firstChild: ${fieldType(node.children)};`);
+            result.push(`    children: [(${fieldType(node.children)})];`);
         }
     }
 
@@ -51,20 +54,17 @@ for (const node of nodeTypes.filter(n => n.named)) {
 
 result.push(
     `type AllNodes = ${nodeTypes
-        .filter(n => n.named)
-        .map(n => nameOfTypeNode(n.type))
+        .filter(t => t.named)
+        .map(nameOfTypeNode)
         .join(" | ")}`
 );
 
-function nameOfTypeNode(type: string): string {
-    return `${type}_Node`;
+function nameOfTypeNode(type: NodeType): string {
+    return type.named ? `${type.type}_Node` : `UnnamedNode<"${type.type}">`;
 }
 
 function fieldType(field: Field): string {
-    const namedTypes = field.types.filter(t => t.named).map(t => nameOfTypeNode(t.type));
-    if (field.types.some(t => !t.named)) {
-        namedTypes.push("UnnamedType");
-    }
+    const namedTypes = field.types.map(nameOfTypeNode);
     const mainType = namedTypes.join(" | ");
     if (field.multiple) {
         const multipleReturnType = `Array<${mainType}>`;

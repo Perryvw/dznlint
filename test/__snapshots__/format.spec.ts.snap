@@ -200,3 +200,37 @@ component HelloWorldSystem
 }
 "
 `;
+
+exports[`multi-line comments 1`] = `
+"/* Hi
+             * Hello
+             */
+interface I
+{
+    enum E
+    {
+        A,
+        B
+    };
+    /* Trailing E */
+}
+/*
+            * Trailing I
+            */
+"
+`;
+
+exports[`single-line comments 1`] = `
+"// Hi
+interface I
+{
+    enum E
+    {
+        A,
+        B
+    };
+    // Trailing E
+}
+// Trailing I
+"
+`;
