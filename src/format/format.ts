@@ -1,7 +1,7 @@
 import { treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
 import { Formatter } from "./formatter";
-import * as Grammar from "./tree-sitter-types";
+import * as Grammar from "./tree-sitter-types-formatter";
 
 export async function format(source: InputSource): Promise<string> {
     const formatter = new Formatter();
@@ -77,21 +77,21 @@ function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
 
 function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
     for (const c of root.children) {
-        formatStatement(c, formatter);
+        formatStatement(c as unknown as Grammar.AllNodes, formatter);
     }
 }
 
-function formatVariable(node: Grammar.variable_Node, indent: string): string {
-    const type = node.childForFieldName("type_name");
-    const name = node.childForFieldName("name");
-    const expression = node.childForFieldName("expression");
+// function formatVariable(node: Grammar.variable_Node, indent: string): string {
+//     const type = node.childForFieldName("type_name");
+//     const name = node.childForFieldName("name");
+//     const expression = node.childForFieldName("expression");
 
-    if (expression) {
-        return `${indent}${formatExpression(type)} ${formatExpression(name)} = ${formatExpression(expression)};`;
-    } else {
-        return `${indent}${formatExpression(type)} ${formatExpression(name)};}`;
-    }
-}
+//     if (expression) {
+//         return `${indent}${formatExpression(type)} ${formatExpression(name)} = ${formatExpression(expression)};`;
+//     } else {
+//         return `${indent}${formatExpression(type)} ${formatExpression(name)};}`;
+//     }
+// }
 
 // function formatEnum(node: Grammar.enum_Node, indent: string): string {
 //     const name = node.childForFieldName("name");
@@ -103,35 +103,35 @@ function formatVariable(node: Grammar.variable_Node, indent: string): string {
 //     return formatScopedBlock(`enum ${formatExpression(name)}`, members, indent) + ";";
 // }
 
-function formatAction(node: Grammar.action_Node, indent: string): string {
-    const portName = node.childForFieldName("port_name");
-    const actionName = node.childForFieldName("name");
-    const actionArguments = node.childForFieldName("arguments").childrenForFieldName("expression") ?? [];
-    return `${indent}${formatExpression(portName)}.${formatExpression(actionName)}(${actionArguments
-        .map(formatExpression)
-        .join(", ")});`;
-}
+// function formatAction(node: Grammar.action_Node, indent: string): string {
+//     const portName = node.childForFieldName("port_name");
+//     const actionName = node.childForFieldName("name");
+//     const actionArguments = node.childForFieldName("arguments").childrenForFieldName("expression") ?? [];
+//     return `${indent}${formatExpression(portName)}.${formatExpression(actionName)}(${actionArguments
+//         .map(formatExpression)
+//         .join(", ")});`;
+// }
 
-function formatInterfaceAction(node: Grammar.interface_action_Node, indent: string): string {
-    return `${indent}${node.text};`;
-}
+// function formatInterfaceAction(node: Grammar.interface_action_Node, indent: string): string {
+//     return `${indent}${node.text};`;
+// }
 
-function formatAssign(node: Grammar.assign_Node, indent: string): string {
-    const lhs = node.childForFieldName("left");
-    const rhs = node.childForFieldName("right");
-    return `${indent}${formatExpression(lhs)} = ${formatExpression(rhs)};`;
-}
+// function formatAssign(node: Grammar.assign_Node, indent: string): string {
+//     const lhs = node.childForFieldName("left");
+//     const rhs = node.childForFieldName("right");
+//     return `${indent}${formatExpression(lhs)} = ${formatExpression(rhs)};`;
+// }
 
-function formatEvent(node: Grammar.event_Node, indent: string): string {
-    const direction = node.childForFieldName("direction");
-    const typeName = node.childForFieldName("type_name");
-    const eventName = node.childForFieldName("event_name");
-    const formals = node.childForFieldName("formals").childrenForFieldName("formal") ?? [];
+// function formatEvent(node: Grammar.event_Node, indent: string): string {
+//     const direction = node.childForFieldName("direction");
+//     const typeName = node.childForFieldName("type_name");
+//     const eventName = node.childForFieldName("event_name");
+//     const formals = node.childForFieldName("formals").childrenForFieldName("formal") ?? [];
 
-    return `${indent}${direction.text} ${formatExpression(typeName)} ${formatExpression(eventName)}(${formals
-        .map(formatExpression)
-        .join(", ")});`;
-}
+//     return `${indent}${direction.text} ${formatExpression(typeName)} ${formatExpression(eventName)}(${formals
+//         .map(formatExpression)
+//         .join(", ")});`;
+// }
 
 // function formatOn(node: Grammar.on_Node, indent: string): string {
 //     const triggers = node.childForFieldName("triggers").childrenForFieldName("trigger");
@@ -152,26 +152,26 @@ function formatEvent(node: Grammar.event_Node, indent: string): string {
 //     );
 // }
 
-function formatBinding(node: Grammar.binding_Node, indent: string): string {
-    const left = node.childForFieldName("left");
-    const right = node.childForFieldName("right");
-    return `${indent}${formatExpression(left)} <=> ${formatExpression(right)};`;
-}
+// function formatBinding(node: Grammar.binding_Node, indent: string): string {
+//     const left = node.childForFieldName("left");
+//     const right = node.childForFieldName("right");
+//     return `${indent}${formatExpression(left)} <=> ${formatExpression(right)};`;
+// }
 
-function formatInstance(node: Grammar.instance_Node, indent: string): string {
-    const type = node.childForFieldName("type");
-    const name = node.childForFieldName("name");
-    return `${indent}${formatExpression(type)} ${formatExpression(name)};`;
-}
+// function formatInstance(node: Grammar.instance_Node, indent: string): string {
+//     const type = node.childForFieldName("type");
+//     const name = node.childForFieldName("name");
+//     return `${indent}${formatExpression(type)} ${formatExpression(name)};`;
+// }
 
-function formatReturn(node: Grammar.return_Node, indent: string): string {
-    const expression = node.childForFieldName("expression");
-    if (expression) {
-        return `${indent}return ${formatExpression(expression)};`;
-    } else {
-        return `${indent}return;`;
-    }
-}
+// function formatReturn(node: Grammar.return_Node, indent: string): string {
+//     const expression = node.childForFieldName("expression");
+//     if (expression) {
+//         return `${indent}return ${formatExpression(expression)};`;
+//     } else {
+//         return `${indent}return;`;
+//     }
+// }
 
 // function formatFunction(node: Grammar.function_Node, indent: string): string {
 //     const type = node.childForFieldName("return_type");
@@ -207,10 +207,10 @@ function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
                 formatter.pushName(c.nodeText);
                 break;
             case "comment":
-                formatComment(c.currentNode as Grammar.comment_Node, formatter);
+                formatComment(c.currentNode, formatter);
                 break;
             case "interface_body":
-                formatInterfaceBody(c.currentNode as Grammar.interface_body_Node, formatter);
+                formatInterfaceBody(c.currentNode, formatter);
                 break;
             default:
                 throw `cant format interface member ${c.nodeType}`;
@@ -255,18 +255,18 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
     cursor.gotoFirstChild();
     do {
         switch (cursor.currentNode.type) {
-            case "{":
-                formatter.openScopedBlock();
-                break;
+            // case "{":
+            //     formatter.openScopedBlock();
+            //     break;
             case "enum":
                 formatter.startEnum();
                 break;
             case "scoped_name":
                 formatter.pushName(cursor.nodeText);
                 break;
-            case "}":
-                formatter.closeScopedBlock();
-                break;
+            // case "}":
+            //     formatter.closeScopedBlock();
+            //     break;
             case ";":
                 formatter.endEnum();
                 break;
@@ -276,7 +276,8 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
             case "fields":
                 if (cursor.gotoFirstChild()) {
                     do {
-                        switch (cursor.currentNode.type as string) {
+                        const c = cursor as Grammar.TypedCursorOfNode<Grammar.fields_Node>;
+                        switch (c.nodeType) {
                             case "{":
                                 formatter.openScopedBlock();
                                 break;
@@ -290,10 +291,11 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
                                 formatter.closeScopedBlock();
                                 break;
                             case "comment":
-                                formatComment(cursor.currentNode as Grammar.comment_Node, formatter);
+                                //formatComment(cursor.currentNode as unknown as Grammar.comment_Node, formatter);
+                                formatComment(c.currentNode, formatter);
                                 break;
                             default:
-                                throw `cant format enum field ${cursor.nodeType}`;
+                                throw `cant format enum field ${c.nodeType}`;
                         }
                     } while (cursor.gotoNextSibling());
 
@@ -338,16 +340,16 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
 //     );
 // }
 
-function formatImport(node: Grammar.import_Node, indent: string): string {
-    const fileName = node.childForFieldName("file_name");
-    return `${indent}import ${fileName.text};`;
-}
+// function formatImport(node: Grammar.import_Node, indent: string): string {
+//     const fileName = node.childForFieldName("file_name");
+//     return `${indent}import ${fileName.text};`;
+// }
 
-function formatExtern(node: Grammar.extern_Node, indent: string): string {
-    const name = node.childForFieldName("name");
-    const value = node.childForFieldName("value");
-    return `${indent}extern ${formatExpression(name)} ${formatExpression(value)}`;
-}
+// function formatExtern(node: Grammar.extern_Node, indent: string): string {
+//     const name = node.childForFieldName("name");
+//     const value = node.childForFieldName("value");
+//     return `${indent}extern ${formatExpression(name)} ${formatExpression(value)}`;
+// }
 
 // Expressions
 
@@ -367,14 +369,14 @@ function formatExpression(node: Grammar.AllNodes): string {
         case "var":
         case "var_name":
             return formatScopedName(node);
-        case "call":
-            return formatCall(node);
-        case "port_event":
-            return formatPortEvent(node);
-        case "literal":
-            return formatLiteral(node);
-        case "trigger":
-            return formatExpression(node.child(0));
+        // case "call":
+        //     return formatCall(node);
+        // case "port_event":
+        //     return formatPortEvent(node);
+        // case "literal":
+        //     return formatLiteral(node);
+        // case "trigger":
+        //     return formatExpression(node.child(0));
         case "dollars_content":
             return formatDollars(node);
         default:
@@ -398,26 +400,26 @@ function formatScopedName(
     return node.text.replace(/\s/g, "");
 }
 
-function formatCall(node: Grammar.call_Node): string {
-    const name = node.childForFieldName("name");
-    const callArgs = node.childForFieldName("arguments").childrenForFieldName("expression") ?? [];
-    return `${formatExpression(name)}(${callArgs.map(formatExpression).join(", ")})`;
-}
+// function formatCall(node: Grammar.call_Node): string {
+//     const name = node.childForFieldName("name");
+//     const callArgs = node.childForFieldName("arguments").childrenForFieldName("expression") ?? [];
+//     return `${formatExpression(name)}(${callArgs.map(formatExpression).join(", ")})`;
+// }
 
-function formatLiteral(node: Grammar.literal_Node): string {
-    return node.text;
-}
+// function formatLiteral(node: Grammar.literal_Node): string {
+//     return node.text;
+// }
 
-function formatPortEvent(node: Grammar.port_event_Node): string {
-    const port = node.childForFieldName("port");
-    const name = node.childForFieldName("name");
-    const formals = node.childForFieldName("formals");
+// function formatPortEvent(node: Grammar.port_event_Node): string {
+//     const port = node.childForFieldName("port");
+//     const name = node.childForFieldName("name");
+//     const formals = node.childForFieldName("formals");
 
-    return `${formatExpression(name)}(${formals.children
-        .filter(c => c.isNamed)
-        .map(n => formatExpression(n as Grammar.AllNodes))
-        .join(", ")})`;
-}
+//     return `${formatExpression(name)}(${formals.children
+//         .filter(c => c.isNamed)
+//         .map(n => formatExpression(n as Grammar.AllNodes))
+//         .join(", ")})`;
+// }
 
 function formatDollars(node: Grammar.dollars_content_Node): string {
     return node.text;
