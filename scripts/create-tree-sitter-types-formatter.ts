@@ -67,35 +67,62 @@ result.push(`interface BaseNode {
     text: string;
 }`);
 
-result.push(`interface UnnamedNode<T extends string> extends BaseNode {
+result.push(`interface UnnamedNode<T extends string, _Id extends number> extends BaseNode {
     type: T;
+    _id: _Id;
+    isNamed: false;
 }`);
 
 result.push(`interface Pattern extends BaseNode { type: "pattern"; }`);
 
 result.push(`interface TypedCursor<TNodes> {
-    currentNode: TNodes;
-    nodeType: AllNodes["type"];
-    nodeText: string;
+    readonly currentNode: TNodes;
+    readonly nodeType: AllNodes["type"];
+    readonly nodeText: string;
     gotoFirstChild(): boolean;
     gotoNextSibling(): boolean;
     gotoParent(): boolean;
-}`)
+}
+type WalkerNodes<TNode> = TNode extends { walk(): TypedCursor<infer TNodes> } ? TNodes : {_id: -1};
+type NamedNodes<TNodes> = Extract<TNodes, { isNamed: true }>;
+type NodeOfId<T> = Extract<AllNodes, { _id: T }>
+
+type CursorRecord<TNode extends { _id: number }> = { [K in TNode["_id"]]: TreeCursorOfType<NodeOfId<K>>}
+
+interface TreeCursorOfType<T extends AllNodes> {
+    nodeType: T["type"];
+    currentNode: T;
+    nodeText: string;
+}
+
+type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<WalkerNodes<TNode>>];
+`);
+const allTypes = new Set<string>();
+for (const extra of extras) {
+    if (extra.type === "SYMBOL") {
+        allTypes.add(typeOfNode(extra));
+    }
+}
+
+let nodeId = 0;
 
 for (const [type, rule] of Object.entries(rules))
 {
     result.push(`interface ${nameOfType(type)} extends BaseNode {`);
     result.push(`    type: "${type}";`);
+    result.push(`    _id: ${++nodeId}`);
+    result.push(`    isNamed: true;`)
     if (rule.type === "REPEAT" || rule.type === "CHOICE" || rule.type === "SEQ")
     {
         const childTypes = removeDuplicates(getAllChildNodes(rule, new Map()).map(typeOfNode));
+        for (const t of childTypes) allTypes.add(t);
         const extraTypes = extras.filter(e => e.type === "SYMBOL").map(typeOfNode);
         result.push(`    walk(): TypedCursor<${[...childTypes, ...extraTypes].join(" | ")}>`);
     }
     result.push("}");
 }
 
-result.push(`type AllNodes = ${Object.keys(rules).map(nameOfType).join(" | ")} | Pattern;`);
+result.push(`type AllNodes = ${[...allTypes.values()].join(" | ")} | Pattern;`);
 
 fs.writeFileSync(`${__dirname}/../src/format/tree-sitter-types-formatter.d.ts`, result.join("\n"));
 
@@ -174,7 +201,7 @@ function typeOfNode(node: RuleNode): string {
     }
     else if (node.type === "STRING")
     {
-        return `UnnamedNode<"${node.value}">`;
+        return `UnnamedNode<"${node.value}", ${++nodeId}>`;
     }
     else if (node.type === "SYMBOL")
     {

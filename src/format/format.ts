@@ -12,7 +12,7 @@ export async function format(source: InputSource): Promise<string> {
 
 // Statements
 
-function formatStatement(node: Grammar.AllNodes, formatter: Formatter) {
+function formatStatement(node: Grammar.NamedNodes<Grammar.AllNodes>, formatter: Formatter) {
     if (node.isError) {
         throw `Cannot format error node ${node.text}`;
     }
@@ -76,9 +76,13 @@ function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
 }
 
 function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
-    for (const c of root.children) {
-        formatStatement(c as unknown as Grammar.AllNodes, formatter);
+    const cursor = root.walk();
+    cursor.gotoFirstChild();
+    do
+    {
+        formatStatement(cursor.currentNode, formatter);
     }
+    while (cursor.gotoNextSibling());
 }
 
 // function formatVariable(node: Grammar.variable_Node, indent: string): string {
@@ -196,15 +200,16 @@ function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
 // }
 
 function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
-    const c = node.walk();
-    c.gotoFirstChild();
+    const cursor = node.walk();
+    cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
-        switch (c.currentNode.type) {
+        switch (c.nodeType) {
             case "interface":
                 formatter.startInterface();
                 break;
             case "scoped_name":
-                formatter.pushName(c.nodeText);
+                formatter.pushName(cursor.nodeText);
                 break;
             case "comment":
                 formatComment(c.currentNode, formatter);
@@ -213,39 +218,31 @@ function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
                 formatInterfaceBody(c.currentNode, formatter);
                 break;
             default:
-                throw `cant format interface member ${c.nodeType}`;
+                throw `cant format interface member ${cursor.nodeType}`;
         }
-    } while (c.gotoNextSibling());
-    // const name = node.childForFieldName("name");
-    // const body = node.childForFieldName("body");
-    // const childIndent = pushIndent(indent);
-    // formatter.startStatement("interface")
-    // return formatScopedBlock(
-    //     `interface ${formatExpression(name)}`,
-    //     body.children.filter(c => c.isNamed).map(n => formatStatement(n as Grammar.AllNodes, childIndent)),
-    //     indent
-    // );
+    } while (cursor.gotoNextSibling());
 }
 
 function formatInterfaceBody(node: Grammar.interface_body_Node, formatter: Formatter) {
     const cursor = node.walk();
     cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
-        switch (cursor.currentNode.type) {
+        switch (c.currentNode.type) {
             case "{":
                 formatter.openScopedBlock();
                 break;
             case "enum":
-                formatEnum(cursor.currentNode as Grammar.enum_Node, formatter);
+                formatEnum(c.currentNode, formatter);
                 break;
             case "}":
                 formatter.closeScopedBlock();
                 break;
             case "comment":
-                formatComment(cursor.currentNode as Grammar.comment_Node, formatter);
+                formatComment(c.currentNode, formatter);
                 break;
             default:
-                throw `cant format interface body member ${cursor.nodeType}`;
+                throw `cant format interface body member ${c.nodeType}`;
         }
     } while (cursor.gotoNextSibling());
 }
@@ -253,36 +250,31 @@ function formatInterfaceBody(node: Grammar.interface_body_Node, formatter: Forma
 function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
     const cursor = node.walk();
     cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
-        switch (cursor.currentNode.type) {
-            // case "{":
-            //     formatter.openScopedBlock();
-            //     break;
+        switch (c.nodeType) {
             case "enum":
                 formatter.startEnum();
                 break;
             case "scoped_name":
-                formatter.pushName(cursor.nodeText);
+                formatter.pushName(c.nodeText);
                 break;
-            // case "}":
-            //     formatter.closeScopedBlock();
-            //     break;
             case ";":
                 formatter.endEnum();
                 break;
             case "comment":
-                formatComment(cursor.currentNode as Grammar.comment_Node, formatter);
+                formatComment(c.currentNode, formatter);
                 break;
             case "fields":
                 if (cursor.gotoFirstChild()) {
                     do {
-                        const c = cursor as Grammar.TypedCursorOfNode<Grammar.fields_Node>;
-                        switch (c.nodeType) {
+                        const c2 = cursor as Grammar.CursorPosition<Grammar.fields_Node>;
+                        switch (c2.nodeType) {
                             case "{":
                                 formatter.openScopedBlock();
                                 break;
                             case "name":
-                                formatter.pushName(cursor.nodeText);
+                                formatter.pushName(c2.nodeText);
                                 break;
                             case ",":
                                 formatter.comma();
@@ -291,11 +283,11 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
                                 formatter.closeScopedBlock();
                                 break;
                             case "comment":
-                                //formatComment(cursor.currentNode as unknown as Grammar.comment_Node, formatter);
-                                formatComment(c.currentNode, formatter);
+                                formatComment(c2.currentNode, formatter);
                                 break;
                             default:
-                                throw `cant format enum field ${c.nodeType}`;
+                                // @ts-ignore
+                                throw `cant format enum field ${c2.nodeType}`;
                         }
                     } while (cursor.gotoNextSibling());
 
