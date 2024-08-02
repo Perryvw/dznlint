@@ -8,8 +8,8 @@ exports[`format 1`] = `
         A,
         B
     };
-}
-"
+    
+}"
 `;
 
 exports[`format file files/component.dzn 1`] = `
@@ -201,6 +201,50 @@ component HelloWorldSystem
 "
 `;
 
-exports[`multi-line comments 1`] = ``;
+exports[`multi-line comments 1`] = `
+"/* Hi
+ * Hello
+ */
+interface I /* sup */
+{
+    enum E
+    {
+        /* foo */
+        A,
+        B /*bar
+         * foo
+         */
+    };
+    /* Trailing E
+     * 
+     * blala */
+} /*
+ * Trailing I
+ */"
+`;
 
-exports[`single-line comments 1`] = ``;
+exports[`single-line comments 1`] = `
+"// Hi
+interface I // Hello
+{
+    enum E
+    {
+        // Foo
+        A,
+        B,
+        //Bar
+        C,
+        // Baz
+        // Buzz
+        D
+    };
+    // Trailing E
+    behavior
+    {
+        void foo()
+        {
+            
+        }
+    } // Trailing I
+    "
+`;

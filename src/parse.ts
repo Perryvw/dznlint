@@ -25,6 +25,8 @@ export function parseDznSource(source: InputSource): { ast?: parser.file; diagno
 
 import * as Parser from "web-tree-sitter";
 
+export type TreeSitterNode = Parser.SyntaxNode;
+
 let treeSitterParser: Parser | undefined;
 
 export async function treeSitterParse(source: InputSource): Promise<Parser.SyntaxNode> {
@@ -37,12 +39,4 @@ export async function treeSitterParse(source: InputSource): Promise<Parser.Synta
 
     const tree = treeSitterParser.parse(source.fileContent);
     return tree.rootNode;
-}
-
-function visitFile(n: Parser.SyntaxNode): parser.file {
-    console.log(n.toString());
-    return {
-        kind: parser.ASTKinds.file,
-        statements: [],
-    };
 }
