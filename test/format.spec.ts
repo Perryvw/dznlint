@@ -80,20 +80,17 @@ async function testFormat(formatTest: { input: string }) {
     const treeBeforeFormat = await treeSitterParse({ fileContent: formatTest.input });
     const treeAfterFormat = await treeSitterParse({ fileContent: result });
 
-    expectEquivalentTrees(treeBeforeFormat, treeAfterFormat);
+    expectEquivalentTrees(treeAfterFormat, treeBeforeFormat);
 }
 
-function expectEquivalentTrees(tree1: TreeSitterNode, tree2: TreeSitterNode) {
-    if (tree1.type !== tree2.type)
-    {
-        expect(tree1.toString()).toBe(tree2.toString());
+function expectEquivalentTrees(actual: TreeSitterNode, expected: TreeSitterNode) {
+    if (actual.type !== expected.type) {
+        expect(actual.toString()).toBe(expected.toString());
     }
-    if (tree1.childCount !== tree2.childCount)
-    {
-        expect(tree1.toString()).toBe(tree2.toString());
+    if (actual.childCount !== expected.childCount) {
+        expect(actual.toString()).toBe(expected.toString());
     }
-    for (let i = 0; i < tree1.childCount; i++)
-    {
-        expectEquivalentTrees(tree1.child(i)!, tree2.child(i)!);
+    for (let i = 0; i < actual.childCount; i++) {
+        expectEquivalentTrees(actual.child(i)!, expected.child(i)!);
     }
 }

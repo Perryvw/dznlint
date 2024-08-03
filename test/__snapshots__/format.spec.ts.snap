@@ -8,8 +8,7 @@ exports[`format 1`] = `
         A,
         B
     };
-    
-}"
+    }"
 `;
 
 exports[`format file files/component.dzn 1`] = `
@@ -241,10 +240,11 @@ interface I // Hello
     // Trailing E
     behavior
     {
-        void foo()
+        void foo( /* hello */ in bool b)
         {
             
         }
-    } // Trailing I
-    "
+    }
+} // Trailing I
+"
 `;

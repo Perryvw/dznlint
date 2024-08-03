@@ -3,7 +3,7 @@ enum PrintingType {
     Enum,
     Interface,
     Behavior,
-    Function
+    Function,
 }
 
 enum Token {
@@ -18,7 +18,7 @@ enum Token {
     Semicolon,
     NewLine,
     BraceOpen,
-    BraceClose
+    BraceClose,
 }
 
 export class Formatter {
@@ -39,42 +39,57 @@ export class Formatter {
     }
     public endInterface() {
         this.currentType.pop();
+        this.popIndent();
+        this.requirePrecedingNewLine();
+        this.output.push("}");
+        this.previousToken = Token.BraceClose;
     }
 
     // Behavior
 
     public startBehavior() {
         this.currentType.push(PrintingType.Behavior);
-        this.keyword("behavior")
+        this.keyword("behavior");
     }
 
-    public endBehavior()
-    {
+    public endBehavior() {
         this.currentType.pop();
+        this.popIndent();
+        this.requirePrecedingNewLine();
+        this.output.push("}");
+        this.previousToken = Token.BraceClose;
+    }
+
+    // On
+
+    public startOn() {
+        this.requirePrecedingNewLine();
+        this.output.push("on");
+        this.previousToken = Token.Keyword;
     }
 
     // Function
 
-    public startFunction(returnType: string)
-    {
+    public startFunction(returnType: string) {
         this.currentType.push(PrintingType.Function);
         this.requirePrecedingNewLine();
         this.name(returnType);
     }
 
-    public endFunction()
-    {
+    public endFunction() {
         this.currentType.push();
     }
 
-    public startFormals()
-    {
+    public startFormals() {
         this.output.push("(");
     }
 
-    public endFormals()
-    {
+    public endFormals() {
         this.output.push(")");
+    }
+
+    public nextFormal() {
+        this.comma();
     }
 
     // Enum
@@ -108,18 +123,14 @@ export class Formatter {
     public multiLineComment(comment: string) {
         const lines = comment.split("\n").map(l => l.trim());
         if (lines.length > 0) {
-            for (let i = 1; i < lines.length; i++)
-            {
-                lines[i] = lines[i].startsWith("*")
-                    ? ` ${lines[i]}`
-                    : ` * ${lines[i]}`;
+            for (let i = 1; i < lines.length; i++) {
+                lines[i] = lines[i].startsWith("*") ? ` ${lines[i]}` : ` * ${lines[i]}`;
             }
         }
 
         this.requirePrecedingSpace();
         this.output.push(lines[0]);
-        for (let i = 1; i < lines.length; i++)
-        {
+        for (let i = 1; i < lines.length; i++) {
             this.newLine();
             this.output.push(lines[i]);
         }
@@ -140,7 +151,7 @@ export class Formatter {
         this.output.push("}");
         this.previousToken = Token.BraceClose;
     }
-    
+
     public name(name: string) {
         this.requirePrecedingSpace();
         this.output.push(name);
@@ -156,8 +167,7 @@ export class Formatter {
     public comma() {
         this.output.push(",");
         this.previousToken = Token.Comma;
-        if (this.peekCurrentType() === PrintingType.Enum)
-        {
+        if (this.peekCurrentType() === PrintingType.Enum) {
             this.newLine();
         }
     }
@@ -178,15 +188,12 @@ export class Formatter {
 
     // Helpers
 
-    private requirePrecedingNewLine()
-    {
-        if (this.previousToken !== Token.NewLine)
-        {
+    private requirePrecedingNewLine() {
+        if (this.previousToken !== Token.NewLine) {
             this.newLine();
         }
     }
-    private requirePrecedingSpace()
-    {
+    private requirePrecedingSpace() {
         if (this.previousToken !== Token.NewLine) {
             this.output.push(" ");
         }
@@ -202,5 +209,4 @@ export class Formatter {
     private peekCurrentType(): PrintingType {
         return this.currentType[this.currentType.length - 1];
     }
-
 }
