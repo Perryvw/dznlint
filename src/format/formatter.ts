@@ -1,24 +1,34 @@
 enum PrintingType {
     File,
     Enum,
+    Component,
     Interface,
+    Event,
     Behavior,
+    System,
+    Port,
+    Instance,
+    Binding,
     Function,
 }
 
 enum Token {
-    Enum,
-    Interface,
-    Behavior,
     Name,
     Keyword,
+    Literal,
     SingleLineComment,
     MultiLineComment,
     Comma,
     Semicolon,
     NewLine,
+    Dot,
     BraceOpen,
     BraceClose,
+    ParenOpen,
+    ParenClose,
+    BracketOpen,
+    BracketClose,
+    Operator,
 }
 
 export class Formatter {
@@ -29,35 +39,124 @@ export class Formatter {
 
     // Component
 
+    public startComponent() {
+        this.requirePrecedingNewLine();
+        this.keyword("component");
+        this.currentType.push(PrintingType.Component);
+    }
+
+    public endComponent() {
+        this.currentType.pop();
+        this.closeScopedBlock();
+    }
+
     // Interface
 
     public startInterface() {
         this.requirePrecedingNewLine();
         this.keyword("interface");
         this.currentType.push(PrintingType.Interface);
-        this.previousToken = Token.Interface;
     }
     public endInterface() {
         this.currentType.pop();
-        this.popIndent();
+        this.closeScopedBlock();
+        this.newLine();
+    }
+
+    public startEvent(direction: string) {
         this.requirePrecedingNewLine();
-        this.output.push("}");
-        this.previousToken = Token.BraceClose;
+        this.keyword(direction);
+        this.currentType.push(PrintingType.Event);
+    }
+
+    public endEvent() {
+        this.semicolon();
+        this.currentType.pop();
     }
 
     // Behavior
 
     public startBehavior() {
+        this.requirePrecedingNewLine();
         this.currentType.push(PrintingType.Behavior);
         this.keyword("behavior");
     }
 
     public endBehavior() {
         this.currentType.pop();
-        this.popIndent();
+        this.closeScopedBlock();
+    }
+
+    public startVariable() {
         this.requirePrecedingNewLine();
-        this.output.push("}");
-        this.previousToken = Token.BraceClose;
+    }
+
+    public endVariable() {
+        this.semicolon();
+    }
+
+    public startAssignment() {
+        this.requirePrecedingNewLine();
+    }
+
+    public endAssignment() {
+        this.semicolon();
+    }
+
+    public startGuard() {
+        this.requirePrecedingNewLine();
+        this.output.push("[");
+    }
+
+    public endGuard() {
+        this.output.push("]");
+    }
+
+    public nextTrigger() {
+        this.comma();
+    }
+
+    // System
+
+    public startSystem() {
+        this.requirePrecedingNewLine();
+        this.currentType.push(PrintingType.System);
+        this.keyword("system");
+    }
+
+    public endSystem() {
+        this.currentType.pop();
+        this.closeScopedBlock();
+    }
+
+    public startPort(direction: string) {
+        this.requirePrecedingNewLine();
+        this.currentType.push(PrintingType.Port);
+        this.keyword(direction);
+    }
+
+    public endPort() {
+        this.currentType.pop();
+    }
+
+    public startInstance() {
+        this.requirePrecedingNewLine();
+        this.currentType.push(PrintingType.Instance);
+    }
+
+    public endInstance() {
+        this.semicolon();
+        this.currentType.pop();
+    }
+
+    public startBinding() {
+        this.requirePrecedingNewLine();
+        this.currentType.push(PrintingType.Binding);
+    }
+
+    public endBinding() {
+        this.semicolon();
+        this.currentType.pop();
     }
 
     // On
@@ -71,9 +170,10 @@ export class Formatter {
     // Function
 
     public startFunction(returnType: string) {
+        this.requirePrecedingNewLine();
         this.currentType.push(PrintingType.Function);
         this.requirePrecedingNewLine();
-        this.name(returnType);
+        this.type(returnType);
     }
 
     public endFunction() {
@@ -81,15 +181,20 @@ export class Formatter {
     }
 
     public startFormals() {
-        this.output.push("(");
+        this.openParen();
     }
 
     public endFormals() {
-        this.output.push(")");
+        this.closeParen();
     }
 
     public nextFormal() {
         this.comma();
+    }
+
+    public return() {
+        this.requirePrecedingNewLine();
+        this.keyword("return");
     }
 
     // Enum
@@ -98,7 +203,6 @@ export class Formatter {
         this.requirePrecedingNewLine();
         this.keyword("enum");
         this.currentType.push(PrintingType.Enum);
-        this.previousToken = Token.Enum;
     }
     public endEnum() {
         this.currentType.pop();
@@ -110,6 +214,11 @@ export class Formatter {
         this.requirePrecedingNewLine();
         this.output.push(name);
         this.previousToken = Token.Name;
+    }
+
+    public nextEnumMember() {
+        this.comma();
+        this.newLine();
     }
 
     // Comments
@@ -158,23 +267,77 @@ export class Formatter {
         this.previousToken = Token.Name;
     }
 
+    public type(name: string) {
+        this.requirePrecedingSpace();
+        this.output.push(name);
+        this.previousToken = Token.Name;
+    }
+
     public keyword(keyword: string) {
         this.requirePrecedingSpace();
         this.output.push(keyword);
         this.previousToken = Token.Keyword;
     }
 
+    public literal(literal: string) {
+        this.requirePrecedingSpace();
+        this.output.push(literal);
+        this.previousToken = Token.Literal;
+    }
+
+    public binaryOperator(operator: string) {
+        this.requirePrecedingSpace();
+        this.output.push(operator);
+        this.previousToken = Token.Operator;
+    }
+
     public comma() {
         this.output.push(",");
         this.previousToken = Token.Comma;
-        if (this.peekCurrentType() === PrintingType.Enum) {
-            this.newLine();
-        }
     }
+
+    public dot() {
+        this.output.push(".");
+        this.previousToken = Token.Dot;
+    }
+
+    public colon() {
+        this.output.push(":");
+    }
+
     public semicolon() {
         this.output.push(";");
         this.previousToken = Token.Semicolon;
     }
+
+    public dollar() {
+        this.output.push("$");
+    }
+
+    public verbatim(str: string) {
+        this.output.push(str);
+    }
+
+    public openParen() {
+        this.output.push("(");
+        this.previousToken = Token.ParenOpen;
+    }
+
+    public closeParen() {
+        this.output.push(")");
+        this.previousToken = Token.ParenClose;
+    }
+
+    public openBracket() {
+        this.output.push("[");
+        this.previousToken = Token.BracketOpen;
+    }
+
+    public closeBracket() {
+        this.output.push("]");
+        this.previousToken = Token.BracketClose;
+    }
+
     public newLine() {
         this.output.push("\n", this.indent);
         this.previousToken = Token.NewLine;
@@ -188,13 +351,18 @@ export class Formatter {
 
     // Helpers
 
-    private requirePrecedingNewLine() {
+    public requirePrecedingNewLine() {
         if (this.previousToken !== Token.NewLine) {
             this.newLine();
         }
     }
     private requirePrecedingSpace() {
-        if (this.previousToken !== Token.NewLine) {
+        if (
+            this.previousToken !== Token.NewLine &&
+            this.previousToken !== Token.ParenOpen &&
+            this.previousToken !== Token.BracketOpen &&
+            this.previousToken !== Token.Dot
+        ) {
             this.output.push(" ");
         }
     }

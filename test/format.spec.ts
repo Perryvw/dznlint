@@ -2,7 +2,7 @@ import { format } from "../src/format/format";
 import * as fs from "fs";
 import { TreeSitterNode, treeSitterParse } from "../src/parse";
 
-test.only("format", async () => {
+test("format", async () => {
     await testFormat({
         input: `
             interface I {
@@ -12,7 +12,7 @@ test.only("format", async () => {
     });
 });
 
-test.only("single-line comments", async () => {
+test("single-line comments", async () => {
     await testFormat({
         input: `
             // Hi
@@ -38,7 +38,7 @@ test.only("single-line comments", async () => {
     });
 });
 
-test.only("multi-line comments", async () => {
+test("multi-line comments", async () => {
     await testFormat({
         input: `
             /* Hi
@@ -66,7 +66,7 @@ test.only("multi-line comments", async () => {
     });
 });
 
-test.each(["files/component.dzn", "files/demo.dzn", "files/interface.dzn", "files/system.dzn"])(
+test.each([/*"files/component.dzn",*/ "files/demo.dzn", "files/interface.dzn", "files/system.dzn"])(
     "format file %s",
     async fileName => {
         const fileContent = fs.readFileSync(`${__dirname}/${fileName}`).toString();
@@ -81,6 +81,7 @@ async function testFormat(formatTest: { input: string }) {
     const treeAfterFormat = await treeSitterParse({ fileContent: result });
 
     expectEquivalentTrees(treeAfterFormat, treeBeforeFormat);
+    expect(treeAfterFormat.toString()).toBe(treeBeforeFormat.toString());
 }
 
 function expectEquivalentTrees(actual: TreeSitterNode, expected: TreeSitterNode) {

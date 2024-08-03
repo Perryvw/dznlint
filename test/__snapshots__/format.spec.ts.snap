@@ -8,49 +8,13 @@ exports[`format 1`] = `
         A,
         B
     };
-    }"
-`;
-
-exports[`format file files/component.dzn 1`] = `
-"import interface.dzn;
-component HelloWorld
-{
-    behavior
-    {
-        enum State
-        {
-            Hello,
-            World
-        };
-        State s = State.Hello;
-                [s.Hello]
-        {
-            
-            {
-            on hello():             
-            {
-            s = State.World;
-            }
-            }
-        }
-                [s.World]
-        {
-            
-            {
-            on world():             
-            {
-            api.helloWorld();
-            s = State.Hello;
-            }
-            }
-        }
-    }
+    
 }
 "
 `;
 
 exports[`format file files/demo.dzn 1`] = `
-"extern int int
+"extern int$int$;
 interface HelloWorld
 {
     in void hello();
@@ -64,32 +28,27 @@ interface HelloWorld
             World
         };
         State s = State.Hello;
-                [s.Hello]
+        [s.Hello]
         {
-            
+            on hello:
             {
-            on hello:             
-            {
-            s = State.World;
+                s = State.World;
             }
-            on world: illegal
-            }
+            on world: illegal;
         }
-                [s.World]
+        [s.World]
         {
-            
+            on world:
             {
-            on world:             
-            {
-            helloWorld;
-            s = State.Hello;
-            }
+                helloWorld;
+                s = State.Hello;
             }
         }
     }
 }
 component HelloWorld
 {
+    provides IHelloWorld api;
     behavior
     {
         enum State
@@ -98,42 +57,41 @@ component HelloWorld
             World
         };
         State s = State.Hello;
-                [s.Hello]
+        [s.Hello]
         {
-            
+            on api.hello():
             {
-            on hello():             
-            {
-            s = State.World;
+                s = State.World;
             }
-            on hello():             
+            on api.hello():
             {
-            s = State.World;
-            Result r = doSomething();
-            }
+                s = State.World;
+                Result r = doSomething();
             }
         }
-                [s.World]
+        [s.World]
         {
-            
+            on api.world():
             {
-            on world():             
-            {
-            api.helloWorld();
-            s = State.Hello;
-            }
+                api.helloWorld();
+                s = State.Hello;
             }
         }
-        int myFunction()
+        int myFunction(in int s, in bool t, in bool t)
         {
             return 4;
             api.foo();
         }
-        int myOtherFunction() {}
+        int myOtherFunction(int t)
+        {
+            
+        }
     }
 }
 component HelloWorldSystem
 {
+    provides IHelloWorld api;
+    requires IFooBar foobar;
     system
     {
         HelloWorld helloWorld;
@@ -160,25 +118,19 @@ exports[`format file files/interface.dzn 1`] = `
             World
         };
         State s = State.Hello;
-                [s.Hello]
+        [s.Hello]
         {
-            
+            on hello:
             {
-            on hello:             
-            {
-            s = State.World;
-            }
+                s = State.World;
             }
         }
-                [s.World]
+        [s.World]
         {
-            
+            on world:
             {
-            on world:             
-            {
-            helloWorld;
-            s = State.Hello;
-            }
+                helloWorld;
+                s = State.Hello;
             }
         }
     }
@@ -190,6 +142,8 @@ exports[`format file files/system.dzn 1`] = `
 "import component.dzn;
 component HelloWorldSystem
 {
+    provides IHelloWorld api;
+    requires IRequired required;
     system
     {
         HelloWorld helloWorld;
@@ -217,9 +171,11 @@ interface I /* sup */
     /* Trailing E
      * 
      * blala */
-} /*
+}
+/*
  * Trailing I
- */"
+ */
+"
 `;
 
 exports[`single-line comments 1`] = `
@@ -240,11 +196,12 @@ interface I // Hello
     // Trailing E
     behavior
     {
-        void foo( /* hello */ in bool b)
+        void foo(/* hello */ in bool b)
         {
             
         }
     }
-} // Trailing I
+}
+// Trailing I
 "
 `;
