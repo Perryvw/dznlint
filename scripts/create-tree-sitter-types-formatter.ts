@@ -57,7 +57,19 @@ interface SeqRule {
     members: RuleNode[];
 }
 
-type RuleNode = AliasNode | BlankNode | ChoiceRule | PatternRule | PrecNode | PrecLeftNode | RepeatRule | SeqRule | PatternNode | FieldNode | StringNode | SymbolReference;
+type RuleNode =
+    | AliasNode
+    | BlankNode
+    | ChoiceRule
+    | PatternRule
+    | PrecNode
+    | PrecLeftNode
+    | RepeatRule
+    | SeqRule
+    | PatternNode
+    | FieldNode
+    | StringNode
+    | SymbolReference;
 
 result.push('import type * as Parser from "web-tree-sitter";');
 
@@ -106,14 +118,12 @@ for (const extra of extras) {
 
 let nodeId = 0;
 
-for (const [type, rule] of Object.entries(rules))
-{
+for (const [type, rule] of Object.entries(rules)) {
     result.push(`interface ${nameOfType(type)} extends BaseNode {`);
     result.push(`    type: "${type}";`);
     result.push(`    _id: ${++nodeId}`);
-    result.push(`    isNamed: true;`)
-    if (rule.type === "REPEAT" || rule.type === "CHOICE" || rule.type === "SEQ")
-    {
+    result.push(`    isNamed: true;`);
+    if (rule.type === "REPEAT" || rule.type === "CHOICE" || rule.type === "SEQ") {
         const childTypes = removeDuplicates(getAllChildNodes(rule, new Map()).map(typeOfNode));
         for (const t of childTypes) allTypes.add(t);
         const extraTypes = extras.filter(e => e.type === "SYMBOL").map(typeOfNode);
@@ -135,8 +145,7 @@ function nameOfType(type: string): string {
     return `${type}_Node`;
 }
 
-function getAllChildNodes(node: RuleNode, seen: Map<string, RuleNode[]>) : RuleNode[]
-{
+function getAllChildNodes(node: RuleNode, seen: Map<string, RuleNode[]>): RuleNode[] {
     switch (node.type) {
         case "ALIAS":
             return [node];
@@ -152,30 +161,25 @@ function getAllChildNodes(node: RuleNode, seen: Map<string, RuleNode[]>) : RuleN
         case "STRING":
             return [node];
         case "SYMBOL":
-            if (!node.name.startsWith("_"))
-            {
+            if (!node.name.startsWith("_")) {
                 return [node];
-            }
-            else {
-                if (!seen.has(node.name))
-                {
+            } else {
+                if (!seen.has(node.name)) {
                     seen.set(node.name, []);
                     const ns = getAllChildNodes(rules[node.name], seen);
                     seen.set(node.name, ns);
                     return ns;
-                }
-                else
-                {
+                } else {
                     return [];
                 }
-        }
-            
-        case "PREC": 
-        case "PREC_LEFT": 
+            }
+
+        case "PREC":
+        case "PREC_LEFT":
             return getAllChildNodes(node.content, seen);
         case "PATTERN":
             return [node];
-        case "BLANK": 
+        case "BLANK":
             return [];
         default:
             // @ts-ignore
@@ -187,28 +191,18 @@ function typeOfNode(node: RuleNode): string {
     if (node === undefined) {
         console.log("HUH");
     }
-    if (node.type === "ALIAS")
-    {
-        return typeOfNode(getAllChildNodes(node.content, new Map())[0]);
+    if (node.type === "ALIAS") {
+        return getAllChildNodes(node.content, new Map()).map(typeOfNode).join(" | ");
     }
-    if (node.type === "FIELD")
-    {
-        return typeOfNode(getAllChildNodes(node.content, new Map())[0]);
-    }
-    else if (node.type === "PATTERN")
-    {
-        return 'Pattern';
-    }
-    else if (node.type === "STRING")
-    {
+    if (node.type === "FIELD") {
+        return getAllChildNodes(node.content, new Map()).map(typeOfNode).join(" | ");
+    } else if (node.type === "PATTERN") {
+        return "Pattern";
+    } else if (node.type === "STRING") {
         return `UnnamedNode<"${node.value}", ${++nodeId}>`;
-    }
-    else if (node.type === "SYMBOL")
-    {
+    } else if (node.type === "SYMBOL") {
         return nameOfType(node.name);
-    }
-    else
-    {
+    } else {
         throw `unknown node type ${node.type}`;
     }
 }
