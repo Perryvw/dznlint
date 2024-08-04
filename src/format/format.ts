@@ -83,7 +83,11 @@ function formatNamespace(node: Grammar.namespace_Node, formatter: Formatter) {
     do {
         switch (c.nodeType) {
             case "namespace":
-                formatter.keyword("namespace");
+                if (c.currentNode.isNamed) {
+                    formatNamespace(c.currentNode, formatter);
+                } else {
+                    formatter.keyword("namespace");
+                }
                 break;
             case "compound_name":
                 formatCompoundName(c.currentNode, formatter);
@@ -1523,7 +1527,48 @@ function formatReply(node: Grammar.reply_Node, formatter: Formatter) {
 // Expressions
 
 function formatUnaryExpression(node: Grammar.unary_expression_Node, formatter: Formatter) {
-    throw "TODO unary expression";
+    const cursor = node.walk();
+    cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
+    do {
+        switch (c.nodeType) {
+            case "!":
+            case "-":
+                formatter.unaryOperator(c.nodeText);
+                break;
+            case "action":
+                formatAction(c.currentNode, formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(c.currentNode, formatter);
+                break;
+            case "call":
+                formatCall(c.currentNode, formatter);
+                break;
+            case "compound_name":
+                formatCompoundName(c.currentNode, formatter);
+                break;
+            case "dollars":
+                formatDollars(c.currentNode, formatter);
+                break;
+            case "group":
+                formatGroup(c.currentNode, formatter);
+                break;
+            case "literal":
+                formatter.literal(c.nodeText);
+                break;
+            case "unary_expression":
+                formatUnaryExpression(c.currentNode, formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            default:
+                assertNever(c);
+                throw `cannot format binary expression child ${cursor.nodeType}`;
+        }
+    } while (cursor.gotoNextSibling());
 }
 
 function formatBinaryExpression(node: Grammar.binary_expression_Node, formatter: Formatter) {

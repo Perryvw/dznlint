@@ -29,7 +29,8 @@ enum Token {
     ParenClose,
     BracketOpen,
     BracketClose,
-    Operator,
+    BinaryOperator,
+    UnaryOperator,
 }
 
 export class Formatter {
@@ -288,7 +289,13 @@ export class Formatter {
     public binaryOperator(operator: string) {
         this.requirePrecedingSpace();
         this.output.push(operator);
-        this.previousToken = Token.Operator;
+        this.previousToken = Token.BinaryOperator;
+    }
+
+    public unaryOperator(operator: string) {
+        this.requirePrecedingSpace();
+        this.output.push(operator);
+        this.previousToken = Token.UnaryOperator;
     }
 
     public comma() {
