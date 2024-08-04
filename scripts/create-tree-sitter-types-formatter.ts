@@ -87,6 +87,11 @@ result.push(`interface UnnamedNode<T extends string, _Id extends number> extends
 
 result.push(`interface Pattern extends BaseNode { type: "pattern"; }`);
 
+result.push(`interface ERROR_Node extends BaseNode {
+    type: "ERROR";
+    _id: -10;
+}`);
+
 result.push(`interface TypedCursor<TNodes> {
     readonly currentNode: TNodes;
     readonly nodeType: AllNodes["type"];
@@ -133,12 +138,12 @@ for (const [type, rule] of Object.entries(rules)) {
         const childTypes = removeDuplicates(getAllChildNodes(rule, new Map()).map(typeOfNode));
         for (const t of childTypes) allTypes.add(t);
         const extraTypes = extras.filter(e => e.type === "SYMBOL").map(typeOfNode);
-        result.push(`    walk(): TypedCursor<${[...childTypes, ...extraTypes].join(" | ")}>`);
+        result.push(`    walk(): TypedCursor<${[...childTypes, ...extraTypes, "ERROR_Node"].join(" | ")}>`);
     }
     result.push("}");
 }
 
-result.push(`type AllNodes = ${[...allTypes.values()].join(" | ")} | Pattern;`);
+result.push(`type AllNodes = ${[...allTypes.values()].join(" | ")} | Pattern | ERROR_Node;`);
 
 fs.writeFileSync(`${__dirname}/../src/format/tree-sitter-types-formatter.d.ts`, result.join("\n"));
 

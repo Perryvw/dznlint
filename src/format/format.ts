@@ -59,6 +59,9 @@ function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
                     formatter.requirePrecedingNewLine();
                     formatComment(c.currentNode, formatter);
                     break;
+                case "ERROR":
+                    formatter.verbatim(c.nodeText);
+                    break;
                 default:
                     assertNever(c);
                     throw `cannot format root child ${cursor.nodeType}`;
@@ -117,6 +120,9 @@ function formatNamespace(node: Grammar.namespace_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format interface member ${cursor.nodeType}`;
@@ -142,6 +148,9 @@ function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -181,6 +190,9 @@ function formatInterfaceBody(node: Grammar.interface_body_Node, formatter: Forma
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format interface body child ${cursor.nodeType}`;
@@ -209,8 +221,12 @@ function formatEvent(node: Grammar.event_Node, formatter: Formatter) {
             case ";":
                 formatter.endEvent();
                 break;
+            // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -234,9 +250,6 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
             case ";":
                 formatter.endEnum();
                 break;
-            case "comment":
-                formatComment(c.currentNode, formatter);
-                break;
             case "fields":
                 cursor.gotoFirstChild();
                 const c2 = cursor as Grammar.CursorPosition<typeof c.currentNode>;
@@ -254,8 +267,12 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
                         case "}":
                             formatter.closeScopedBlock();
                             break;
+                        // generics
                         case "comment":
                             formatComment(c2.currentNode, formatter);
+                            break;
+                        case "ERROR":
+                            formatter.verbatim(c.nodeText);
                             break;
                         default:
                             assertNever(c2);
@@ -265,6 +282,13 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
 
                 // back up to parent
                 cursor.gotoParent();
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -294,9 +318,6 @@ function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
             case "scoped_name":
                 formatter.name(c.nodeText);
                 break;
-            case "comment":
-                formatComment(c.currentNode, formatter);
-                break;
             case "body":
                 const c2 = cursor as Grammar.CursorPosition<typeof c.currentNode>;
                 cursor.gotoFirstChild();
@@ -308,8 +329,12 @@ function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
                         case "system":
                             formatSystem(c2.currentNode, formatter);
                             break;
+                        // generics
                         case "comment":
                             formatComment(c2.currentNode, formatter);
+                            break;
+                        case "ERROR":
+                            formatter.verbatim(c.nodeText);
                             break;
                         default:
                             assertNever(c2);
@@ -318,6 +343,13 @@ function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
                 } while (cursor.gotoNextSibling());
 
                 cursor.gotoParent();
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -351,8 +383,12 @@ function formatPort(node: Grammar.port_Node, formatter: Formatter) {
                 formatter.semicolon();
                 formatter.endPort();
                 break;
+            // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -387,8 +423,12 @@ function formatSystem(node: Grammar.system_Node, formatter: Formatter) {
                         case "instance":
                             formatInstance(c2.currentNode, formatter);
                             break;
+                        // generics
                         case "comment":
                             formatComment(c2.currentNode, formatter);
+                            break;
+                        case "ERROR":
+                            formatter.verbatim(c.nodeText);
                             break;
                         default:
                             assertNever(c2);
@@ -398,8 +438,12 @@ function formatSystem(node: Grammar.system_Node, formatter: Formatter) {
 
                 cursor.gotoParent();
                 break;
+            // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -430,6 +474,9 @@ function formatBinding(node: Grammar.binding_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format binding child ${cursor.nodeType}`;
@@ -458,6 +505,9 @@ function formatInstance(node: Grammar.instance_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -531,6 +581,9 @@ function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
                             formatter.requirePrecedingNewLine();
                             formatComment(c2.currentNode, formatter);
                             break;
+                        case "ERROR":
+                            formatter.verbatim(c.nodeText);
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format behavior body child ${cursor.nodeType}`;
@@ -543,6 +596,9 @@ function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -636,6 +692,9 @@ function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format guard child ${cursor.nodeType}`;
@@ -692,6 +751,9 @@ function formatVariable(node: Grammar.variable_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format variable child ${cursor.nodeType}`;
@@ -722,6 +784,9 @@ function formatFunction(node: Grammar.function_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format function child ${cursor.nodeType}`;
@@ -751,6 +816,9 @@ function formatFormals(node: Grammar.formals_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format formals child ${cursor.nodeType}`;
@@ -776,6 +844,9 @@ function formatFormal(node: Grammar.formal_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -854,6 +925,9 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format compound child ${cursor.nodeType}`;
@@ -900,6 +974,9 @@ function formatReturn(node: Grammar.return_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -973,6 +1050,9 @@ function formatOn(node: Grammar.on_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format on child ${cursor.nodeType}`;
@@ -1041,6 +1121,9 @@ function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format blocking child ${cursor.nodeType}`;
@@ -1075,6 +1158,9 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
                         case "comment":
                             formatComment(c2.currentNode, formatter);
                             break;
+                        case "ERROR":
+                            formatter.verbatim(c.nodeText);
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format trigger child ${cursor.nodeType}`;
@@ -1089,6 +1175,9 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1119,6 +1208,9 @@ function formatPortEvent(node: Grammar.port_event_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1157,6 +1249,9 @@ function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: For
                         case "comment":
                             formatComment(c2.currentNode, formatter);
                             break;
+                        case "ERROR":
+                            formatter.verbatim(c.nodeText);
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format trigger formal child ${cursor.nodeType}`;
@@ -1168,6 +1263,9 @@ function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: For
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1221,6 +1319,9 @@ function formatAssign(node: Grammar.assign_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1280,6 +1381,9 @@ function formatDefer(node: Grammar.defer_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1369,6 +1473,9 @@ function formatIfStatement(node: Grammar.if_statement_Node, formatter: Formatter
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format ifs statement child ${cursor.nodeType}`;
@@ -1394,6 +1501,9 @@ function formatImport(node: Grammar.import_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1427,6 +1537,9 @@ function formatExtern(node: Grammar.extern_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1467,6 +1580,9 @@ function formatInt(node: Grammar.int_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1527,6 +1643,9 @@ function formatReply(node: Grammar.reply_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format reply child ${cursor.nodeType}`;
@@ -1573,6 +1692,9 @@ function formatUnaryExpression(node: Grammar.unary_expression_Node, formatter: F
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1627,6 +1749,9 @@ function formatBinaryExpression(node: Grammar.binary_expression_Node, formatter:
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format binary expression child ${cursor.nodeType}`;
@@ -1649,6 +1774,9 @@ function formatCall(node: Grammar.call_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1700,6 +1828,9 @@ function formatArguments(node: Grammar.arguments_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format arguments child ${cursor.nodeType}`;
@@ -1729,6 +1860,9 @@ function formatAction(node: Grammar.action_Node, formatter: Formatter) {
             case "comment":
                 formatComment(c.currentNode, formatter);
                 break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
+                break;
             default:
                 assertNever(c);
                 throw `cannot format action child ${cursor.nodeType}`;
@@ -1754,6 +1888,9 @@ function formatDollars(node: Grammar.dollars_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);
@@ -1801,6 +1938,9 @@ function formatGroup(node: Grammar.group_Node, formatter: Formatter) {
             // generics
             case "comment":
                 formatComment(c.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(c.nodeText);
                 break;
             default:
                 assertNever(c);

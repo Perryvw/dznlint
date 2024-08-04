@@ -2,12 +2,63 @@ import { format } from "../src/format/format";
 import * as fs from "fs";
 import { TreeSitterNode, treeSitterParse } from "../src/parse";
 
-test("format", async () => {
+test("enum missing ;", async () => {
+    await testFormat({
+        verifyTreeEquality: false,
+        input: `
+            interface I {
+                enum E
+                {
+                    A,
+                    B
+                }
+            }
+        `,
+    });
+});
+
+test("variable missing ;", async () => {
     await testFormat({
         input: `
             interface I {
-            enum E { A, B};
+                bool b = false
+            }
+        `,
+    });
+});
+
+test("guard missing ;", async () => {
+    await testFormat({
+        input: `
+            interface I {
+                behavior {
+                    [c] illegal
                 }
+            }
+        `,
+    });
+});
+
+test("on missing ;", async () => {
+    await testFormat({
+        verifyTreeEquality: false,
+        input: `
+            interface I {
+                behavior {
+                    on a: illegal
+                }
+            }
+        `,
+    });
+});
+
+test("error", async () => {
+    await testFormat({
+        input: `
+            interface I {
+                enum E
+                {
+
         `,
     });
 });
@@ -74,14 +125,18 @@ test.each(["files/component.dzn", "files/demo.dzn", "files/interface.dzn", "file
     }
 );
 
-async function testFormat(formatTest: { input: string }) {
+async function testFormat(formatTest: { input: string, verifyTreeEquality?: boolean }) {
     const result = await format({ fileContent: formatTest.input });
     expect(result).toMatchSnapshot();
-    const treeBeforeFormat = await treeSitterParse({ fileContent: formatTest.input });
-    const treeAfterFormat = await treeSitterParse({ fileContent: result });
 
-    expectEquivalentTrees(treeAfterFormat, treeBeforeFormat);
-    expect(treeAfterFormat.toString()).toBe(treeBeforeFormat.toString());
+    if (formatTest.verifyTreeEquality !== false)
+    {
+        const treeBeforeFormat = await treeSitterParse({ fileContent: formatTest.input });
+        const treeAfterFormat = await treeSitterParse({ fileContent: result });
+
+        expectEquivalentTrees(treeAfterFormat, treeBeforeFormat);
+        expect(treeAfterFormat.toString()).toBe(treeBeforeFormat.toString());
+    }
 }
 
 function expectEquivalentTrees(actual: TreeSitterNode, expected: TreeSitterNode) {

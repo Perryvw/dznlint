@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`format 1`] = `
+exports[`enum missing ; 1`] = `
 "interface I
 {
     enum E
@@ -10,6 +10,13 @@ exports[`format 1`] = `
     };
     
 }
+"
+`;
+
+exports[`error 1`] = `
+"interface I {
+                enum E
+                {
 "
 `;
 
@@ -189,6 +196,17 @@ component HelloWorldSystem
 "
 `;
 
+exports[`guard missing ; 1`] = `
+"interface I
+{
+    behavior
+    {
+        [c] illegal
+    }
+}
+"
+`;
+
 exports[`multi-line comments 1`] = `
 "/* Hi
  * Hello
@@ -210,6 +228,17 @@ interface I /* sup */
 /*
  * Trailing I
  */
+"
+`;
+
+exports[`on missing ; 1`] = `
+"interface I
+{
+    behavior
+    {
+        on a: illegal;
+    }
+}
 "
 `;
 
@@ -238,5 +267,13 @@ interface I // Hello
     }
 }
 // Trailing I
+"
+`;
+
+exports[`variable missing ; 1`] = `
+"interface I
+{
+    bool b = false
+}
 "
 `;
