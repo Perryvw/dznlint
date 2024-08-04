@@ -1,6 +1,7 @@
 import { format } from "../src/format/format";
 import * as fs from "fs";
 import { TreeSitterNode, treeSitterParse } from "../src/parse";
+import { DEFAULT_DZNLINT_FORMAT_CONFIG, DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../src";
 
 test("enum missing ;", async () => {
     await testFormat({
@@ -125,12 +126,15 @@ test.each(["files/component.dzn", "files/demo.dzn", "files/interface.dzn", "file
     }
 );
 
-async function testFormat(formatTest: { input: string, verifyTreeEquality?: boolean }) {
-    const result = await format({ fileContent: formatTest.input });
+async function testFormat(formatTest: {
+    input: string;
+    verifyTreeEquality?: boolean;
+    config?: DznLintFormatUserConfiguration;
+}) {
+    const result = await format({ fileContent: formatTest.input }, formatTest.config);
     expect(result).toMatchSnapshot();
 
-    if (formatTest.verifyTreeEquality !== false)
-    {
+    if (formatTest.verifyTreeEquality !== false) {
         const treeBeforeFormat = await treeSitterParse({ fileContent: formatTest.input });
         const treeAfterFormat = await treeSitterParse({ fileContent: result });
 

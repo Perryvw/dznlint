@@ -1,3 +1,5 @@
+import { DznLintFormatConfiguration } from "../config/dznlint-configuration";
+
 enum PrintingType {
     File,
     Enum,
@@ -38,6 +40,16 @@ export class Formatter {
     private indent: string = "";
     private currentType: PrintingType[] = [PrintingType.File];
     private previousToken: Token = Token.NewLine;
+    private indentStep: string;
+
+    constructor(private config: DznLintFormatConfiguration) {
+        const [indentType, indentCount] = config.indent;
+        if (indentType === "spaces") {
+            this.indentStep = " ".repeat(indentCount ?? 4);
+        } else {
+            this.indentStep = "\t".repeat(indentCount ?? 1);
+        }
+    }
 
     // Component
 
@@ -251,7 +263,11 @@ export class Formatter {
     // Misc
 
     public openScopedBlock() {
-        this.requirePrecedingNewLine();
+        if (this.config.braces === "next-line") {
+            this.requirePrecedingNewLine();
+        } else {
+            this.requirePrecedingSpace();
+        }
         this.openBrace();
         this.pushIndent();
         this.newLine();
@@ -393,10 +409,10 @@ export class Formatter {
     }
 
     private pushIndent(): void {
-        this.indent += "    ";
+        this.indent += this.indentStep;
     }
     private popIndent(): void {
-        this.indent = this.indent.substring(0, this.indent.length - 4);
+        this.indent = this.indent.substring(0, this.indent.length - this.indentStep.length);
     }
 
     private peekCurrentType(): PrintingType {

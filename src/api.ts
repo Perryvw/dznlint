@@ -1,8 +1,9 @@
-import { DznLintUserConfiguration } from "./config/dznlint-configuration";
+import { DznLintFormatUserConfiguration, DznLintUserConfiguration } from "./config/dznlint-configuration";
 import { Diagnostic, DiagnosticSeverity, createDiagnosticsFactory } from "./diagnostic";
 import { loadLinters } from "./linting-rule";
 import { visitFile } from "./visitor";
 import { LinterHost, Program, SourceFile } from "./semantics/program";
+import { format as formatInternal } from "./format/format";
 
 export { LinterHost };
 export { Program };
@@ -90,4 +91,8 @@ export function lint(sourceFiles: SourceFile[], config: DznLintUserConfiguration
         }
     }
     return diagnostics;
+}
+
+export async function format(dznSource: string, config?: DznLintFormatUserConfiguration): Promise<string> {
+    return await formatInternal({ fileContent: dznSource }, config);
 }

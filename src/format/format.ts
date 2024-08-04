@@ -1,10 +1,16 @@
+import { DEFAULT_DZNLINT_FORMAT_CONFIG } from "../config/default-config";
+import { DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../config/dznlint-configuration";
 import { treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
 import { Formatter } from "./formatter";
 import * as Grammar from "./tree-sitter-types-formatter";
 
-export async function format(source: InputSource): Promise<string> {
-    const formatter = new Formatter();
+export async function format(source: InputSource, config?: DznLintFormatUserConfiguration): Promise<string> {
+    const fullConfig: DznLintFormatConfiguration = {
+        indent: config?.indent ?? DEFAULT_DZNLINT_FORMAT_CONFIG.indent,
+        braces: config?.braces ?? DEFAULT_DZNLINT_FORMAT_CONFIG.braces,
+    };
+    const formatter = new Formatter(fullConfig);
     const tree = await treeSitterParse(source);
     formatRoot(tree as unknown as Grammar.root_Node, formatter);
     const formatted = formatter.toString();

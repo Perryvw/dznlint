@@ -1,4 +1,4 @@
-import type { DznLintConfiguration } from "./dznlint-configuration";
+import type { DznLintConfiguration, DznLintFormatConfiguration } from "./dznlint-configuration";
 
 export const DEFAULT_DZNLINT_CONFIG_FILE = "dznlint.config.json";
 
@@ -7,11 +7,6 @@ type DefaultDznLintConfig = {
 };
 
 export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
-    // format: {
-    //     indent: "spaces",
-    //     indentWidth: 4,
-    //     braces:  "next-line"
-    // },
     call_arguments_must_match: "error",
     dead_code: "error",
     implicit_illegal: "warning",
@@ -46,4 +41,9 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     on_parameters_must_match: "error",
     parameter_direction: "warning",
     port_missing_redundant_blocking: false,
+};
+
+export const DEFAULT_DZNLINT_FORMAT_CONFIG: DznLintFormatConfiguration = {
+    indent: ["spaces", 4],
+    braces: "same-line",
 };
