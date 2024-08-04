@@ -18,43 +18,53 @@ function assertNever(x: never): void {}
 
 function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
     const cursor = root.walk();
-    cursor.gotoFirstChild();
-    const c = cursor as Grammar.CursorPosition<typeof root>;
-    do {
-        switch (c.nodeType) {
-            case "import":
-                formatImport(c.currentNode, formatter);
-                break;
-            case "interface":
-                formatInterface(c.currentNode, formatter);
-                break;
-            case "component":
-                formatComponent(c.currentNode, formatter);
-                break;
-            case "extern":
-                formatExtern(c.currentNode, formatter);
-                break;
-            case "dollars":
-                formatDollars(c.currentNode, formatter);
-                break;
-            case "enum":
-                formatEnum(c.currentNode, formatter);
-                break;
-            case "int":
-                formatInt(c.currentNode, formatter);
-                break;
-            case "namespace":
-                formatNamespace(c.currentNode, formatter);
-                break;
-            // generics
-            case "comment":
-                formatComment(c.currentNode, formatter);
-                break;
-            default:
-                assertNever(c);
-                throw `cannot format root child ${cursor.nodeType}`;
-        }
-    } while (cursor.gotoNextSibling());
+    if (cursor.gotoFirstChild()) {
+        const c = cursor as Grammar.CursorPosition<typeof root>;
+        do {
+            switch (c.nodeType) {
+                case "import":
+                    formatter.requirePrecedingNewLine();
+                    formatImport(c.currentNode, formatter);
+                    break;
+                case "interface":
+                    formatter.requirePrecedingNewLine();
+                    formatInterface(c.currentNode, formatter);
+                    break;
+                case "component":
+                    formatter.requirePrecedingNewLine();
+                    formatComponent(c.currentNode, formatter);
+                    break;
+                case "extern":
+                    formatter.requirePrecedingNewLine();
+                    formatExtern(c.currentNode, formatter);
+                    break;
+                case "dollars":
+                    formatter.requirePrecedingNewLine();
+                    formatDollars(c.currentNode, formatter);
+                    break;
+                case "enum":
+                    formatter.requirePrecedingNewLine();
+                    formatEnum(c.currentNode, formatter);
+                    break;
+                case "int":
+                    formatter.requirePrecedingNewLine();
+                    formatInt(c.currentNode, formatter);
+                    break;
+                case "namespace":
+                    formatter.requirePrecedingNewLine();
+                    formatNamespace(c.currentNode, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatter.requirePrecedingNewLine();
+                    formatComment(c.currentNode, formatter);
+                    break;
+                default:
+                    assertNever(c);
+                    throw `cannot format root child ${cursor.nodeType}`;
+            }
+        } while (cursor.gotoNextSibling());
+    }
 }
 
 function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
@@ -546,11 +556,9 @@ function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
                 formatCompound(c.currentNode, formatter);
                 break;
             case "action":
-                formatter.requirePrecedingNewLine();
                 formatAction(c.currentNode, formatter);
                 break;
             case "assign":
-                formatter.requirePrecedingNewLine();
                 formatAssign(c.currentNode, formatter);
                 break;
             case "binary_expression":
@@ -587,7 +595,6 @@ function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
                 formatter.semicolon();
                 break;
             case "on":
-                formatter.requirePrecedingNewLine();
                 formatOn(c.currentNode, formatter);
                 break;
             case "otherwise":
@@ -597,21 +604,18 @@ function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
                 formatReply(c.currentNode, formatter);
                 break;
             case "interface_action":
-                formatter.requirePrecedingNewLine();
                 formatCompoundName(c.currentNode, formatter);
                 break;
             case ";":
                 formatter.semicolon();
                 break;
             case "variable":
-                formatter.requirePrecedingNewLine();
                 formatVariable(c.currentNode, formatter);
                 break;
             case "unary_expression":
                 formatUnaryExpression(c.currentNode, formatter);
                 break;
             case "return":
-                formatter.requirePrecedingNewLine();
                 formatReturn(c.currentNode, formatter);
                 break;
             // generics
@@ -978,11 +982,9 @@ function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
                 formatter.semicolon();
                 break;
             case "action":
-                formatter.requirePrecedingNewLine();
                 formatAction(c.currentNode, formatter);
                 break;
             case "assign":
-                formatter.requirePrecedingNewLine();
                 formatAssign(c.currentNode, formatter);
                 break;
             case "call":
@@ -1004,11 +1006,9 @@ function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
                 formatter.keyword("illegal");
                 break;
             case "interface_action":
-                formatter.requirePrecedingNewLine();
                 formatCompoundName(c.currentNode, formatter);
                 break;
             case "on":
-                formatter.requirePrecedingNewLine();
                 formatOn(c.currentNode, formatter);
                 break;
             case "reply":
@@ -1021,7 +1021,6 @@ function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
                 formatter.semicolon();
                 break;
             case "variable":
-                formatter.requirePrecedingNewLine();
                 formatVariable(c.currentNode, formatter);
                 break;
             // generics
@@ -1056,7 +1055,7 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
                             formatCompoundName(c2.currentNode, formatter);
                             break;
                         case "port_event":
-                            formatCompoundName(c2.currentNode, formatter);
+                            formatPortEvent(c2.currentNode, formatter);
                             break;
                         // generics
                         case "comment":
@@ -1080,6 +1079,85 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
             default:
                 assertNever(c);
                 throw `cannot format triggers child ${cursor.nodeType}`;
+        }
+    } while (cursor.gotoNextSibling());
+}
+
+function formatPortEvent(node: Grammar.port_event_Node, formatter: Formatter) {
+    const cursor = node.walk();
+    cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
+    do {
+        switch (c.nodeType) {
+            case "port_name":
+                formatter.requirePrecedingSpace();
+                formatter.name(c.nodeText);
+                break;
+            case ".":
+                formatter.dot();
+                break;
+            case "name":
+                formatter.name(c.nodeText);
+                break;
+            case "trigger_formals":
+                formatTriggerFormals(c.currentNode, formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            default:
+                assertNever(c);
+                throw `cannot format port event child ${cursor.nodeType}`;
+        }
+    } while (cursor.gotoNextSibling());
+}
+
+function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: Formatter) {
+    const cursor = node.walk();
+    cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
+    do {
+        switch (c.nodeType) {
+            case "(":
+                formatter.openParen();
+                break;
+            case ",":
+                formatter.nextFormal();
+                break;
+            case ")":
+                formatter.closeParen();
+                break;
+            case "trigger_formal":
+                cursor.gotoFirstChild();
+                const c2 = cursor as Grammar.CursorPosition<typeof c.currentNode>;
+                do {
+                    switch (c2.nodeType) {
+                        case "var":
+                            formatCompoundName(c2.currentNode, formatter);
+                            break;
+                        case "<-":
+                            formatter.binaryOperator("<-");
+                            break;
+                        // generics
+                        case "comment":
+                            formatComment(c2.currentNode, formatter);
+                            break;
+                        default:
+                            assertNever(c2);
+                            throw `cannot format trigger formal child ${cursor.nodeType}`;
+                    }
+                } while (cursor.gotoNextSibling());
+
+                cursor.gotoParent();
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            default:
+                assertNever(c);
+                throw `cannot format trigger formals child ${cursor.nodeType}`;
         }
     } while (cursor.gotoNextSibling());
 }
@@ -1237,6 +1315,7 @@ function formatExtern(node: Grammar.extern_Node, formatter: Formatter) {
                 break;
             case "scoped_name":
                 formatter.name(c.nodeText);
+                formatter.space();
                 break;
             case "dollars_content":
                 formatter.verbatim(c.nodeText);
@@ -1272,16 +1351,17 @@ function formatInt(node: Grammar.int_Node, formatter: Formatter) {
                 formatCompoundName(c.currentNode, formatter);
                 break;
             case "{":
-                formatter.verbatim("{");
+                formatter.space();
+                formatter.openBrace();
                 break;
             case "number":
-                formatter.literal(node.text);
+                formatter.literal(c.nodeText);
                 break;
             case "..":
                 formatter.binaryOperator("..");
                 break;
             case "}":
-                formatter.verbatim("}");
+                formatter.closeBrace();
                 break;
             case ";":
                 formatter.semicolon();
@@ -1472,6 +1552,9 @@ function formatDollars(node: Grammar.dollars_Node, formatter: Formatter) {
     const cursor = node.walk();
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
+
+    formatter.requirePrecedingSpace();
+
     do {
         switch (c.nodeType) {
             case "dollars_content":
@@ -1542,7 +1625,6 @@ function formatCompoundName(
     name:
         | Grammar.end_point_Node
         | Grammar.event_name_Node
-        | Grammar.port_event_Node
         | Grammar.type_name_Node
         | Grammar.var_name_Node
         | Grammar.compound_name_Node

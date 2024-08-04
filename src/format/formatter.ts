@@ -21,6 +21,7 @@ enum Token {
     Comma,
     Semicolon,
     NewLine,
+    Space,
     Dot,
     BraceOpen,
     BraceClose,
@@ -104,12 +105,12 @@ export class Formatter {
     }
 
     public startGuard() {
-        this.requirePrecedingNewLine();
-        this.output.push("[");
+        this.requirePrecedingSpace();
+        this.openBracket();
     }
 
     public endGuard() {
-        this.output.push("]");
+        this.closeBracket();
     }
 
     public nextTrigger() {
@@ -162,7 +163,7 @@ export class Formatter {
     // On
 
     public startOn() {
-        this.requirePrecedingNewLine();
+        this.requirePrecedingSpace();
         this.output.push("on");
         this.previousToken = Token.Keyword;
     }
@@ -250,15 +251,14 @@ export class Formatter {
 
     public openScopedBlock() {
         this.requirePrecedingNewLine();
-        this.output.push("{");
+        this.openBrace()
         this.pushIndent();
         this.newLine();
     }
     public closeScopedBlock() {
         this.popIndent();
         this.newLine();
-        this.output.push("}");
-        this.previousToken = Token.BraceClose;
+        this.closeBrace();
     }
 
     public name(name: string) {
@@ -312,6 +312,7 @@ export class Formatter {
 
     public dollar() {
         this.output.push("$");
+        this.previousToken = Token.Literal;
     }
 
     public verbatim(str: string) {
@@ -338,6 +339,21 @@ export class Formatter {
         this.previousToken = Token.BracketClose;
     }
 
+    public openBrace() {
+        this.output.push("{");
+        this.previousToken = Token.BraceOpen;
+    }
+
+    public closeBrace() {
+        this.output.push("}");
+        this.previousToken = Token.BraceClose;
+    }
+
+    public space() {
+        this.output.push(" ");
+        this.previousToken = Token.Space;
+    }
+
     public newLine() {
         this.output.push("\n", this.indent);
         this.previousToken = Token.NewLine;
@@ -356,14 +372,16 @@ export class Formatter {
             this.newLine();
         }
     }
-    private requirePrecedingSpace() {
+    public requirePrecedingSpace() {
         if (
             this.previousToken !== Token.NewLine &&
+            this.previousToken !== Token.Space &&
             this.previousToken !== Token.ParenOpen &&
             this.previousToken !== Token.BracketOpen &&
+            this.previousToken !== Token.BraceOpen &&
             this.previousToken !== Token.Dot
         ) {
-            this.output.push(" ");
+            this.space();
         }
     }
 
