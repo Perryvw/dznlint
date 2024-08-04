@@ -1,8 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`enum missing ; 1`] = `
-"interface I {
-    enum E {
+"interface I
+{
+    enum E
+    {
         A,
         B
     };
@@ -20,23 +22,30 @@ exports[`error 1`] = `
 
 exports[`format file files/component.dzn 1`] = `
 "import interface.dzn;
-component HelloWorld {
+component HelloWorld
+{
     provides IHelloWorld api;
     requires IRequired required;
     requires injected IInjected requiredInjected;
-    behavior {
-        enum State {
+    behavior
+    {
+        enum State
+        {
             Hello,
             World
         };
         State s = State.Hello;
-        [s.Hello] {
-            on api.hello(): {
+        [s.Hello]
+        {
+            on api.hello():
+            {
                 s = State.World;
             }
         }
-        [s.World] {
-            on api.world(): {
+        [s.World]
+        {
+            on api.world():
+            {
                 api.helloWorld();
                 s = State.Hello;
             }
@@ -48,66 +57,85 @@ component HelloWorld {
 
 exports[`format file files/demo.dzn 1`] = `
 "extern int $int$;
-interface HelloWorld {
+interface HelloWorld
+{
     in void hello();
     in void world();
     out void helloWorld();
-    behavior {
-        enum State {
+    behavior
+    {
+        enum State
+        {
             Hello,
             World
         };
         State s = State.Hello;
-        [s.Hello] {
-            on hello: {
+        [s.Hello]
+        {
+            on hello:
+            {
                 s = State.World;
             }
             on world: illegal;
         }
-        [s.World] {
-            on world: {
+        [s.World]
+        {
+            on world:
+            {
                 helloWorld;
                 s = State.Hello;
             }
         }
     }
 }
-component HelloWorld {
+component HelloWorld
+{
     provides IHelloWorld api;
-    behavior {
-        enum State {
+    behavior
+    {
+        enum State
+        {
             Hello,
             World
         };
         State s = State.Hello;
-        [s.Hello] {
-            on api.hello(): {
+        [s.Hello]
+        {
+            on api.hello():
+            {
                 s = State.World;
             }
-            on api.hello(): {
+            on api.hello():
+            {
                 s = State.World;
                 Result r = doSomething();
             }
         }
-        [s.World] {
-            on api.world(): {
+        [s.World]
+        {
+            on api.world():
+            {
                 api.helloWorld();
                 s = State.Hello;
             }
         }
-        int myFunction(in int s, in bool t, in bool t) {
+        int myFunction(in int s, in bool t, in bool t)
+        {
             return 4;
             api.foo();
         }
-        int myOtherFunction(int t) {
+        int myOtherFunction(int t)
+        {
             
         }
     }
 }
-component HelloWorldSystem {
+component HelloWorldSystem
+{
     provides IHelloWorld api;
     requires IFooBar foobar;
-    system {
+    system
+    {
         HelloWorld helloWorld;
         MyType myinstance;
         api <=> helloWold.api;
@@ -119,23 +147,30 @@ component HelloWorldSystem {
 `;
 
 exports[`format file files/interface.dzn 1`] = `
-"interface IHelloWorld {
+"interface IHelloWorld
+{
     in void hello();
     in void world();
     out void helloWorld();
-    behavior {
-        enum State {
+    behavior
+    {
+        enum State
+        {
             Hello,
             World
         };
         State s = State.Hello;
-        [s.Hello] {
-            on hello: {
+        [s.Hello]
+        {
+            on hello:
+            {
                 s = State.World;
             }
         }
-        [s.World] {
-            on world: {
+        [s.World]
+        {
+            on world:
+            {
                 helloWorld;
                 s = State.Hello;
             }
@@ -147,10 +182,12 @@ exports[`format file files/interface.dzn 1`] = `
 
 exports[`format file files/system.dzn 1`] = `
 "import component.dzn;
-component HelloWorldSystem {
+component HelloWorldSystem
+{
     provides IHelloWorld api;
     requires IRequired required;
-    system {
+    system
+    {
         HelloWorld helloWorld;
         api <=> helloWorld.api;
         helloWorld.required <=> required;
@@ -160,8 +197,10 @@ component HelloWorldSystem {
 `;
 
 exports[`guard missing ; 1`] = `
-"interface I {
-    behavior {
+"interface I
+{
+    behavior
+    {
         [c] illegal
     }
 }
@@ -172,8 +211,10 @@ exports[`multi-line comments 1`] = `
 "/* Hi
  * Hello
  */
-interface I /* sup */ {
-    enum E {
+interface I /* sup */
+{
+    enum E
+    {
         /* foo */
         A,
         B /*bar
@@ -191,8 +232,10 @@ interface I /* sup */ {
 `;
 
 exports[`on missing ; 1`] = `
-"interface I {
-    behavior {
+"interface I
+{
+    behavior
+    {
         on a: illegal;
     }
 }
@@ -203,7 +246,8 @@ exports[`single-line comments 1`] = `
 "// Hi
 interface I // Hello
 {
-    enum E {
+    enum E
+    {
         // Foo
         A,
         B,
@@ -214,8 +258,10 @@ interface I // Hello
         D
     };
     // Trailing E
-    behavior {
-        void foo(/* hello */ in bool b) {
+    behavior
+    {
+        void foo(/* hello */ in bool b)
+        {
             
         }
     }
@@ -225,7 +271,8 @@ interface I // Hello
 `;
 
 exports[`variable missing ; 1`] = `
-"interface I {
+"interface I
+{
     bool b = false
 }
 "
