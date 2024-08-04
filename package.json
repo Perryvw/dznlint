@@ -15,6 +15,7 @@
     "scripts": {
         "build:parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts",
         "build": "npm run build:parser && tsc",
+        "postbuild": "node -e \"require('fs').cpSync('src/grammar/tree-sitter-dezyne.wasm', 'dist/grammar/tree-sitter-dezyne.wasm');\"",
         "lint": "eslint . --ext .ts",
         "test": "jest",
         "prepublishOnly": "npm run build",
