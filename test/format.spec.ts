@@ -66,7 +66,7 @@ test("multi-line comments", async () => {
     });
 });
 
-test.each([/*"files/component.dzn",*/ "files/demo.dzn", "files/interface.dzn", "files/system.dzn"])(
+test.each(["files/component.dzn", "files/demo.dzn", "files/interface.dzn", "files/system.dzn"])(
     "format file %s",
     async fileName => {
         const fileContent = fs.readFileSync(`${__dirname}/${fileName}`).toString();

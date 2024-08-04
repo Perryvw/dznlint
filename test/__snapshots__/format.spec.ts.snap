@@ -13,6 +13,41 @@ exports[`format 1`] = `
 "
 `;
 
+exports[`format file files/component.dzn 1`] = `
+"import interface.dzn;
+component HelloWorld
+{
+    provides IHelloWorld api;
+    requires IRequired required;
+    requires injected IInjected requiredInjected;
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+        [s.Hello]
+        {
+            on api.hello():
+            {
+                s = State.World;
+            }
+        }
+        [s.World]
+        {
+            on api.world():
+            {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+    }
+}
+"
+`;
+
 exports[`format file files/demo.dzn 1`] = `
 "extern int$int$;
 interface HelloWorld
