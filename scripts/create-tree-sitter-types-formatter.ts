@@ -123,7 +123,13 @@ for (const [type, rule] of Object.entries(rules)) {
     result.push(`    type: "${type}";`);
     result.push(`    _id: ${++nodeId}`);
     result.push(`    isNamed: true;`);
-    if (rule.type === "REPEAT" || rule.type === "CHOICE" || rule.type === "SEQ") {
+    if (
+        rule.type === "REPEAT" ||
+        rule.type === "CHOICE" ||
+        rule.type === "SEQ" ||
+        rule.type === "PREC" ||
+        rule.type === "PREC_LEFT"
+    ) {
         const childTypes = removeDuplicates(getAllChildNodes(rule, new Map()).map(typeOfNode));
         for (const t of childTypes) allTypes.add(t);
         const extraTypes = extras.filter(e => e.type === "SYMBOL").map(typeOfNode);

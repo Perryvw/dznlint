@@ -1275,7 +1275,91 @@ function formatDefer(node: Grammar.defer_Node, formatter: Formatter) {
 }
 
 function formatIfStatement(node: Grammar.if_statement_Node, formatter: Formatter) {
-    throw "TODO if statement";
+    const cursor = node.walk();
+    cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
+    do {
+        switch (c.nodeType) {
+            case "if":
+                formatter.keyword("if");
+                break;
+            case "(":
+                formatter.space();
+                formatter.openParen();
+                break;
+            case ")":
+                formatter.closeParen();
+                break;
+            case "else":
+                formatter.keyword("else");
+                break;
+            case ";":
+                formatter.semicolon();
+                break;
+            case "action":
+                formatAction(c.currentNode, formatter);
+                break;
+            case "assign":
+                formatAssign(c.currentNode, formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(c.currentNode, formatter);
+                break;
+            case "call":
+                formatCall(c.currentNode, formatter);
+                break;
+            case "compound":
+                formatCompound(c.currentNode, formatter);
+                break;
+            case "compound_name":
+                formatCompoundName(c.currentNode, formatter);
+                break;
+            case "defer":
+                formatDefer(c.currentNode, formatter);
+                break;
+            case "dollars":
+                formatDollars(c.currentNode, formatter);
+                break;
+            case "group":
+                formatGroup(c.currentNode, formatter);
+                break;
+            case "if_statement":
+                formatIfStatement(c.currentNode, formatter);
+                break;
+            case "interface_action":
+                formatter.name(c.nodeText);
+                break;
+            case "illegal":
+                formatter.keyword("illegal");
+                formatter.semicolon();
+                break;
+            case "literal":
+                formatter.literal(c.nodeText);
+                break;
+            case "reply":
+                formatReply(c.currentNode, formatter);
+                break;
+            case "return":
+                formatReturn(c.currentNode, formatter);
+                break;
+            case "skip_statement":
+                formatter.semicolon();
+                break;
+            case "unary_expression":
+                formatUnaryExpression(c.currentNode, formatter);
+                break;
+            case "variable":
+                formatVariable(c.currentNode, formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            default:
+                assertNever(c);
+                throw `cannot format ifs statement child ${cursor.nodeType}`;
+        }
+    } while (cursor.gotoNextSibling());
 }
 
 function formatImport(node: Grammar.import_Node, formatter: Formatter) {
@@ -1443,7 +1527,56 @@ function formatUnaryExpression(node: Grammar.unary_expression_Node, formatter: F
 }
 
 function formatBinaryExpression(node: Grammar.binary_expression_Node, formatter: Formatter) {
-    throw "TODO binary expression";
+    const cursor = node.walk();
+    cursor.gotoFirstChild();
+    const c = cursor as Grammar.CursorPosition<typeof node>;
+    do {
+        switch (c.nodeType) {
+            case "!=":
+            case "&&":
+            case "+":
+            case "-":
+            case "<":
+            case "<=":
+            case "==":
+            case ">":
+            case ">=":
+            case "||":
+                formatter.binaryOperator(c.nodeText);
+                break;
+            case "action":
+                formatAction(c.currentNode, formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(c.currentNode, formatter);
+                break;
+            case "call":
+                formatCall(c.currentNode, formatter);
+                break;
+            case "compound_name":
+                formatCompoundName(c.currentNode, formatter);
+                break;
+            case "dollars":
+                formatDollars(c.currentNode, formatter);
+                break;
+            case "group":
+                formatGroup(c.currentNode, formatter);
+                break;
+            case "literal":
+                formatter.literal(c.nodeText);
+                break;
+            case "unary_expression":
+                formatUnaryExpression(c.currentNode, formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(c.currentNode, formatter);
+                break;
+            default:
+                assertNever(c);
+                throw `cannot format binary expression child ${cursor.nodeType}`;
+        }
+    } while (cursor.gotoNextSibling());
 }
 
 function formatCall(node: Grammar.call_Node, formatter: Formatter) {

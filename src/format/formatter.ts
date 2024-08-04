@@ -251,7 +251,7 @@ export class Formatter {
 
     public openScopedBlock() {
         this.requirePrecedingNewLine();
-        this.openBrace()
+        this.openBrace();
         this.pushIndent();
         this.newLine();
     }
