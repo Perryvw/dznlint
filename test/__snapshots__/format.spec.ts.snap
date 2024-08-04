@@ -49,7 +49,7 @@ component HelloWorld
 `;
 
 exports[`format file files/demo.dzn 1`] = `
-"extern int$int$;
+"extern int $int$;
 interface HelloWorld
 {
     in void hello();

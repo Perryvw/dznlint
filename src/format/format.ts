@@ -491,34 +491,44 @@ function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
                             formatter.endBehavior();
                             break;
                         case "function":
+                            formatter.requirePrecedingNewLine();
                             formatFunction(c2.currentNode, formatter);
                             break;
                         case "enum":
+                            formatter.requirePrecedingNewLine();
                             formatEnum(c2.currentNode, formatter);
                             break;
                         case "variable":
+                            formatter.requirePrecedingNewLine();
                             formatVariable(c2.currentNode, formatter);
                             break;
                         case "guard":
+                            formatter.requirePrecedingNewLine();
                             formatGuard(c2.currentNode, formatter);
                             break;
                         case "int":
+                            formatter.requirePrecedingNewLine();
                             formatInt(c2.currentNode, formatter);
                             break;
                         case "compound":
+                            formatter.requirePrecedingNewLine();
                             formatCompound(c2.currentNode, formatter);
                             break;
                         case "extern":
+                            formatter.requirePrecedingNewLine();
                             formatExtern(c2.currentNode, formatter);
                             break;
                         case "on":
+                            formatter.requirePrecedingNewLine();
                             formatOn(c2.currentNode, formatter);
                             break;
                         case "blocking":
+                            formatter.requirePrecedingNewLine();
                             formatBlocking(c2.currentNode, formatter);
                             break;
                         // generics
                         case "comment":
+                            formatter.requirePrecedingNewLine();
                             formatComment(c2.currentNode, formatter);
                             break;
                         default:
