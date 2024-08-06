@@ -82,7 +82,11 @@ test("single-line comments", async () => {
                 // Trailing E
 
                 behavior {
-                    void foo(/* hello */in bool b) {}
+                    void foo(/* hello */in bool b) {
+                        bool a  = true; // Hello
+                        // Hi
+                        bool b = false;
+                    }
                 }
             }
             // Trailing I

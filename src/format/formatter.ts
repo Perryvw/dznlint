@@ -232,7 +232,6 @@ export class Formatter {
 
     public nextEnumMember() {
         this.comma();
-        this.newLine();
     }
 
     // Comments
@@ -380,6 +379,11 @@ export class Formatter {
     public newLine() {
         this.output.push("\n", this.indent);
         this.previousToken = Token.NewLine;
+    }
+
+    public whiteline() {
+        this.requirePrecedingNewLine();
+        this.newLine();
     }
 
     // Output

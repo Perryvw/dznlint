@@ -25,8 +25,10 @@ exports[`format file files/component.dzn 1`] = `
 component HelloWorld
 {
     provides IHelloWorld api;
+    
     requires IRequired required;
     requires injected IInjected requiredInjected;
+    
     behavior
     {
         enum State
@@ -35,6 +37,7 @@ component HelloWorld
             World
         };
         State s = State.Hello;
+        
         [s.Hello]
         {
             on api.hello():
@@ -42,6 +45,7 @@ component HelloWorld
                 s = State.World;
             }
         }
+        
         [s.World]
         {
             on api.world():
@@ -61,7 +65,9 @@ interface HelloWorld
 {
     in void hello();
     in void world();
+    
     out void helloWorld();
+    
     behavior
     {
         enum State
@@ -70,14 +76,17 @@ interface HelloWorld
             World
         };
         State s = State.Hello;
+        
         [s.Hello]
         {
             on hello:
             {
                 s = State.World;
             }
+            
             on world: illegal;
         }
+        
         [s.World]
         {
             on world:
@@ -91,6 +100,7 @@ interface HelloWorld
 component HelloWorld
 {
     provides IHelloWorld api;
+    
     behavior
     {
         enum State
@@ -99,18 +109,21 @@ component HelloWorld
             World
         };
         State s = State.Hello;
+        
         [s.Hello]
         {
             on api.hello():
             {
                 s = State.World;
             }
+            
             on api.hello():
             {
                 s = State.World;
                 Result r = doSomething();
             }
         }
+        
         [s.World]
         {
             on api.world():
@@ -119,11 +132,13 @@ component HelloWorld
                 s = State.Hello;
             }
         }
+        
         int myFunction(in int s, in bool t, in bool t)
         {
             return 4;
             api.foo();
         }
+        
         int myOtherFunction(int t)
         {
             
@@ -134,12 +149,14 @@ component HelloWorldSystem
 {
     provides IHelloWorld api;
     requires IFooBar foobar;
+    
     system
     {
         HelloWorld helloWorld;
         MyType myinstance;
         api <=> helloWold.api;
         blabla <=> helloWorld.api;
+        
         HelloWorldSystem recursiveSystem;
     }
 }
@@ -151,7 +168,9 @@ exports[`format file files/interface.dzn 1`] = `
 {
     in void hello();
     in void world();
+    
     out void helloWorld();
+    
     behavior
     {
         enum State
@@ -160,6 +179,7 @@ exports[`format file files/interface.dzn 1`] = `
             World
         };
         State s = State.Hello;
+        
         [s.Hello]
         {
             on hello:
@@ -167,6 +187,7 @@ exports[`format file files/interface.dzn 1`] = `
                 s = State.World;
             }
         }
+        
         [s.World]
         {
             on world:
@@ -186,6 +207,7 @@ component HelloWorldSystem
 {
     provides IHelloWorld api;
     requires IRequired required;
+    
     system
     {
         HelloWorld helloWorld;
@@ -221,6 +243,7 @@ interface I /* sup */
          * foo
          */
     };
+    
     /* Trailing E
      * 
      * blala */
@@ -250,19 +273,21 @@ interface I // Hello
     {
         // Foo
         A,
-        B,
-        //Bar
-        C,
-        // Baz
+        B, //Bar
+        C, // Baz
         // Buzz
         D
     };
+    
     // Trailing E
+    
     behavior
     {
         void foo(/* hello */ in bool b)
         {
-            
+            bool a = true; // Hello
+            // Hi
+            bool b = false;
         }
     }
 }

@@ -1,6 +1,7 @@
+import { SyntaxNode, TreeCursor } from "web-tree-sitter";
 import { DEFAULT_DZNLINT_FORMAT_CONFIG } from "../config/default-config";
 import { DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../config/dznlint-configuration";
-import { treeSitterParse } from "../parse";
+import { TreeSitterNode, treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
 import { Formatter } from "./formatter";
 import * as Grammar from "./tree-sitter-types-formatter";
@@ -15,6 +16,77 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
     formatRoot(tree as unknown as Grammar.root_Node, formatter);
     const formatted = formatter.toString();
     return formatted.endsWith("\n") ? formatted : formatted + "\n";
+}
+
+class WhitespaceCursor<TNode extends Extract<Grammar.AllNodes, { walk(): Grammar.TypedCursor<any> }>>
+    implements Grammar.TypedCursor<Grammar.WalkerNodes<TNode>>
+{
+    private cursor: TreeCursor;
+
+    constructor(node: TNode) {
+        this.cursor = node.walk() as any;
+    }
+
+    private syntheticNode: Grammar.WalkerNodes<TNode> | undefined;
+    private _currentNode: TreeSitterNode = undefined!;
+
+    public get currentNode() {
+        return this.syntheticNode ?? (this._currentNode as Grammar.WalkerNodes<TNode>);
+    }
+    public get nodeType() {
+        return this.currentNode.type;
+    }
+    public get nodeText() {
+        return this.currentNode.text;
+    }
+
+    gotoFirstChild(): boolean {
+        if (this.cursor.gotoFirstChild()) {
+            this.syntheticNode = undefined;
+            this._currentNode = this.cursor.currentNode;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    gotoNextSibling(): boolean {
+        if (this.syntheticNode) {
+            this.syntheticNode = undefined;
+            return true;
+        } else {
+            const previousNode = this._currentNode;
+            if (this.cursor.gotoNextSibling()) {
+                const newNode = this.cursor.currentNode;
+                this._currentNode = newNode;
+                if (newNode.startPosition.row > previousNode.endPosition.row + 1) {
+                    // Insert synthetic whiteline node
+                    this.syntheticNode = {
+                        type: "whiteline",
+                        isError: false,
+                        isNamed: true,
+                        text: "",
+                    } as any;
+                }
+                if (newNode.type === "comment") {
+                    if (newNode.type === "comment" && previousNode.endPosition.row === newNode.startPosition.row) {
+                        (this._currentNode as unknown as Grammar.comment_Node).trailing = true;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    gotoParent(): boolean {
+        if (this.cursor.gotoParent()) {
+            this.syntheticNode = undefined;
+            this._currentNode = this.cursor.currentNode;
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
 // Sanity check to help verify we handled all possible cases in the if statement
@@ -68,6 +140,9 @@ function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
                 case "ERROR":
                     formatter.verbatim(c.nodeText);
                     break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
                 default:
                     assertNever(c);
                     throw `cannot format root child ${cursor.nodeType}`;
@@ -77,6 +152,9 @@ function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
 }
 
 function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
+    if (!node.trailing) {
+        formatter.requirePrecedingNewLine();
+    }
     const isSingleLine = node.text.startsWith("//");
     if (isSingleLine) {
         formatter.singleLineComment(node.text);
@@ -86,7 +164,7 @@ function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
 }
 
 function formatNamespace(node: Grammar.namespace_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -129,15 +207,18 @@ function formatNamespace(node: Grammar.namespace_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
-                throw `cannot format interface member ${cursor.nodeType}`;
+                throw `cannot format namespace member ${cursor.nodeType}`;
         }
     } while (cursor.gotoNextSibling());
 }
 
 function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -158,6 +239,9 @@ function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format interface member ${cursor.nodeType}`;
@@ -166,7 +250,7 @@ function formatInterface(node: Grammar.interface_Node, formatter: Formatter) {
 }
 
 function formatInterfaceBody(node: Grammar.interface_body_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -199,6 +283,9 @@ function formatInterfaceBody(node: Grammar.interface_body_Node, formatter: Forma
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format interface body child ${cursor.nodeType}`;
@@ -207,7 +294,7 @@ function formatInterfaceBody(node: Grammar.interface_body_Node, formatter: Forma
 }
 
 function formatEvent(node: Grammar.event_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -234,6 +321,9 @@ function formatEvent(node: Grammar.event_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format event child ${cursor.nodeType}`;
@@ -242,7 +332,7 @@ function formatEvent(node: Grammar.event_Node, formatter: Formatter) {
 }
 
 function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -265,6 +355,7 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
                             formatter.openScopedBlock();
                             break;
                         case "name":
+                            formatter.requirePrecedingNewLine();
                             formatter.enumMember(c2.nodeText);
                             break;
                         case ",":
@@ -279,6 +370,9 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
                             break;
                         case "ERROR":
                             formatter.verbatim(c.nodeText);
+                            break;
+                        case "whiteline":
+                            formatter.whiteline();
                             break;
                         default:
                             assertNever(c2);
@@ -296,6 +390,9 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format enum member ${cursor.nodeType}`;
@@ -304,7 +401,7 @@ function formatEnum(node: Grammar.enum_Node, formatter: Formatter) {
 }
 
 function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -342,6 +439,9 @@ function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
                         case "ERROR":
                             formatter.verbatim(c.nodeText);
                             break;
+                        case "whiteline":
+                            formatter.whiteline();
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format component child ${cursor.nodeType}`;
@@ -357,6 +457,9 @@ function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format component child ${cursor.nodeType}`;
@@ -365,7 +468,7 @@ function formatComponent(node: Grammar.component_Node, formatter: Formatter) {
 }
 
 function formatPort(node: Grammar.port_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -396,6 +499,9 @@ function formatPort(node: Grammar.port_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format interface body child ${cursor.nodeType}`;
@@ -404,7 +510,7 @@ function formatPort(node: Grammar.port_Node, formatter: Formatter) {
 }
 
 function formatSystem(node: Grammar.system_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -436,6 +542,9 @@ function formatSystem(node: Grammar.system_Node, formatter: Formatter) {
                         case "ERROR":
                             formatter.verbatim(c.nodeText);
                             break;
+                        case "whiteline":
+                            formatter.whiteline();
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format component child ${cursor.nodeType}`;
@@ -451,6 +560,9 @@ function formatSystem(node: Grammar.system_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format system child ${cursor.nodeType}`;
@@ -459,7 +571,7 @@ function formatSystem(node: Grammar.system_Node, formatter: Formatter) {
 }
 
 function formatBinding(node: Grammar.binding_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
 
@@ -483,6 +595,9 @@ function formatBinding(node: Grammar.binding_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format binding child ${cursor.nodeType}`;
@@ -491,7 +606,7 @@ function formatBinding(node: Grammar.binding_Node, formatter: Formatter) {
 }
 
 function formatInstance(node: Grammar.instance_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
 
@@ -515,6 +630,9 @@ function formatInstance(node: Grammar.instance_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format instance child ${cursor.nodeType}`;
@@ -523,7 +641,7 @@ function formatInstance(node: Grammar.instance_Node, formatter: Formatter) {
 }
 
 function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -590,6 +708,9 @@ function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
                         case "ERROR":
                             formatter.verbatim(c.nodeText);
                             break;
+                        case "whiteline":
+                            formatter.whiteline();
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format behavior body child ${cursor.nodeType}`;
@@ -606,6 +727,9 @@ function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format behavior child ${cursor.nodeType}`;
@@ -614,7 +738,7 @@ function formatBehavior(node: Grammar.behavior_Node, formatter: Formatter) {
 }
 
 function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -701,6 +825,9 @@ function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format guard child ${cursor.nodeType}`;
@@ -709,7 +836,7 @@ function formatGuard(node: Grammar.guard_Node, formatter: Formatter) {
 }
 
 function formatVariable(node: Grammar.variable_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
 
@@ -760,6 +887,9 @@ function formatVariable(node: Grammar.variable_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format variable child ${cursor.nodeType}`;
@@ -768,7 +898,7 @@ function formatVariable(node: Grammar.variable_Node, formatter: Formatter) {
 }
 
 function formatFunction(node: Grammar.function_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -793,6 +923,9 @@ function formatFunction(node: Grammar.function_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format function child ${cursor.nodeType}`;
@@ -801,7 +934,7 @@ function formatFunction(node: Grammar.function_Node, formatter: Formatter) {
 }
 
 function formatFormals(node: Grammar.formals_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -825,6 +958,9 @@ function formatFormals(node: Grammar.formals_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format formals child ${cursor.nodeType}`;
@@ -833,7 +969,7 @@ function formatFormals(node: Grammar.formals_Node, formatter: Formatter) {
 }
 
 function formatFormal(node: Grammar.formal_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -854,6 +990,9 @@ function formatFormal(node: Grammar.formal_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format formal child ${cursor.nodeType}`;
@@ -862,7 +1001,7 @@ function formatFormal(node: Grammar.formal_Node, formatter: Formatter) {
 }
 
 function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -934,6 +1073,9 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format compound child ${cursor.nodeType}`;
@@ -942,7 +1084,7 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
 }
 
 function formatReturn(node: Grammar.return_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -984,6 +1126,9 @@ function formatReturn(node: Grammar.return_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format return child ${cursor.nodeType}`;
@@ -992,7 +1137,7 @@ function formatReturn(node: Grammar.return_Node, formatter: Formatter) {
 }
 
 function formatOn(node: Grammar.on_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1059,6 +1204,9 @@ function formatOn(node: Grammar.on_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format on child ${cursor.nodeType}`;
@@ -1067,7 +1215,7 @@ function formatOn(node: Grammar.on_Node, formatter: Formatter) {
 }
 
 function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1130,6 +1278,9 @@ function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format blocking child ${cursor.nodeType}`;
@@ -1138,7 +1289,7 @@ function formatBlocking(node: Grammar.blocking_Node, formatter: Formatter) {
 }
 
 function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1167,6 +1318,9 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
                         case "ERROR":
                             formatter.verbatim(c.nodeText);
                             break;
+                        case "whiteline":
+                            formatter.whiteline();
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format trigger child ${cursor.nodeType}`;
@@ -1185,6 +1339,9 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format triggers child ${cursor.nodeType}`;
@@ -1193,7 +1350,7 @@ function formatTriggers(node: Grammar.triggers_Node, formatter: Formatter) {
 }
 
 function formatPortEvent(node: Grammar.port_event_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1218,6 +1375,9 @@ function formatPortEvent(node: Grammar.port_event_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format port event child ${cursor.nodeType}`;
@@ -1226,7 +1386,7 @@ function formatPortEvent(node: Grammar.port_event_Node, formatter: Formatter) {
 }
 
 function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1258,6 +1418,9 @@ function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: For
                         case "ERROR":
                             formatter.verbatim(c.nodeText);
                             break;
+                        case "whiteline":
+                            formatter.whiteline();
+                            break;
                         default:
                             assertNever(c2);
                             throw `cannot format trigger formal child ${cursor.nodeType}`;
@@ -1273,6 +1436,9 @@ function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: For
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format trigger formals child ${cursor.nodeType}`;
@@ -1281,7 +1447,7 @@ function formatTriggerFormals(node: Grammar.trigger_formals_Node, formatter: For
 }
 
 function formatAssign(node: Grammar.assign_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
 
@@ -1329,6 +1495,9 @@ function formatAssign(node: Grammar.assign_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format assign child ${cursor.nodeType}`;
@@ -1337,7 +1506,7 @@ function formatAssign(node: Grammar.assign_Node, formatter: Formatter) {
 }
 
 function formatDefer(node: Grammar.defer_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1391,6 +1560,9 @@ function formatDefer(node: Grammar.defer_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format defer child ${cursor.nodeType}`;
@@ -1399,7 +1571,7 @@ function formatDefer(node: Grammar.defer_Node, formatter: Formatter) {
 }
 
 function formatIfStatement(node: Grammar.if_statement_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1482,6 +1654,9 @@ function formatIfStatement(node: Grammar.if_statement_Node, formatter: Formatter
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format ifs statement child ${cursor.nodeType}`;
@@ -1490,7 +1665,7 @@ function formatIfStatement(node: Grammar.if_statement_Node, formatter: Formatter
 }
 
 function formatImport(node: Grammar.import_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1511,6 +1686,9 @@ function formatImport(node: Grammar.import_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format import child ${cursor.nodeType}`;
@@ -1519,7 +1697,7 @@ function formatImport(node: Grammar.import_Node, formatter: Formatter) {
 }
 
 function formatExtern(node: Grammar.extern_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1547,6 +1725,9 @@ function formatExtern(node: Grammar.extern_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format extern child ${cursor.nodeType}`;
@@ -1555,7 +1736,7 @@ function formatExtern(node: Grammar.extern_Node, formatter: Formatter) {
 }
 
 function formatInt(node: Grammar.int_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1590,6 +1771,9 @@ function formatInt(node: Grammar.int_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format int child ${cursor.nodeType}`;
@@ -1598,7 +1782,7 @@ function formatInt(node: Grammar.int_Node, formatter: Formatter) {
 }
 
 function formatReply(node: Grammar.reply_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1652,6 +1836,9 @@ function formatReply(node: Grammar.reply_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format reply child ${cursor.nodeType}`;
@@ -1662,7 +1849,7 @@ function formatReply(node: Grammar.reply_Node, formatter: Formatter) {
 // Expressions
 
 function formatUnaryExpression(node: Grammar.unary_expression_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1702,6 +1889,9 @@ function formatUnaryExpression(node: Grammar.unary_expression_Node, formatter: F
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format binary expression child ${cursor.nodeType}`;
@@ -1710,7 +1900,7 @@ function formatUnaryExpression(node: Grammar.unary_expression_Node, formatter: F
 }
 
 function formatBinaryExpression(node: Grammar.binary_expression_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1758,6 +1948,9 @@ function formatBinaryExpression(node: Grammar.binary_expression_Node, formatter:
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format binary expression child ${cursor.nodeType}`;
@@ -1766,7 +1959,7 @@ function formatBinaryExpression(node: Grammar.binary_expression_Node, formatter:
 }
 
 function formatCall(node: Grammar.call_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1784,6 +1977,9 @@ function formatCall(node: Grammar.call_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format call child ${cursor.nodeType}`;
@@ -1792,7 +1988,7 @@ function formatCall(node: Grammar.call_Node, formatter: Formatter) {
 }
 
 function formatArguments(node: Grammar.arguments_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1837,6 +2033,9 @@ function formatArguments(node: Grammar.arguments_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format arguments child ${cursor.nodeType}`;
@@ -1845,7 +2044,7 @@ function formatArguments(node: Grammar.arguments_Node, formatter: Formatter) {
 }
 
 function formatAction(node: Grammar.action_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1869,6 +2068,9 @@ function formatAction(node: Grammar.action_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format action child ${cursor.nodeType}`;
@@ -1877,7 +2079,7 @@ function formatAction(node: Grammar.action_Node, formatter: Formatter) {
 }
 
 function formatDollars(node: Grammar.dollars_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
 
@@ -1898,6 +2100,9 @@ function formatDollars(node: Grammar.dollars_Node, formatter: Formatter) {
             case "ERROR":
                 formatter.verbatim(c.nodeText);
                 break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
             default:
                 assertNever(c);
                 throw `cannot format dollars child ${cursor.nodeType}`;
@@ -1906,7 +2111,7 @@ function formatDollars(node: Grammar.dollars_Node, formatter: Formatter) {
 }
 
 function formatGroup(node: Grammar.group_Node, formatter: Formatter) {
-    const cursor = node.walk();
+    const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
     do {
@@ -1947,6 +2152,9 @@ function formatGroup(node: Grammar.group_Node, formatter: Formatter) {
                 break;
             case "ERROR":
                 formatter.verbatim(c.nodeText);
+                break;
+            case "whiteline":
+                formatter.whiteline();
                 break;
             default:
                 assertNever(c);

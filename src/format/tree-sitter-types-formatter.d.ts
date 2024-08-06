@@ -52,6 +52,7 @@ interface root_Node extends BaseNode {
         | interface_Node
         | component_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -69,6 +70,7 @@ interface _root_statement_Node extends BaseNode {
         | interface_Node
         | component_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -76,7 +78,9 @@ interface import_Node extends BaseNode {
     type: "import";
     _id: 3;
     isNamed: true;
-    walk(): TypedCursor<UnnamedNode<"import", 4> | file_name_Node | UnnamedNode<";", 5> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        UnnamedNode<"import", 4> | file_name_Node | UnnamedNode<";", 5> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface file_name_Node extends BaseNode {
     type: "file_name";
@@ -87,7 +91,9 @@ interface dollars_Node extends BaseNode {
     type: "dollars";
     _id: 7;
     isNamed: true;
-    walk(): TypedCursor<UnnamedNode<"$", 8> | dollars_content_Node | UnnamedNode<"$", 9> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        UnnamedNode<"$", 8> | dollars_content_Node | UnnamedNode<"$", 9> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface dollars_content_Node extends BaseNode {
     type: "dollars_content";
@@ -98,14 +104,20 @@ interface _type_Node extends BaseNode {
     type: "_type";
     _id: 11;
     isNamed: true;
-    walk(): TypedCursor<enum_Node | int_Node | extern_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<enum_Node | int_Node | extern_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface enum_Node extends BaseNode {
     type: "enum";
     _id: 12;
     isNamed: true;
     walk(): TypedCursor<
-        UnnamedNode<"enum", 13> | scoped_name_Node | fields_Node | UnnamedNode<";", 14> | comment_Node | ERROR_Node
+        | UnnamedNode<"enum", 13>
+        | scoped_name_Node
+        | fields_Node
+        | UnnamedNode<";", 14>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface fields_Node extends BaseNode {
@@ -119,6 +131,7 @@ interface fields_Node extends BaseNode {
         | UnnamedNode<",", 18>
         | UnnamedNode<"}", 19>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -135,6 +148,7 @@ interface int_Node extends BaseNode {
         | UnnamedNode<"}", 24>
         | UnnamedNode<";", 25>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -142,7 +156,7 @@ interface _range_Node extends BaseNode {
     type: "_range";
     _id: 26;
     isNamed: true;
-    walk(): TypedCursor<number_Node | UnnamedNode<"..", 27> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<number_Node | UnnamedNode<"..", 27> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface extern_Node extends BaseNode {
     type: "extern";
@@ -156,6 +170,7 @@ interface extern_Node extends BaseNode {
         | UnnamedNode<"$", 31>
         | UnnamedNode<";", 32>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -175,6 +190,7 @@ interface namespace_Node extends BaseNode {
         | component_Node
         | UnnamedNode<"}", 36>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -190,6 +206,7 @@ interface _namespace_statement_Node extends BaseNode {
         | interface_Node
         | component_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -198,7 +215,12 @@ interface interface_Node extends BaseNode {
     _id: 38;
     isNamed: true;
     walk(): TypedCursor<
-        UnnamedNode<"interface", 39> | scoped_name_Node | interface_body_Node | comment_Node | ERROR_Node
+        | UnnamedNode<"interface", 39>
+        | scoped_name_Node
+        | interface_body_Node
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface interface_body_Node extends BaseNode {
@@ -214,6 +236,7 @@ interface interface_body_Node extends BaseNode {
         | behavior_Node
         | UnnamedNode<"}", 42>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -221,7 +244,7 @@ interface _interface_statement_Node extends BaseNode {
     type: "_interface_statement";
     _id: 43;
     isNamed: true;
-    walk(): TypedCursor<enum_Node | int_Node | extern_Node | event_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<enum_Node | int_Node | extern_Node | event_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface event_Node extends BaseNode {
     type: "event";
@@ -234,6 +257,7 @@ interface event_Node extends BaseNode {
         | formals_Node
         | UnnamedNode<";", 45>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -241,7 +265,7 @@ interface direction_Node extends BaseNode {
     type: "direction";
     _id: 46;
     isNamed: true;
-    walk(): TypedCursor<UnnamedNode<"in", 47> | UnnamedNode<"out", 48> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<UnnamedNode<"in", 47> | UnnamedNode<"out", 48> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface component_Node extends BaseNode {
     type: "component";
@@ -255,6 +279,7 @@ interface component_Node extends BaseNode {
         | body_Node
         | UnnamedNode<"}", 52>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -262,45 +287,57 @@ interface body_Node extends BaseNode {
     type: "body";
     _id: 53;
     isNamed: true;
-    walk(): TypedCursor<behavior_Node | system_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<behavior_Node | system_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface system_Node extends BaseNode {
     type: "system";
     _id: 54;
     isNamed: true;
-    walk(): TypedCursor<UnnamedNode<"system", 55> | system_body_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<UnnamedNode<"system", 55> | system_body_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface system_body_Node extends BaseNode {
     type: "system_body";
     _id: 56;
     isNamed: true;
     walk(): TypedCursor<
-        UnnamedNode<"{", 57> | instance_Node | binding_Node | UnnamedNode<"}", 58> | comment_Node | ERROR_Node
+        | UnnamedNode<"{", 57>
+        | instance_Node
+        | binding_Node
+        | UnnamedNode<"}", 58>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface _instance_or_binding_Node extends BaseNode {
     type: "_instance_or_binding";
     _id: 59;
     isNamed: true;
-    walk(): TypedCursor<instance_Node | binding_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<instance_Node | binding_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface instance_Node extends BaseNode {
     type: "instance";
     _id: 60;
     isNamed: true;
-    walk(): TypedCursor<compound_name_Node | name_Node | UnnamedNode<";", 61> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        compound_name_Node | name_Node | UnnamedNode<";", 61> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface binding_Node extends BaseNode {
     type: "binding";
     _id: 62;
     isNamed: true;
-    walk(): TypedCursor<end_point_Node | UnnamedNode<"<=>", 63> | UnnamedNode<";", 64> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        end_point_Node | UnnamedNode<"<=>", 63> | UnnamedNode<";", 64> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface end_point_Node extends BaseNode {
     type: "end_point";
     _id: 65;
     isNamed: true;
-    walk(): TypedCursor<compound_name_Node | UnnamedNode<".", 66> | asterisk_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        compound_name_Node | UnnamedNode<".", 66> | asterisk_Node | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface asterisk_Node extends BaseNode {
     type: "asterisk";
@@ -319,6 +356,7 @@ interface port_Node extends BaseNode {
         | port_name_Node
         | UnnamedNode<";", 69>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -326,7 +364,9 @@ interface port_direction_Node extends BaseNode {
     type: "port_direction";
     _id: 70;
     isNamed: true;
-    walk(): TypedCursor<UnnamedNode<"provides", 71> | UnnamedNode<"requires", 72> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        UnnamedNode<"provides", 71> | UnnamedNode<"requires", 72> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface port_qualifiers_Node extends BaseNode {
     type: "port_qualifiers";
@@ -342,6 +382,7 @@ interface port_qualifier_Node extends BaseNode {
         | UnnamedNode<"external", 76>
         | UnnamedNode<"injected", 77>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -350,21 +391,34 @@ interface formals_Node extends BaseNode {
     _id: 78;
     isNamed: true;
     walk(): TypedCursor<
-        UnnamedNode<"(", 79> | formal_Node | UnnamedNode<",", 80> | UnnamedNode<")", 81> | comment_Node | ERROR_Node
+        | UnnamedNode<"(", 79>
+        | formal_Node
+        | UnnamedNode<",", 80>
+        | UnnamedNode<")", 81>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface formal_Node extends BaseNode {
     type: "formal";
     _id: 82;
     isNamed: true;
-    walk(): TypedCursor<formal_direction_Node | type_name_Node | var_name_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        formal_direction_Node | type_name_Node | var_name_Node | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface formal_direction_Node extends BaseNode {
     type: "formal_direction";
     _id: 83;
     isNamed: true;
     walk(): TypedCursor<
-        UnnamedNode<"in", 84> | UnnamedNode<"out", 85> | UnnamedNode<"inout", 86> | comment_Node | ERROR_Node
+        | UnnamedNode<"in", 84>
+        | UnnamedNode<"out", 85>
+        | UnnamedNode<"inout", 86>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface type_name_Node extends BaseNode {
@@ -372,7 +426,12 @@ interface type_name_Node extends BaseNode {
     _id: 87;
     isNamed: true;
     walk(): TypedCursor<
-        compound_name_Node | UnnamedNode<"bool", 88> | UnnamedNode<"void", 89> | comment_Node | ERROR_Node
+        | compound_name_Node
+        | UnnamedNode<"bool", 88>
+        | UnnamedNode<"void", 89>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface behavior_Node extends BaseNode {
@@ -385,6 +444,7 @@ interface behavior_Node extends BaseNode {
         | name_Node
         | behavior_body_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -405,6 +465,7 @@ interface behavior_body_Node extends BaseNode {
         | extern_Node
         | UnnamedNode<"}", 95>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -423,6 +484,7 @@ interface _behavior_statement_Node extends BaseNode {
         | int_Node
         | extern_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -430,13 +492,17 @@ interface function_Node extends BaseNode {
     type: "function";
     _id: 97;
     isNamed: true;
-    walk(): TypedCursor<type_name_Node | name_Node | formals_Node | compound_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        type_name_Node | name_Node | formals_Node | compound_Node | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface _declarative_statement_Node extends BaseNode {
     type: "_declarative_statement";
     _id: 98;
     isNamed: true;
-    walk(): TypedCursor<on_Node | blocking_Node | guard_Node | compound_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        on_Node | blocking_Node | guard_Node | compound_Node | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface on_Node extends BaseNode {
     type: "on";
@@ -465,6 +531,7 @@ interface on_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 103>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -472,14 +539,14 @@ interface triggers_Node extends BaseNode {
     type: "triggers";
     _id: 104;
     isNamed: true;
-    walk(): TypedCursor<trigger_Node | UnnamedNode<",", 105> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<trigger_Node | UnnamedNode<",", 105> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface trigger_Node extends BaseNode {
     type: "trigger";
     _id: 106;
     isNamed: true;
     walk(): TypedCursor<
-        port_event_Node | optional_Node | inevitable_Node | event_name_Node | comment_Node | ERROR_Node
+        port_event_Node | optional_Node | inevitable_Node | event_name_Node | comment_Node | whiteline_Node | ERROR_Node
     >;
 }
 interface port_event_Node extends BaseNode {
@@ -487,7 +554,13 @@ interface port_event_Node extends BaseNode {
     _id: 107;
     isNamed: true;
     walk(): TypedCursor<
-        port_name_Node | UnnamedNode<".", 108> | name_Node | trigger_formals_Node | comment_Node | ERROR_Node
+        | port_name_Node
+        | UnnamedNode<".", 108>
+        | name_Node
+        | trigger_formals_Node
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
 }
 interface optional_Node extends BaseNode {
@@ -510,6 +583,7 @@ interface trigger_formals_Node extends BaseNode {
         | UnnamedNode<",", 113>
         | UnnamedNode<")", 114>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -517,7 +591,7 @@ interface trigger_formal_Node extends BaseNode {
     type: "trigger_formal";
     _id: 115;
     isNamed: true;
-    walk(): TypedCursor<var_Node | UnnamedNode<"<-", 116> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<var_Node | UnnamedNode<"<-", 116> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface guard_Node extends BaseNode {
     type: "guard";
@@ -554,6 +628,7 @@ interface guard_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 121>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -572,6 +647,7 @@ interface _otherwise_or_expression_Node extends BaseNode {
         | action_Node
         | binary_expression_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -606,6 +682,7 @@ interface compound_Node extends BaseNode {
         | UnnamedNode<";", 127>
         | UnnamedNode<"}", 128>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -627,6 +704,7 @@ interface variable_Node extends BaseNode {
         | binary_expression_Node
         | UnnamedNode<";", 131>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -663,6 +741,7 @@ interface _statement_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 136>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -686,6 +765,7 @@ interface _imperative_statement_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 139>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -711,6 +791,7 @@ interface defer_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 143>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -723,21 +804,21 @@ interface _action_or_call_Node extends BaseNode {
     type: "_action_or_call";
     _id: 145;
     isNamed: true;
-    walk(): TypedCursor<action_Node | call_Node | UnnamedNode<";", 146> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<action_Node | call_Node | UnnamedNode<";", 146> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface action_Node extends BaseNode {
     type: "action";
     _id: 147;
     isNamed: true;
     walk(): TypedCursor<
-        port_name_Node | UnnamedNode<".", 148> | name_Node | arguments_Node | comment_Node | ERROR_Node
+        port_name_Node | UnnamedNode<".", 148> | name_Node | arguments_Node | comment_Node | whiteline_Node | ERROR_Node
     >;
 }
 interface call_Node extends BaseNode {
     type: "call";
     _id: 149;
     isNamed: true;
-    walk(): TypedCursor<name_Node | arguments_Node | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<name_Node | arguments_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface arguments_Node extends BaseNode {
     type: "arguments";
@@ -756,6 +837,7 @@ interface arguments_Node extends BaseNode {
         | UnnamedNode<",", 152>
         | UnnamedNode<")", 153>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -789,6 +871,7 @@ interface blocking_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 158>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -796,7 +879,9 @@ interface illegal_Node extends BaseNode {
     type: "illegal";
     _id: 159;
     isNamed: true;
-    walk(): TypedCursor<UnnamedNode<"illegal", 160> | UnnamedNode<";", 161> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        UnnamedNode<"illegal", 160> | UnnamedNode<";", 161> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface assign_Node extends BaseNode {
     type: "assign";
@@ -815,6 +900,7 @@ interface assign_Node extends BaseNode {
         | binary_expression_Node
         | UnnamedNode<";", 164>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -864,6 +950,7 @@ interface if_statement_Node extends BaseNode {
         | interface_action_Node
         | UnnamedNode<";", 173>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -887,6 +974,7 @@ interface reply_Node extends BaseNode {
         | UnnamedNode<")", 178>
         | UnnamedNode<";", 179>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -906,6 +994,7 @@ interface return_Node extends BaseNode {
         | binary_expression_Node
         | UnnamedNode<";", 182>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -923,6 +1012,7 @@ interface _expression_Node extends BaseNode {
         | action_Node
         | binary_expression_Node
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -942,6 +1032,7 @@ interface group_Node extends BaseNode {
         | binary_expression_Node
         | UnnamedNode<")", 186>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -949,7 +1040,9 @@ interface literal_Node extends BaseNode {
     type: "literal";
     _id: 187;
     isNamed: true;
-    walk(): TypedCursor<number_Node | UnnamedNode<"true", 188> | UnnamedNode<"false", 189> | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        number_Node | UnnamedNode<"true", 188> | UnnamedNode<"false", 189> | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface unary_expression_Node extends BaseNode {
     type: "unary_expression";
@@ -967,6 +1060,7 @@ interface unary_expression_Node extends BaseNode {
         | binary_expression_Node
         | UnnamedNode<"-", 192>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -994,6 +1088,7 @@ interface binary_expression_Node extends BaseNode {
         | UnnamedNode<"+", 202>
         | UnnamedNode<"-", 203>
         | comment_Node
+        | whiteline_Node
         | ERROR_Node
     >;
 }
@@ -1001,7 +1096,9 @@ interface compound_name_Node extends BaseNode {
     type: "compound_name";
     _id: 204;
     isNamed: true;
-    walk(): TypedCursor<global_Node | Pattern | UnnamedNode<".", 205> | Pattern | comment_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        global_Node | Pattern | UnnamedNode<".", 205> | Pattern | comment_Node | whiteline_Node | ERROR_Node
+    >;
 }
 interface global_Node extends BaseNode {
     type: "global";
@@ -1042,12 +1139,25 @@ interface comment_Node extends BaseNode {
     type: "comment";
     _id: 213;
     isNamed: true;
+    trailing?: boolean;
     walk(): TypedCursor<
-        UnnamedNode<"//", 214> | Pattern | UnnamedNode<"/*", 215> | UnnamedNode<"/", 216> | comment_Node | ERROR_Node
+        | UnnamedNode<"//", 214>
+        | Pattern
+        | UnnamedNode<"/*", 215>
+        | UnnamedNode<"/", 216>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
     >;
+}
+interface whiteline_Node extends BaseNode {
+    type: "whiteline";
+    _id: 217;
+    isNamed: true;
 }
 type AllNodes =
     | comment_Node
+    | whiteline_Node
     | import_Node
     | dollars_Node
     | enum_Node
