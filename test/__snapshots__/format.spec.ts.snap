@@ -55,6 +55,15 @@ component HelloWorld
                 s = State.Hello;
             }
         }
+
+        bool bla(bool a)
+        {
+            bool c = a;
+            if (c == false)
+            {
+                
+            }
+        }
     }
 }
 "

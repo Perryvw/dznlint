@@ -1024,21 +1024,27 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
                 formatAssign(c.currentNode, formatter);
                 break;
             case "blocking":
+                formatter.requirePrecedingNewLine();
                 formatBlocking(c.currentNode, formatter);
                 break;
             case "call":
+                formatter.requirePrecedingNewLine();
                 formatCall(c.currentNode, formatter);
                 break;
             case "defer":
+                formatter.requirePrecedingNewLine();
                 formatDefer(c.currentNode, formatter);
                 break;
             case "guard":
+                formatter.requirePrecedingNewLine();
                 formatGuard(c.currentNode, formatter);
                 break;
             case "if_statement":
+                formatter.requirePrecedingNewLine();
                 formatIfStatement(c.currentNode, formatter);
                 break;
             case "illegal":
+                formatter.requirePrecedingNewLine();
                 formatter.keyword("illegal");
                 break;
             case "skip_statement":
@@ -1049,6 +1055,7 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
                 formatOn(c.currentNode, formatter);
                 break;
             case "reply":
+                formatter.requirePrecedingNewLine();
                 formatReply(c.currentNode, formatter);
                 break;
             case "interface_action":
