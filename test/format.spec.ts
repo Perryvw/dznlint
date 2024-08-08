@@ -3,6 +3,57 @@ import * as fs from "fs";
 import { TreeSitterNode, treeSitterParse } from "../src/parse";
 import { DEFAULT_DZNLINT_FORMAT_CONFIG, DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../src";
 
+test("different interface formatting (interface)", async () => {
+    await testFormat({
+        input: `
+        interface I {
+            in void A();
+            in void B();
+
+            out void C();
+
+            behavior {
+                enum State {
+                    S,
+                    T
+                };
+                State s = State.S;
+
+                [s.S] on A: { s = S.T; C; }
+                [s.T] on B: { s = S.S; C; }
+
+                [s.S] { on A: { s = S.T; C; } }
+                [s.T] { on B: { s = S.S; C; } }
+            }
+        }
+    `,
+    });
+});
+
+test("different interface formatting (component)", async () => {
+    await testFormat({
+        input: `
+        component C {
+            requires I i;
+
+            behavior {
+                enum State {
+                    S,
+                    T
+                };
+
+                [s.S] {
+                    on i.A(): { s = S.T; C; }
+                }
+                [s.T] {
+                    on i.B(): { s = S.S; C; }
+                }
+            }
+        }
+    `,
+    });
+});
+
 test("enum missing ;", async () => {
     await testFormat({
         verifyTreeEquality: false,

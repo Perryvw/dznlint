@@ -12,6 +12,7 @@ enum PrintingType {
     Instance,
     Binding,
     Function,
+    On,
 }
 
 enum Token {
@@ -33,6 +34,11 @@ enum Token {
     BracketClose,
     BinaryOperator,
     UnaryOperator,
+}
+
+export enum RequireNewLine {
+    Always,
+    SpaceInInterfaceOn,
 }
 
 export class Formatter {
@@ -60,7 +66,7 @@ export class Formatter {
     }
 
     public endComponent() {
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Component);
         this.closeScopedBlock();
     }
 
@@ -72,7 +78,7 @@ export class Formatter {
         this.currentType.push(PrintingType.Interface);
     }
     public endInterface() {
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Interface);
         this.closeScopedBlock();
         this.newLine();
     }
@@ -85,7 +91,7 @@ export class Formatter {
 
     public endEvent() {
         this.semicolon();
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Event);
     }
 
     // Behavior
@@ -97,7 +103,7 @@ export class Formatter {
     }
 
     public endBehavior() {
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Behavior);
         this.closeScopedBlock();
     }
 
@@ -139,7 +145,7 @@ export class Formatter {
     }
 
     public endSystem() {
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.System);
         this.closeScopedBlock();
     }
 
@@ -150,7 +156,7 @@ export class Formatter {
     }
 
     public endPort() {
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Port);
     }
 
     public startInstance() {
@@ -160,7 +166,7 @@ export class Formatter {
 
     public endInstance() {
         this.semicolon();
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Instance);
     }
 
     public startBinding() {
@@ -170,7 +176,7 @@ export class Formatter {
 
     public endBinding() {
         this.semicolon();
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Binding);
     }
 
     // On
@@ -179,6 +185,11 @@ export class Formatter {
         this.requirePrecedingSpace();
         this.output.push("on");
         this.previousToken = Token.Keyword;
+        this.currentType.push(PrintingType.On);
+    }
+
+    public endOn() {
+        this.popCurrentType(PrintingType.On);
     }
 
     // Function
@@ -191,7 +202,7 @@ export class Formatter {
     }
 
     public endFunction() {
-        this.currentType.push();
+        this.popCurrentType(PrintingType.Function);
     }
 
     public startFormals() {
@@ -219,7 +230,7 @@ export class Formatter {
         this.currentType.push(PrintingType.Enum);
     }
     public endEnum() {
-        this.currentType.pop();
+        this.popCurrentType(PrintingType.Enum);
         this.output.push(";");
         this.newLine();
     }
@@ -261,19 +272,27 @@ export class Formatter {
 
     // Misc
 
-    public openScopedBlock() {
+    public openScopedBlock(requireNewLine = RequireNewLine.Always) {
         if (this.config.braces === "next-line") {
-            this.requirePrecedingNewLine();
+            this.requirePrecedingNewLine(requireNewLine);
         } else {
             this.requirePrecedingSpace();
         }
         this.openBrace();
         this.pushIndent();
-        this.newLine();
+        if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
+            this.space();
+        } else {
+            this.newLine();
+        }
     }
-    public closeScopedBlock() {
+    public closeScopedBlock(requireNewLine = RequireNewLine.Always) {
         this.popIndent();
-        this.newLine();
+        if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
+            this.space();
+        } else {
+            this.newLine();
+        }
         this.closeBrace();
     }
 
@@ -396,7 +415,11 @@ export class Formatter {
 
     // Helpers
 
-    public requirePrecedingNewLine() {
+    public requirePrecedingNewLine(requireNewLine = RequireNewLine.Always) {
+        if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
+            this.requirePrecedingSpace();
+            return;
+        }
         if (this.previousToken !== Token.NewLine) {
             this.newLine();
         }
@@ -423,5 +446,25 @@ export class Formatter {
 
     private peekCurrentType(): PrintingType {
         return this.currentType[this.currentType.length - 1];
+    }
+
+    private popCurrentType(expectedType: PrintingType) {
+        const popped = this.currentType.pop();
+        if (popped !== expectedType) {
+            throw `Popped type ${PrintingType[popped!]} does not match expected type ${PrintingType[expectedType]}!`;
+        }
+    }
+
+    private inInterfaceOn(): boolean {
+        let inOn = false;
+        for (let i = this.currentType.length - 1; i >= 0; i--) {
+            if (this.currentType[i] === PrintingType.On) {
+                inOn = true;
+            } else if (this.currentType[i] === PrintingType.Interface) {
+                return inOn;
+            }
+        }
+
+        return false;
     }
 }

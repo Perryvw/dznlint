@@ -1,5 +1,72 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`different interface formatting (component) 1`] = `
+"component C
+{
+    requires I i;
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        
+        [s.S]
+        {
+            on i.A():
+            {
+                s = S.T;
+                C;
+            }
+        }
+        [s.T]
+        {
+            on i.B():
+            {
+                s = S.S;
+                C;
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`different interface formatting (interface) 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
+
+        [s.S]
+        {
+            on A: { s = S.T; C; }
+        }
+        [s.T]
+        {
+            on B: { s = S.S; C; }
+        }
+    }
+}
+"
+`;
+
 exports[`enum missing ; 1`] = `
 "interface I
 {
@@ -90,21 +157,14 @@ interface HelloWorld
 
         [s.Hello]
         {
-            on hello:
-            {
-                s = State.World;
-            }
+            on hello: { s = State.World; }
 
             on world: illegal;
         }
 
         [s.World]
         {
-            on world:
-            {
-                helloWorld;
-                s = State.Hello;
-            }
+            on world: { helloWorld; s = State.Hello; }
         }
     }
 }
@@ -237,19 +297,12 @@ exports[`format file files/interface.dzn 1`] = `
 
         [s.Hello]
         {
-            on hello:
-            {
-                s = State.World;
-            }
+            on hello: { s = State.World; }
         }
 
         [s.World]
         {
-            on world:
-            {
-                helloWorld;
-                s = State.Hello;
-            }
+            on world: { helloWorld; s = State.Hello; }
         }
     }
 }
@@ -290,16 +343,8 @@ exports[`formatting configuration braces ("next-line") 1`] = `
             T
         };
         State s = State.S;
-        [s.S] on A:
-        {
-            s = S.T;
-            C;
-        }
-        [s.T] on B:
-        {
-            s = S.S;
-            C;
-        }
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
     }
 }
 "
@@ -318,14 +363,8 @@ exports[`formatting configuration braces ("same-line") 1`] = `
             T
         };
         State s = State.S;
-        [s.S] on A: {
-            s = S.T;
-            C;
-        }
-        [s.T] on B: {
-            s = S.S;
-            C;
-        }
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
     }
 }
 "
@@ -347,16 +386,8 @@ exports[`formatting configuration indent (2) 1`] = `
       T
     };
     State s = State.S;
-    [s.S] on A:
-    {
-      s = S.T;
-      C;
-    }
-    [s.T] on B:
-    {
-      s = S.S;
-      C;
-    }
+    [s.S] on A: { s = S.T; C; }
+    [s.T] on B: { s = S.S; C; }
   }
 }
 "
@@ -378,16 +409,8 @@ exports[`formatting configuration indent (4) 1`] = `
             T
         };
         State s = State.S;
-        [s.S] on A:
-        {
-            s = S.T;
-            C;
-        }
-        [s.T] on B:
-        {
-            s = S.S;
-            C;
-        }
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
     }
 }
 "
@@ -409,16 +432,8 @@ exports[`formatting configuration indent (8) 1`] = `
                         T
                 };
                 State s = State.S;
-                [s.S] on A:
-                {
-                        s = S.T;
-                        C;
-                }
-                [s.T] on B:
-                {
-                        s = S.S;
-                        C;
-                }
+                [s.S] on A: { s = S.T; C; }
+                [s.T] on B: { s = S.S; C; }
         }
 }
 "

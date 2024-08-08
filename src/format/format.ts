@@ -3,7 +3,7 @@ import { DEFAULT_DZNLINT_FORMAT_CONFIG } from "../config/default-config";
 import { DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../config/dznlint-configuration";
 import { TreeSitterNode, treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
-import { Formatter } from "./formatter";
+import { Formatter, RequireNewLine } from "./formatter";
 import * as Grammar from "./tree-sitter-types-formatter";
 
 export async function format(source: InputSource, config?: DznLintFormatUserConfiguration): Promise<string> {
@@ -1014,13 +1014,13 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
     do {
         switch (c.nodeType) {
             case "{":
-                formatter.openScopedBlock();
+                formatter.openScopedBlock(RequireNewLine.SpaceInInterfaceOn);
                 break;
             case "}":
-                formatter.closeScopedBlock();
+                formatter.closeScopedBlock(RequireNewLine.SpaceInInterfaceOn);
                 break;
             case "assign":
-                formatter.requirePrecedingNewLine();
+                formatter.requirePrecedingNewLine(RequireNewLine.SpaceInInterfaceOn);
                 formatAssign(c.currentNode, formatter);
                 break;
             case "blocking":
@@ -1055,11 +1055,11 @@ function formatCompound(node: Grammar.compound_Node, formatter: Formatter) {
                 formatOn(c.currentNode, formatter);
                 break;
             case "reply":
-                formatter.requirePrecedingNewLine();
+                formatter.requirePrecedingNewLine(RequireNewLine.SpaceInInterfaceOn);
                 formatReply(c.currentNode, formatter);
                 break;
             case "interface_action":
-                formatter.requirePrecedingNewLine();
+                formatter.requirePrecedingNewLine(RequireNewLine.SpaceInInterfaceOn);
                 formatCompoundName(c.currentNode, formatter);
                 break;
             case ";":
@@ -1167,9 +1167,11 @@ function formatOn(node: Grammar.on_Node, formatter: Formatter) {
                 break;
             case ";":
                 formatter.semicolon();
+                formatter.endOn();
                 break;
             case "compound":
                 formatCompound(c.currentNode, formatter);
+                formatter.endOn();
                 break;
             case "action":
                 formatAction(c.currentNode, formatter);
@@ -1195,6 +1197,7 @@ function formatOn(node: Grammar.on_Node, formatter: Formatter) {
             case "illegal":
                 formatter.keyword("illegal");
                 formatter.semicolon();
+                formatter.endOn();
                 break;
             case "interface_action":
                 formatCompoundName(c.currentNode, formatter);
@@ -1464,8 +1467,6 @@ function formatAssign(node: Grammar.assign_Node, formatter: Formatter) {
     const cursor = new WhitespaceCursor(node);
     cursor.gotoFirstChild();
     const c = cursor as Grammar.CursorPosition<typeof node>;
-
-    formatter.startVariable();
 
     do {
         switch (c.nodeType) {
