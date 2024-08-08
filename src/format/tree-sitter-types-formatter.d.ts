@@ -16,6 +16,10 @@ interface ERROR_Node extends BaseNode {
     type: "ERROR";
     _id: -10;
 }
+interface whiteline_Node extends BaseNode {
+    type: "whiteline";
+    _id: -20;
+}
 interface TypedCursor<TNodes> {
     readonly currentNode: TNodes;
     readonly nodeType: AllNodes["type"];
@@ -1139,7 +1143,6 @@ interface comment_Node extends BaseNode {
     type: "comment";
     _id: 213;
     isNamed: true;
-    trailing?: boolean;
     walk(): TypedCursor<
         | UnnamedNode<"//", 214>
         | Pattern
@@ -1150,14 +1153,9 @@ interface comment_Node extends BaseNode {
         | ERROR_Node
     >;
 }
-interface whiteline_Node extends BaseNode {
-    type: "whiteline";
-    _id: 217;
-    isNamed: true;
-}
 type AllNodes =
+    | root_Node
     | comment_Node
-    | whiteline_Node
     | import_Node
     | dollars_Node
     | enum_Node
@@ -1468,4 +1466,5 @@ type AllNodes =
     | UnnamedNode<"/*", 215>
     | UnnamedNode<"/", 216>
     | Pattern
+    | whiteline_Node
     | ERROR_Node;

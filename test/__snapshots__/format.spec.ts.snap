@@ -22,13 +22,14 @@ exports[`error 1`] = `
 
 exports[`format file files/component.dzn 1`] = `
 "import interface.dzn;
+
 component HelloWorld
 {
     provides IHelloWorld api;
-    
+
     requires IRequired required;
     requires injected IInjected requiredInjected;
-    
+
     behavior
     {
         enum State
@@ -37,7 +38,7 @@ component HelloWorld
             World
         };
         State s = State.Hello;
-        
+
         [s.Hello]
         {
             on api.hello():
@@ -45,7 +46,7 @@ component HelloWorld
                 s = State.World;
             }
         }
-        
+
         [s.World]
         {
             on api.world():
@@ -61,13 +62,14 @@ component HelloWorld
 
 exports[`format file files/demo.dzn 1`] = `
 "extern int $int$;
+
 interface HelloWorld
 {
     in void hello();
     in void world();
-    
+
     out void helloWorld();
-    
+
     behavior
     {
         enum State
@@ -76,17 +78,17 @@ interface HelloWorld
             World
         };
         State s = State.Hello;
-        
+
         [s.Hello]
         {
             on hello:
             {
                 s = State.World;
             }
-            
+
             on world: illegal;
         }
-        
+
         [s.World]
         {
             on world:
@@ -97,10 +99,11 @@ interface HelloWorld
         }
     }
 }
+
 component HelloWorld
 {
     provides IHelloWorld api;
-    
+
     behavior
     {
         enum State
@@ -109,21 +112,21 @@ component HelloWorld
             World
         };
         State s = State.Hello;
-        
+
         [s.Hello]
         {
             on api.hello():
             {
                 s = State.World;
             }
-            
+
             on api.hello():
             {
                 s = State.World;
                 Result r = doSomething();
             }
         }
-        
+
         [s.World]
         {
             on api.world():
@@ -132,32 +135,75 @@ component HelloWorld
                 s = State.Hello;
             }
         }
-        
+
         int myFunction(in int s, in bool t, in bool t)
         {
             return 4;
             api.foo();
         }
-        
+
         int myOtherFunction(int t)
         {
             
         }
     }
 }
+
 component HelloWorldSystem
 {
     provides IHelloWorld api;
     requires IFooBar foobar;
-    
+
     system
     {
         HelloWorld helloWorld;
         MyType myinstance;
         api <=> helloWold.api;
         blabla <=> helloWorld.api;
-        
+
         HelloWorldSystem recursiveSystem;
+    }
+}
+"
+`;
+
+exports[`format file files/format-component.dzn 1`] = `
+"import test_interface.dzn;
+import bla.dzn;
+
+component MyComponent
+{
+    provides IMyInterface myInterface;
+    provides IMyInterface myInterface2;
+    provides IMyInterface myInterface3;
+    provides IMyInterface myInterface4;
+    provides IMyInterface myInterface5;
+
+    behavior
+    {
+        on myInterface.Test():
+        {
+            
+        }
+
+        /* a:
+         *
+         */
+        on myInterface.Tes0t():
+        {
+            
+        }
+    }
+}
+
+component System
+{
+    provides IMyInterface myInterface;
+
+    system
+    {
+        MyComponent component;
+        component.myInterface <=> component.myInterface2;
     }
 }
 "
@@ -168,9 +214,9 @@ exports[`format file files/interface.dzn 1`] = `
 {
     in void hello();
     in void world();
-    
+
     out void helloWorld();
-    
+
     behavior
     {
         enum State
@@ -179,7 +225,7 @@ exports[`format file files/interface.dzn 1`] = `
             World
         };
         State s = State.Hello;
-        
+
         [s.Hello]
         {
             on hello:
@@ -187,7 +233,7 @@ exports[`format file files/interface.dzn 1`] = `
                 s = State.World;
             }
         }
-        
+
         [s.World]
         {
             on world:
@@ -203,17 +249,168 @@ exports[`format file files/interface.dzn 1`] = `
 
 exports[`format file files/system.dzn 1`] = `
 "import component.dzn;
+
 component HelloWorldSystem
 {
     provides IHelloWorld api;
     requires IRequired required;
-    
+
     system
     {
         HelloWorld helloWorld;
         api <=> helloWorld.api;
         helloWorld.required <=> required;
     }
+}
+"
+`;
+
+exports[`formatting configuration braces ("next-line") 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A:
+        {
+            s = S.T;
+            C;
+        }
+        [s.T] on B:
+        {
+            s = S.S;
+            C;
+        }
+    }
+}
+"
+`;
+
+exports[`formatting configuration braces ("same-line") 1`] = `
+"interface I {
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior {
+        enum State {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A: {
+            s = S.T;
+            C;
+        }
+        [s.T] on B: {
+            s = S.S;
+            C;
+        }
+    }
+}
+"
+`;
+
+exports[`formatting configuration indent (2) 1`] = `
+"interface I
+{
+  in void A();
+  in void B();
+
+  out void C();
+
+  behavior
+  {
+    enum State
+    {
+      S,
+      T
+    };
+    State s = State.S;
+    [s.S] on A:
+    {
+      s = S.T;
+      C;
+    }
+    [s.T] on B:
+    {
+      s = S.S;
+      C;
+    }
+  }
+}
+"
+`;
+
+exports[`formatting configuration indent (4) 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A:
+        {
+            s = S.T;
+            C;
+        }
+        [s.T] on B:
+        {
+            s = S.S;
+            C;
+        }
+    }
+}
+"
+`;
+
+exports[`formatting configuration indent (8) 1`] = `
+"interface I
+{
+        in void A();
+        in void B();
+
+        out void C();
+
+        behavior
+        {
+                enum State
+                {
+                        S,
+                        T
+                };
+                State s = State.S;
+                [s.S] on A:
+                {
+                        s = S.T;
+                        C;
+                }
+                [s.T] on B:
+                {
+                        s = S.S;
+                        C;
+                }
+        }
 }
 "
 `;
@@ -248,6 +445,7 @@ interface I /* sup */
      * 
      * blala */
 }
+
 /*
  * Trailing I
  */

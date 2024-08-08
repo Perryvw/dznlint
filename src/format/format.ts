@@ -18,6 +18,13 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
     return formatted.endsWith("\n") ? formatted : formatted + "\n";
 }
 
+// Extend comment node with extra property
+declare module "./tree-sitter-types-formatter" {
+    interface comment_Node {
+        trailing: boolean;
+    }
+}
+
 class WhitespaceCursor<TNode extends Extract<Grammar.AllNodes, { walk(): Grammar.TypedCursor<any> }>>
     implements Grammar.TypedCursor<Grammar.WalkerNodes<TNode>>
 {
@@ -58,7 +65,7 @@ class WhitespaceCursor<TNode extends Extract<Grammar.AllNodes, { walk(): Grammar
             if (this.cursor.gotoNextSibling()) {
                 const newNode = this.cursor.currentNode;
                 this._currentNode = newNode;
-                if (newNode.startPosition.row > previousNode.endPosition.row + 1) {
+                if (newNode.startPosition.row > previousNode.endPosition.row + 1 && previousNode.type !== "{") {
                     // Insert synthetic whiteline node
                     this.syntheticNode = {
                         type: "whiteline",
@@ -95,7 +102,7 @@ function assertNever(x: never): void {}
 // Statements
 
 function formatRoot(root: Grammar.root_Node, formatter: Formatter) {
-    const cursor = root.walk();
+    const cursor = new WhitespaceCursor(root);
     if (cursor.gotoFirstChild()) {
         const c = cursor as Grammar.CursorPosition<typeof root>;
         do {

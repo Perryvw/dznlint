@@ -122,13 +122,55 @@ test("multi-line comments", async () => {
     });
 });
 
-test.each(["files/component.dzn", "files/demo.dzn", "files/interface.dzn", "files/system.dzn"])(
-    "format file %s",
-    async fileName => {
-        const fileContent = fs.readFileSync(`${__dirname}/${fileName}`).toString();
-        await testFormat({ input: fileContent });
-    }
-);
+test.each([
+    "files/component.dzn",
+    "files/demo.dzn",
+    "files/interface.dzn",
+    "files/system.dzn",
+    "files/format-component.dzn",
+])("format file %s", async fileName => {
+    const fileContent = fs.readFileSync(`${__dirname}/${fileName}`).toString();
+    await testFormat({ input: fileContent });
+});
+
+describe("formatting configuration", () => {
+    const unformatted = `
+        interface I {
+            in void A();
+            in void B();
+
+            out void C();
+
+            behavior {
+                enum State {
+                    S,
+                    T
+                };
+                State s = State.S;
+                [s.S] on A: { s = S.T; C; }
+                [s.T] on B: { s = S.S; C; }
+            }
+        }
+    `;
+
+    test.each([2, 4, 8])("indent (%p)", indent => {
+        testFormat({
+            input: unformatted,
+            config: {
+                indent: ["spaces", indent],
+            },
+        });
+    });
+
+    test.each(["same-line", "next-line"] as const)("braces (%p)", braces => {
+        testFormat({
+            input: unformatted,
+            config: {
+                braces,
+            },
+        });
+    });
+});
 
 async function testFormat(formatTest: {
     input: string;

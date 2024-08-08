@@ -92,6 +92,11 @@ result.push(`interface ERROR_Node extends BaseNode {
     _id: -10;
 }`);
 
+result.push(`interface whiteline_Node extends BaseNode {
+    type: "whiteline";
+    _id: -20;
+}`);
+
 result.push(`interface TypedCursor<TNodes> {
     readonly currentNode: TNodes;
     readonly nodeType: AllNodes["type"];
@@ -138,12 +143,16 @@ for (const [type, rule] of Object.entries(rules)) {
         const childTypes = removeDuplicates(getAllChildNodes(rule, new Map()).map(typeOfNode));
         for (const t of childTypes) allTypes.add(t);
         const extraTypes = extras.filter(e => e.type === "SYMBOL").map(typeOfNode);
-        result.push(`    walk(): TypedCursor<${[...childTypes, ...extraTypes, "ERROR_Node"].join(" | ")}>`);
+        result.push(
+            `    walk(): TypedCursor<${[...childTypes, ...extraTypes, "whiteline_Node", "ERROR_Node"].join(" | ")}>`
+        );
     }
     result.push("}");
 }
 
-result.push(`type AllNodes = ${[...allTypes.values()].join(" | ")} | Pattern | ERROR_Node;`);
+result.push(
+    `type AllNodes = ${["root_Node", ...allTypes.values()].join(" | ")} | Pattern | whiteline_Node | ERROR_Node;`
+);
 
 fs.writeFileSync(`${__dirname}/../src/format/tree-sitter-types-formatter.d.ts`, result.join("\n"));
 

@@ -382,7 +382,9 @@ export class Formatter {
     }
 
     public whiteline() {
-        this.requirePrecedingNewLine();
+        if (this.previousToken !== Token.NewLine) {
+            this.output.push("\n"); // no indent!
+        }
         this.newLine();
     }
 
