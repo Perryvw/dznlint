@@ -21,6 +21,7 @@ enum Token {
     Literal,
     SingleLineComment,
     MultiLineComment,
+    LeadingComment,
     Comma,
     Semicolon,
     NewLine,
@@ -270,6 +271,11 @@ export class Formatter {
         this.previousToken = Token.MultiLineComment;
     }
 
+    public leadingComment(comment: string) {
+        this.multiLineComment(comment);
+        this.previousToken = Token.LeadingComment;
+    }
+
     // Misc
 
     public openScopedBlock(requireNewLine = RequireNewLine.Always) {
@@ -418,6 +424,9 @@ export class Formatter {
     public requirePrecedingNewLine(requireNewLine = RequireNewLine.Always) {
         if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
             this.requirePrecedingSpace();
+            return;
+        }
+        if (this.previousToken === Token.LeadingComment) {
             return;
         }
         if (this.previousToken !== Token.NewLine) {

@@ -1,7 +1,7 @@
 import { format } from "../src/format/format";
 import * as fs from "fs";
 import { TreeSitterNode, treeSitterParse } from "../src/parse";
-import { DEFAULT_DZNLINT_FORMAT_CONFIG, DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../src";
+import { DznLintFormatUserConfiguration } from "../src";
 
 test("different interface formatting (interface)", async () => {
     await testFormat({
@@ -169,6 +169,20 @@ test("multi-line comments", async () => {
             /*
             * Trailing I
             */
+        `,
+    });
+});
+
+test("leading comments", async () => {
+    await testFormat({
+        input: `
+            component C {
+                system {
+                    Instance instance;
+                    /*|*/Instance instance;
+                    /*|--*/Instance isntance;
+                }
+            }
         `,
     });
 });

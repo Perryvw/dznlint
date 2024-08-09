@@ -450,6 +450,19 @@ exports[`guard missing ; 1`] = `
 "
 `;
 
+exports[`leading comments 1`] = `
+"component C
+{
+    system
+    {
+        Instance instance;
+        /*|*/ Instance instance;
+        /*|--*/ Instance isntance;
+    }
+}
+"
+`;
+
 exports[`multi-line comments 1`] = `
 "/* Hi
  * Hello

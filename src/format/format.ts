@@ -21,6 +21,7 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
 // Extend comment node with extra property
 declare module "./tree-sitter-types-formatter" {
     interface comment_Node {
+        leading: boolean;
         trailing: boolean;
     }
 }
@@ -75,8 +76,14 @@ class WhitespaceCursor<TNode extends Extract<Grammar.AllNodes, { walk(): Grammar
                     } as any;
                 }
                 if (newNode.type === "comment") {
-                    if (newNode.type === "comment" && previousNode.endPosition.row === newNode.startPosition.row) {
+                    if (previousNode.endPosition.row === newNode.startPosition.row) {
                         (this._currentNode as unknown as Grammar.comment_Node).trailing = true;
+                    }
+                    if (this.cursor.gotoNextSibling()) {
+                        if (this.cursor.currentNode.startPosition.row === newNode.endPosition.row) {
+                            (this._currentNode as unknown as Grammar.comment_Node).leading = true;
+                        }
+                        this.cursor.gotoPreviousSibling();
                     }
                 }
                 return true;
@@ -165,6 +172,8 @@ function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
     const isSingleLine = node.text.startsWith("//");
     if (isSingleLine) {
         formatter.singleLineComment(node.text);
+    } else if (node.leading) {
+        formatter.leadingComment(node.text);
     } else {
         formatter.multiLineComment(node.text);
     }
