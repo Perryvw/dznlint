@@ -38,6 +38,10 @@ interface TreeCursorOfType<T extends AllNodes> {
     nodeType: T["type"];
     currentNode: T;
     nodeText: string;
+    gotoFirstChild(): boolean;
+    gotoNextSibling(): boolean;
+    gotoParent(): boolean;
+    pos(): CursorPosition<T>;
 }
 
 type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<WalkerNodes<TNode>>];
