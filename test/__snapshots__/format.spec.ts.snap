@@ -439,6 +439,72 @@ exports[`formatting configuration indent (8) 1`] = `
 "
 `;
 
+exports[`formatting configuration indenting components and interfaces (false) 1`] = `
+"interface I
+{
+in void A();
+in void B();
+
+out void C();
+
+behavior
+{
+    enum State
+    {
+        S,
+        T
+    };
+    State s = State.S;
+    [s.S] on A: { s = S.T; C; }
+    [s.T] on B: { s = S.S; C; }
+}
+}
+
+component C
+{
+provides I p;
+requires I r;
+behavior
+{
+    
+}
+}
+"
+`;
+
+exports[`formatting configuration indenting components and interfaces (true) 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
+    }
+}
+
+component C
+{
+    provides I p;
+    requires I r;
+    behavior
+    {
+        
+    }
+}
+"
+`;
+
 exports[`guard missing ; 1`] = `
 "interface I
 {

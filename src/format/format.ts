@@ -10,6 +10,8 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
     const fullConfig: DznLintFormatConfiguration = {
         indent: config?.indent ?? DEFAULT_DZNLINT_FORMAT_CONFIG.indent,
         braces: config?.braces ?? DEFAULT_DZNLINT_FORMAT_CONFIG.braces,
+        indent_components_interfaces:
+            config?.indent_components_interfaces ?? DEFAULT_DZNLINT_FORMAT_CONFIG.indent_components_interfaces,
     };
     const formatter = new Formatter(fullConfig);
     const tree = (await treeSitterParse(source)) as Grammar.BaseNode as Grammar.root_Node;

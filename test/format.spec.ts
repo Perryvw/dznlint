@@ -235,6 +235,23 @@ describe("formatting configuration", () => {
             },
         });
     });
+
+    test.each([true, false])("indenting components and interfaces (%p)", doIndent => {
+        testFormat({
+            input:
+                unformatted +
+                `
+                component C {
+                    provides I p;
+                    requires I r;
+                    behavior {}
+                }
+            `,
+            config: {
+                indent_components_interfaces: doIndent,
+            },
+        });
+    });
 });
 
 async function testFormat(formatTest: {

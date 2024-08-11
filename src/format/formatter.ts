@@ -67,8 +67,8 @@ export class Formatter {
     }
 
     public endComponent() {
-        this.popCurrentType(PrintingType.Component);
         this.closeScopedBlock();
+        this.popCurrentType(PrintingType.Component);
     }
 
     // Interface
@@ -79,8 +79,8 @@ export class Formatter {
         this.currentType.push(PrintingType.Interface);
     }
     public endInterface() {
-        this.popCurrentType(PrintingType.Interface);
         this.closeScopedBlock();
+        this.popCurrentType(PrintingType.Interface);
         this.newLine();
     }
 
@@ -104,8 +104,8 @@ export class Formatter {
     }
 
     public endBehavior() {
-        this.popCurrentType(PrintingType.Behavior);
         this.closeScopedBlock();
+        this.popCurrentType(PrintingType.Behavior);
     }
 
     public startVariable() {
@@ -146,8 +146,8 @@ export class Formatter {
     }
 
     public endSystem() {
-        this.popCurrentType(PrintingType.System);
         this.closeScopedBlock();
+        this.popCurrentType(PrintingType.System);
     }
 
     public startPort(direction: string) {
@@ -231,8 +231,8 @@ export class Formatter {
         this.currentType.push(PrintingType.Enum);
     }
     public endEnum() {
-        this.popCurrentType(PrintingType.Enum);
         this.output.push(";");
+        this.popCurrentType(PrintingType.Enum);
         this.newLine();
     }
 
@@ -285,7 +285,9 @@ export class Formatter {
             this.requirePrecedingSpace();
         }
         this.openBrace();
-        this.pushIndent();
+        if (this.shouldIndent()) {
+            this.pushIndent();
+        }
         if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
             this.space();
         } else {
@@ -293,7 +295,9 @@ export class Formatter {
         }
     }
     public closeScopedBlock(requireNewLine = RequireNewLine.Always) {
-        this.popIndent();
+        if (this.shouldIndent()) {
+            this.popIndent();
+        }
         if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
             this.space();
         } else {
@@ -475,5 +479,16 @@ export class Formatter {
         }
 
         return false;
+    }
+
+    private shouldIndent(): boolean {
+        if (this.config.indent_components_interfaces) {
+            return true;
+        }
+
+        const currentType = this.peekCurrentType();
+        const isComponentOrInterface = currentType === PrintingType.Component || currentType === PrintingType.Interface;
+
+        return !isComponentOrInterface;
     }
 }

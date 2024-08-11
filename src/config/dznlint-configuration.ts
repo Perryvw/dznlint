@@ -5,6 +5,7 @@ export type ConfigValueWithData<T> = [ConfigSeverity, T];
 export interface DznLintFormatConfiguration {
     indent: ["tabs" | "spaces", number];
     braces: "same-line" | "next-line";
+    indent_components_interfaces: boolean;
 }
 
 export interface DznLintConfiguration {
