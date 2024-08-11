@@ -125,10 +125,7 @@ component HelloWorld
         bool bla(bool a)
         {
             bool c = a;
-            if (c == false)
-            {
-                
-            }
+            if (c == false) {}
         }
     }
 }
@@ -210,10 +207,7 @@ component HelloWorld
             api.foo();
         }
 
-        int myOtherFunction(int t)
-        {
-            
-        }
+        int myOtherFunction(int t) {}
     }
 }
 
@@ -249,18 +243,12 @@ component MyComponent
 
     behavior
     {
-        on myInterface.Test():
-        {
-            
-        }
+        on myInterface.Test(): {}
 
         /* a:
          *
          */
-        on myInterface.Tes0t():
-        {
-            
-        }
+        on myInterface.Tes0t(): {}
     }
 }
 

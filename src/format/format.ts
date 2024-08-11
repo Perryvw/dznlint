@@ -916,6 +916,13 @@ function formatFormal(cursor: Grammar.CursorPosition<Grammar.formal_Node>, forma
 }
 
 function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, formatter: Formatter) {
+    if (cursor.currentNode.childCount === 2) {
+        formatter.requirePrecedingSpace();
+        formatter.openBrace();
+        formatter.closeBrace();
+        return;
+    }
+
     cursor.gotoFirstChild();
     do {
         switch (cursor.nodeType) {

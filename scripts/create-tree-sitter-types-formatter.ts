@@ -77,6 +77,7 @@ result.push(`interface BaseNode {
     isNamed: boolean;
     isError: boolean;
     text: string;
+    childCount: number;
 }`);
 
 result.push(`interface UnnamedNode<T extends string, _Id extends number> extends BaseNode {

@@ -3,6 +3,7 @@ interface BaseNode {
     isNamed: boolean;
     isError: boolean;
     text: string;
+    childCount: number;
 }
 interface UnnamedNode<T extends string, _Id extends number> extends BaseNode {
     type: T;
