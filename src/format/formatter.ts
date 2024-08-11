@@ -81,7 +81,6 @@ export class Formatter {
     public endInterface() {
         this.closeScopedBlock();
         this.popCurrentType(PrintingType.Interface);
-        this.newLine();
     }
 
     public startEvent(direction: string) {
@@ -233,7 +232,6 @@ export class Formatter {
     public endEnum() {
         this.output.push(";");
         this.popCurrentType(PrintingType.Enum);
-        this.newLine();
     }
 
     public enumMember(name: string) {
@@ -251,7 +249,7 @@ export class Formatter {
     public singleLineComment(comment: string) {
         this.requirePrecedingSpace();
         this.output.push(comment);
-        this.newLine();
+        this.previousToken = Token.SingleLineComment;
     }
 
     public multiLineComment(comment: string) {

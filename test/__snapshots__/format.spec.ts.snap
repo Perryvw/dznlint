@@ -12,7 +12,7 @@ exports[`different interface formatting (component) 1`] = `
             S,
             T
         };
-        
+
         [s.S]
         {
             on i.A():
@@ -75,7 +75,6 @@ exports[`enum missing ; 1`] = `
         A,
         B
     };
-    
 }
 "
 `;
@@ -543,7 +542,7 @@ interface I /* sup */
          * foo
          */
     };
-    
+
     /* Trailing E
      * 
      * blala */
@@ -579,9 +578,9 @@ interface I // Hello
         // Buzz
         D
     };
-    
+
     // Trailing E
-    
+
     behavior
     {
         void foo(/* hello */ in bool b)

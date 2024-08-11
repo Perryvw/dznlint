@@ -1,6 +1,6 @@
 import { TreeCursor } from "web-tree-sitter";
 import { TreeSitterNode } from "../parse";
-import * as Grammar from "../grammar/tree-sitter-types-formatter";
+import type * as Grammar from "../grammar/tree-sitter-types-formatter";
 
 // Extend comment node with extra property
 declare module "../grammar/tree-sitter-types-formatter" {
