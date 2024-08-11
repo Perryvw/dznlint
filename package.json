@@ -5,7 +5,8 @@
     "repository": "https://github.com/Perryvw/dznlint",
     "files": [
         "dist/**/*.js",
-        "dist/**/*.ts"
+        "dist/**/*.ts",
+        "dist/**/*.wasm"
     ],
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
