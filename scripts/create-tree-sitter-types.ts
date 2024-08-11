@@ -80,4 +80,4 @@ function fieldType(field: Field): string {
     }
 }
 
-fs.writeFileSync(`${__dirname}/../src/format/tree-sitter-types.d.ts`, result.join("\n"));
+fs.writeFileSync(`${__dirname}/../src/grammar/tree-sitter-types.d.ts`, result.join("\n"));

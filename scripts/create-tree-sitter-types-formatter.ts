@@ -115,6 +115,10 @@ interface TreeCursorOfType<T extends AllNodes> {
     nodeType: T["type"];
     currentNode: T;
     nodeText: string;
+    gotoFirstChild(): boolean;
+    gotoNextSibling(): boolean;
+    gotoParent(): boolean;
+    pos(): CursorPosition<T>;
 }
 
 type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<WalkerNodes<TNode>>];
@@ -154,7 +158,7 @@ result.push(
     `type AllNodes = ${["root_Node", ...allTypes.values()].join(" | ")} | Pattern | whiteline_Node | ERROR_Node;`
 );
 
-fs.writeFileSync(`${__dirname}/../src/format/tree-sitter-types-formatter.d.ts`, result.join("\n"));
+fs.writeFileSync(`${__dirname}/../src/grammar/tree-sitter-types-formatter.d.ts`, result.join("\n"));
 
 function removeDuplicates<T>(l: T[]) {
     const m = new Set(l);

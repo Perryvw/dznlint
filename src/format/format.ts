@@ -1,10 +1,10 @@
-import { SyntaxNode, TreeCursor } from "web-tree-sitter";
 import { DEFAULT_DZNLINT_FORMAT_CONFIG } from "../config/default-config";
 import { DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../config/dznlint-configuration";
-import { TreeSitterNode, treeSitterParse } from "../parse";
+import { treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
 import { Formatter, RequireNewLine } from "./formatter";
-import * as Grammar from "./tree-sitter-types-formatter";
+import * as Grammar from "../grammar/tree-sitter-types-formatter";
+import { WhitespaceSensitiveCursor } from "./whitespace-sensitive-cursor";
 
 export async function format(source: InputSource, config?: DznLintFormatUserConfiguration): Promise<string> {
     const fullConfig: DznLintFormatConfiguration = {
@@ -13,102 +13,9 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
     };
     const formatter = new Formatter(fullConfig);
     const tree = (await treeSitterParse(source)) as Grammar.BaseNode as Grammar.root_Node;
-    formatRoot(new WhitespaceCursor(tree) as Grammar.CursorPosition<Grammar.root_Node>, formatter);
+    formatRoot(new WhitespaceSensitiveCursor(tree) as Grammar.CursorPosition<Grammar.root_Node>, formatter);
     const formatted = formatter.toString();
     return formatted.endsWith("\n") ? formatted : formatted + "\n";
-}
-
-// Extend comment node with extra property
-declare module "./tree-sitter-types-formatter" {
-    interface comment_Node {
-        leading: boolean;
-        trailing: boolean;
-    }
-}
-
-class WhitespaceCursor<TNode extends Extract<Grammar.AllNodes, { walk(): Grammar.TypedCursor<any> }>>
-    implements Grammar.TypedCursor<Grammar.WalkerNodes<TNode>>
-{
-    private cursor: TreeCursor;
-
-    constructor(node: TNode) {
-        this.cursor = node.walk() as any;
-    }
-
-    private syntheticNode: Grammar.WalkerNodes<TNode> | undefined;
-    private _currentNode: TreeSitterNode = undefined!;
-
-    public get currentNode() {
-        return this.syntheticNode ?? (this._currentNode as Grammar.WalkerNodes<TNode>);
-    }
-    public get nodeType() {
-        return this.currentNode.type;
-    }
-    public get nodeText() {
-        return this.currentNode.text;
-    }
-
-    public toString() {
-        return `[Cursor at node of type <${this.currentNode.type}> "${this.currentNode.text}"]`;
-    }
-
-    public pos() {
-        return this;
-    }
-
-    gotoFirstChild(): boolean {
-        if (this.cursor.gotoFirstChild()) {
-            this.syntheticNode = undefined;
-            this._currentNode = this.cursor.currentNode;
-            return true;
-        } else {
-            return false;
-        }
-    }
-    gotoNextSibling(): boolean {
-        if (this.syntheticNode) {
-            this.syntheticNode = undefined;
-            return true;
-        } else {
-            const previousNode = this._currentNode;
-            if (this.cursor.gotoNextSibling()) {
-                const newNode = this.cursor.currentNode;
-                this._currentNode = newNode;
-                if (newNode.startPosition.row > previousNode.endPosition.row + 1 && previousNode.type !== "{") {
-                    // Insert synthetic whiteline node
-                    this.syntheticNode = {
-                        type: "whiteline",
-                        isError: false,
-                        isNamed: true,
-                        text: "",
-                    } as any;
-                }
-                if (newNode.type === "comment") {
-                    if (previousNode.endPosition.row === newNode.startPosition.row) {
-                        (this._currentNode as unknown as Grammar.comment_Node).trailing = true;
-                    }
-                    if (this.cursor.gotoNextSibling()) {
-                        if (this.cursor.currentNode.startPosition.row === newNode.endPosition.row) {
-                            (this._currentNode as unknown as Grammar.comment_Node).leading = true;
-                        }
-                        this.cursor.gotoPreviousSibling();
-                    }
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-    gotoParent(): boolean {
-        if (this.cursor.gotoParent()) {
-            this.syntheticNode = undefined;
-            this._currentNode = this.cursor.currentNode;
-            return true;
-        } else {
-            return false;
-        }
-    }
 }
 
 // Sanity check to help verify we handled all possible cases in the if statement
