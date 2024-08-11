@@ -187,6 +187,26 @@ test("leading comments", async () => {
     });
 });
 
+test("trailing comments after guard", async () => {
+    await testFormat({
+        input: `
+            component C {
+                behavior {
+                    State s = State.A;
+
+                    [true] {
+                        // hi
+                    } // abc
+
+                    [true] {
+                        // ho
+                    } // def
+                }
+            }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",
@@ -230,6 +250,26 @@ describe("formatting configuration", () => {
     test.each(["same-line", "next-line"] as const)("braces (%p)", braces => {
         testFormat({
             input: unformatted,
+            config: {
+                braces,
+            },
+        });
+    });
+    test.each(["same-line", "next-line"] as const)("braces if statement (%p)", braces => {
+        testFormat({
+            input: `
+                component C {
+                    behavior {
+                        void foo() {
+                            if (true) {
+                                // foo
+                            } else {
+                                // bar
+                            }
+                        }
+                    }
+                }
+            `,
             config: {
                 braces,
             },

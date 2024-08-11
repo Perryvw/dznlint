@@ -63,7 +63,6 @@ function formatRoot(cursor: Grammar.CursorPosition<Grammar.root_Node>, formatter
                     break;
                 // generics
                 case "comment":
-                    formatter.requirePrecedingNewLine();
                     formatComment(cursor.currentNode, formatter);
                     break;
                 case "ERROR":
@@ -621,7 +620,6 @@ function formatBehavior(cursor: Grammar.CursorPosition<Grammar.behavior_Node>, f
                             break;
                         // generics
                         case "comment":
-                            formatter.requirePrecedingNewLine();
                             formatComment(c2.currentNode, formatter);
                             break;
                         case "ERROR":
@@ -1505,7 +1503,7 @@ function formatIfStatement(cursor: Grammar.CursorPosition<Grammar.if_statement_N
                 formatter.closeParen();
                 break;
             case "else":
-                formatter.keyword("else");
+                formatter.else();
                 break;
             case ";":
                 formatter.semicolon();

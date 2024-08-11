@@ -357,6 +357,42 @@ exports[`formatting configuration braces ("same-line") 1`] = `
 "
 `;
 
+exports[`formatting configuration braces if statement ("next-line") 1`] = `
+"component C
+{
+    behavior
+    {
+        void foo()
+        {
+            if (true)
+            {
+                // foo
+            }
+            else
+            {
+                // bar
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`formatting configuration braces if statement ("same-line") 1`] = `
+"component C {
+    behavior {
+        void foo() {
+            if (true) {
+                // foo
+            } else {
+                // bar
+            }
+        }
+    }
+}
+"
+`;
+
 exports[`formatting configuration indent (2) 1`] = `
 "interface I
 {
@@ -580,6 +616,27 @@ interface I // Hello
     }
 }
 // Trailing I
+"
+`;
+
+exports[`trailing comments after guard 1`] = `
+"component C
+{
+    behavior
+    {
+        State s = State.A;
+
+        [true]
+        {
+            // hi
+        } // abc
+
+        [true]
+        {
+            // ho
+        } // def
+    }
+}
 "
 `;
 

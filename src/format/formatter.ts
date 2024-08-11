@@ -340,6 +340,13 @@ export class Formatter {
         this.previousToken = Token.UnaryOperator;
     }
 
+    public else() {
+        if (this.config.braces === "next-line") {
+            this.requirePrecedingNewLine();
+        }
+        this.keyword("else");
+    }
+
     public comma() {
         this.output.push(",");
         this.previousToken = Token.Comma;
