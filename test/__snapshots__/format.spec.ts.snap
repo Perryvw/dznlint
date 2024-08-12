@@ -589,6 +589,29 @@ exports[`on missing ; 1`] = `
 "
 `;
 
+exports[`pop expected types 1`] = `
+"interface I
+{
+    behavior
+    {
+        on Foo, Bar: { 
+            [true] reply(true);
+            [true] reply(false); }
+
+        on Baz: reply(Foo.Bar);
+    }
+}
+component C
+{
+    behavior
+    {
+        on port.Action(): reply(Foo.Bar);
+        on port.Action(): s = Foo.Bar;
+    }
+}
+"
+`;
+
 exports[`single-line comments 1`] = `
 "// Hi
 interface I // Hello

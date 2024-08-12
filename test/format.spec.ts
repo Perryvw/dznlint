@@ -207,6 +207,30 @@ test("trailing comments after guard", async () => {
     });
 });
 
+test("pop expected types", async () => {
+    await testFormat({
+        input: `
+            interface I {
+                behavior {
+                    on Foo, Bar:
+                    {
+                        [true] reply(true);
+                        [true] reply(false);
+                    }
+
+                    on Baz: reply(Foo.Bar);
+                }
+            }
+            component C {
+                behavior {
+                    on port.Action(): reply(Foo.Bar);
+                    on port.Action(): s = Foo.Bar;
+                }
+            }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

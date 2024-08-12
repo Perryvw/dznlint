@@ -1076,11 +1076,9 @@ function formatOn(cursor: Grammar.CursorPosition<Grammar.on_Node>, formatter: Fo
                 break;
             case ";":
                 formatter.semicolon();
-                formatter.endOn();
                 break;
             case "compound":
                 formatCompound(cursor, formatter);
-                formatter.endOn();
                 break;
             case "action":
                 formatAction(cursor.pos(), formatter);
@@ -1106,7 +1104,6 @@ function formatOn(cursor: Grammar.CursorPosition<Grammar.on_Node>, formatter: Fo
             case "illegal":
                 formatter.keyword("illegal");
                 formatter.semicolon();
-                formatter.endOn();
                 break;
             case "interface_action":
                 formatCompoundName(cursor.currentNode, formatter);
@@ -1138,6 +1135,7 @@ function formatOn(cursor: Grammar.CursorPosition<Grammar.on_Node>, formatter: Fo
                 throw `cannot format on child ${cursor}`;
         }
     } while (cursor.gotoNextSibling());
+    formatter.endOn();
     cursor.gotoParent();
 }
 
