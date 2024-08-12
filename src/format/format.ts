@@ -921,17 +921,19 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
         return;
     }
 
+    const containsGuards = compoundContainsGuards(cursor);
+
     cursor.gotoFirstChild();
     do {
         switch (cursor.nodeType) {
             case "{":
-                formatter.openScopedBlock(RequireNewLine.SpaceInInterfaceOn);
+                formatter.openCompound(containsGuards);
                 break;
             case "}":
-                formatter.closeScopedBlock(RequireNewLine.SpaceInInterfaceOn);
+                formatter.closeCompound();
                 break;
             case "assign":
-                formatter.requirePrecedingNewLine(RequireNewLine.SpaceInInterfaceOn);
+                formatter.requirePrecedingNewLine();
                 formatAssign(cursor.pos(), formatter);
                 break;
             case "blocking":
@@ -966,11 +968,11 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
                 formatOn(cursor, formatter);
                 break;
             case "reply":
-                formatter.requirePrecedingNewLine(RequireNewLine.SpaceInInterfaceOn);
+                formatter.requirePrecedingNewLine();
                 formatReply(cursor.pos(), formatter);
                 break;
             case "interface_action":
-                formatter.requirePrecedingNewLine(RequireNewLine.SpaceInInterfaceOn);
+                formatter.requirePrecedingNewLine();
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
             case ";":
@@ -2081,4 +2083,17 @@ function formatCompoundName(
     formatter: Formatter
 ) {
     formatter.name(name.text.replace(/\s/g, ""));
+}
+
+function compoundContainsGuards(compound: Grammar.CursorPosition<Grammar.compound_Node>): boolean {
+    if (compound.gotoFirstChild()) {
+        do {
+            if (compound.currentNode.type === "guard") {
+                compound.gotoParent();
+                return true;
+            }
+        } while (compound.gotoNextSibling());
+        compound.gotoParent();
+    }
+    return false;
 }

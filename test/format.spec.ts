@@ -19,11 +19,18 @@ test("different interface formatting (interface)", async () => {
                 };
                 State s = State.S;
 
-                [s.S] on A: { s = S.T; C; }
-                [s.T] on B: { s = S.S; C; }
+                [s.S] on A: { s = S.T; C; reply(true); }
+                [s.T] on B: { s = S.S; C; reply(false); }
 
-                [s.S] { on A: { s = S.T; C; } }
-                [s.T] { on B: { s = S.S; C; } }
+                [s.S] { on A: { s = S.T; C; reply(true); } }
+                [s.T] { on B: { s = S.S; C; reply(false); } }
+
+                [s.S] { 
+                    on A: { 
+                        [true] { s = S.T; C; reply(true); }
+                        [true] { s = S.S; C; reply(false); }
+                    }
+                }
             }
         }
     `,
@@ -43,10 +50,10 @@ test("different interface formatting (component)", async () => {
                 };
 
                 [s.S] {
-                    on i.A(): { s = S.T; C; }
+                    on i.A(): { s = S.T; C; reply(true); }
                 }
                 [s.T] {
-                    on i.B(): { s = S.S; C; }
+                    on i.B(): { s = S.S; C; reply(false); }
                 }
             }
         }

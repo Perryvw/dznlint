@@ -13,6 +13,8 @@ enum PrintingType {
     Binding,
     Function,
     On,
+    Compound,
+    OneLineCompound,
 }
 
 enum Token {
@@ -39,7 +41,7 @@ enum Token {
 
 export enum RequireNewLine {
     Always,
-    SpaceInInterfaceOn,
+    NotInOneLineCompound,
 }
 
 export class Formatter {
@@ -116,7 +118,11 @@ export class Formatter {
     }
 
     public startAssignment() {
-        this.requirePrecedingNewLine();
+        if (this.peekCurrentType() === PrintingType.OneLineCompound) {
+            this.requirePrecedingSpace();
+        } else {
+            this.requirePrecedingNewLine();
+        }
     }
 
     public endAssignment() {
@@ -274,11 +280,31 @@ export class Formatter {
         this.previousToken = Token.LeadingComment;
     }
 
+    // Compound
+
+    public openCompound(containsGuards: boolean) {
+        if (this.inInterfaceOn() && !containsGuards) {
+            this.currentType.push(PrintingType.OneLineCompound);
+        } else {
+            this.currentType.push(PrintingType.Compound);
+        }
+        this.openScopedBlock();
+    }
+
+    public closeCompound() {
+        this.closeScopedBlock();
+        if (this.peekCurrentType() === PrintingType.OneLineCompound) {
+            this.popCurrentType(PrintingType.OneLineCompound);
+        } else {
+            this.popCurrentType(PrintingType.Compound);
+        }
+    }
+
     // Misc
 
-    public openScopedBlock(requireNewLine = RequireNewLine.Always) {
+    public openScopedBlock() {
         if (this.config.braces === "next-line") {
-            this.requirePrecedingNewLine(requireNewLine);
+            this.requirePrecedingNewLine();
         } else {
             this.requirePrecedingSpace();
         }
@@ -286,21 +312,12 @@ export class Formatter {
         if (this.shouldIndent()) {
             this.pushIndent();
         }
-        if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
-            this.space();
-        } else {
-            this.newLine();
-        }
     }
-    public closeScopedBlock(requireNewLine = RequireNewLine.Always) {
+    public closeScopedBlock() {
         if (this.shouldIndent()) {
             this.popIndent();
         }
-        if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
-            this.space();
-        } else {
-            this.newLine();
-        }
+        this.requirePrecedingNewLine();
         this.closeBrace();
     }
 
@@ -430,8 +447,9 @@ export class Formatter {
 
     // Helpers
 
-    public requirePrecedingNewLine(requireNewLine = RequireNewLine.Always) {
-        if (requireNewLine === RequireNewLine.SpaceInInterfaceOn && this.inInterfaceOn()) {
+    public requirePrecedingNewLine() {
+        if (this.peekCurrentType() === PrintingType.OneLineCompound) {
+            // When printing a one-line compound, require a preceding space instead of preceding newline
             this.requirePrecedingSpace();
             return;
         }
@@ -448,7 +466,6 @@ export class Formatter {
             this.previousToken !== Token.Space &&
             this.previousToken !== Token.ParenOpen &&
             this.previousToken !== Token.BracketOpen &&
-            this.previousToken !== Token.BraceOpen &&
             this.previousToken !== Token.Dot
         ) {
             this.space();

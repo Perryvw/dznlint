@@ -19,6 +19,7 @@ exports[`different interface formatting (component) 1`] = `
             {
                 s = S.T;
                 C;
+                reply(true);
             }
         }
         [s.T]
@@ -27,6 +28,7 @@ exports[`different interface formatting (component) 1`] = `
             {
                 s = S.S;
                 C;
+                reply(false);
             }
         }
     }
@@ -51,16 +53,25 @@ exports[`different interface formatting (interface) 1`] = `
         };
         State s = State.S;
 
-        [s.S] on A: { s = S.T; C; }
-        [s.T] on B: { s = S.S; C; }
+        [s.S] on A: { s = S.T; C; reply(true); }
+        [s.T] on B: { s = S.S; C; reply(false); }
 
         [s.S]
         {
-            on A: { s = S.T; C; }
+            on A: { s = S.T; C; reply(true); }
         }
         [s.T]
         {
-            on B: { s = S.S; C; }
+            on B: { s = S.S; C; reply(false); }
+        }
+
+        [s.S]
+        {
+            on A:
+            {
+                [true] { s = S.T; C; reply(true); }
+                [true] { s = S.S; C; reply(false); }
+            }
         }
     }
 }
@@ -489,7 +500,6 @@ provides I p;
 requires I r;
 behavior
 {
-    
 }
 }
 "
@@ -522,7 +532,6 @@ component C
     requires I r;
     behavior
     {
-        
     }
 }
 "
@@ -594,9 +603,11 @@ exports[`pop expected types 1`] = `
 {
     behavior
     {
-        on Foo, Bar: { 
+        on Foo, Bar:
+        {
             [true] reply(true);
-            [true] reply(false); }
+            [true] reply(false);
+        }
 
         on Baz: reply(Foo.Bar);
     }
@@ -665,8 +676,7 @@ exports[`trailing comments after guard 1`] = `
 
 exports[`variable missing ; 1`] = `
 "interface I
-{
-    bool b = false
+{bool b = false
 }
 "
 `;
