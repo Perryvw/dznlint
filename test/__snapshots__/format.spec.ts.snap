@@ -587,6 +587,33 @@ interface I /* sup */
 "
 `;
 
+exports[`namespaces 1`] = `
+"namespace A { namespace B { namespace C {
+
+enum MyEnum
+{
+    A,
+    B
+};
+
+interface I
+{
+    in void Bla();
+
+    behavior
+    {
+    }
+}
+
+component C
+{
+    provides I i;
+}
+
+}}}
+"
+`;
+
 exports[`on missing ; 1`] = `
 "interface I
 {

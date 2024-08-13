@@ -251,6 +251,30 @@ test("spaces before trailing comments", async () => {
     });
 });
 
+test("namespaces", async () => {
+    await testFormat({
+        input: `
+            namespace A { namespace B { namespace C {
+
+            enum MyEnum {
+                A, B
+            };
+
+            interface I {
+                in void Bla();
+
+                behavior{}
+            }
+
+            component C {
+                provides I i;
+            }
+
+            }}}
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

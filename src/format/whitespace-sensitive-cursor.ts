@@ -59,7 +59,7 @@ export class WhitespaceSensitiveCursor<TNode extends Extract<Grammar.AllNodes, {
             if (this.cursor.gotoNextSibling()) {
                 const newNode = this.cursor.currentNode;
                 this._currentNode = newNode;
-                if (newNode.startPosition.row > previousNode.endPosition.row + 1 && previousNode.type !== "{") {
+                if (newNode.startPosition.row > previousNode.endPosition.row + 1) {
                     // Insert synthetic whiteline node
                     this.syntheticNode = {
                         type: "whiteline",

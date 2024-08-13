@@ -113,10 +113,10 @@ function formatNamespace(cursor: Grammar.CursorPosition<Grammar.namespace_Node>,
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
             case "{":
-                formatter.openScopedBlock();
+                formatter.openNamespaceBrace();
                 break;
             case "}":
-                formatter.closeScopedBlock();
+                formatter.closeNamespaceBrace();
                 break;
             case "interface":
                 formatInterface(cursor.pos(), formatter);

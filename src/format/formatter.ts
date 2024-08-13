@@ -37,6 +37,7 @@ enum Token {
     BracketClose,
     BinaryOperator,
     UnaryOperator,
+    NamespaceBrace,
 }
 
 export enum RequireNewLine {
@@ -300,6 +301,22 @@ export class Formatter {
         }
     }
 
+    // Namespace
+
+    public openNamespaceBrace() {
+        this.requirePrecedingSpace();
+        this.openBrace();
+        this.previousToken = Token.NamespaceBrace;
+    }
+
+    public closeNamespaceBrace() {
+        if (this.previousToken !== Token.NamespaceBrace) {
+            this.requirePrecedingNewLine();
+        }
+        this.closeBrace();
+        this.previousToken = Token.NamespaceBrace;
+    }
+
     // Misc
 
     public openScopedBlock() {
@@ -433,6 +450,10 @@ export class Formatter {
     }
 
     public whiteline() {
+        if (this.previousToken === Token.BraceOpen) {
+            // Don't print whitelines directly after opening braces
+            return;
+        }
         if (this.previousToken !== Token.NewLine) {
             this.output.push("\n"); // no indent!
         }
