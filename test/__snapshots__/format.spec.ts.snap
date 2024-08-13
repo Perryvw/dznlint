@@ -653,6 +653,17 @@ interface I // Hello
 "
 `;
 
+exports[`spaces before trailing comments 1`] = `
+"interface A
+{
+    in bool Bla(); // Hello
+    in bool Bar(); // World
+    in bool Bar();  // World
+    in bool Bar();   // World
+}
+"
+`;
+
 exports[`trailing comments after guard 1`] = `
 "component C
 {

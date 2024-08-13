@@ -238,6 +238,19 @@ test("pop expected types", async () => {
     });
 });
 
+test("spaces before trailing comments", async () => {
+    await testFormat({
+        input: `
+            interface A {
+                in bool Bla();// Hello
+                in bool Bar(); // World
+                in bool Bar();  // World
+                in bool Bar();   // World
+            }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

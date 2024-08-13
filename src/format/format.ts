@@ -82,6 +82,11 @@ function formatRoot(cursor: Grammar.CursorPosition<Grammar.root_Node>, formatter
 function formatComment(node: Grammar.comment_Node, formatter: Formatter) {
     if (!node.trailing) {
         formatter.requirePrecedingNewLine();
+    } else {
+        for (let i = 0; i < node.trailingSpaces; ++i) {
+            // Preserve spaces before comment
+            formatter.space();
+        }
     }
     const isSingleLine = node.text.startsWith("//");
     if (isSingleLine) {

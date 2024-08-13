@@ -7,6 +7,7 @@ declare module "../grammar/tree-sitter-types-formatter" {
     interface comment_Node {
         leading: boolean;
         trailing: boolean;
+        trailingSpaces: number;
     }
 }
 
@@ -69,7 +70,9 @@ export class WhitespaceSensitiveCursor<TNode extends Extract<Grammar.AllNodes, {
                 }
                 if (newNode.type === "comment") {
                     if (previousNode.endPosition.row === newNode.startPosition.row) {
-                        (this._currentNode as unknown as Grammar.comment_Node).trailing = true;
+                        const commentNode = this._currentNode as Grammar.BaseNode as Grammar.comment_Node;
+                        commentNode.trailing = true;
+                        commentNode.trailingSpaces = newNode.startPosition.column - previousNode.endPosition.column;
                     }
                     if (this.cursor.gotoNextSibling()) {
                         if (this.cursor.currentNode.startPosition.row === newNode.endPosition.row) {
