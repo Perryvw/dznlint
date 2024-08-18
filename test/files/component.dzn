@@ -22,5 +22,12 @@ component HelloWorld {
                 s = State.Hello;
             }
         }
+
+        bool bla(in bool a) {
+            bool c = a;
+            if (c == false) {
+            }
+            c = true;
+        }
     }
 }

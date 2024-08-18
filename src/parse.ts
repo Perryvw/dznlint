@@ -22,3 +22,21 @@ export function parseDznSource(source: InputSource): { ast?: parser.file; diagno
 
     return { ast: ast == null ? undefined : ast, diagnostics };
 }
+
+import * as Parser from "web-tree-sitter";
+
+export type TreeSitterNode = Parser.SyntaxNode;
+
+let treeSitterParser: Parser | undefined;
+
+export async function treeSitterParse(source: InputSource): Promise<Parser.SyntaxNode> {
+    if (treeSitterParser === undefined) {
+        await Parser.init();
+        treeSitterParser = new Parser();
+        const language = await Parser.Language.load(`${__dirname}/grammar/tree-sitter-dezyne.wasm`);
+        treeSitterParser.setLanguage(language);
+    }
+
+    const tree = treeSitterParser.parse(source.fileContent);
+    return tree.rootNode;
+}

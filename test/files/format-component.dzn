@@ -1,0 +1,34 @@
+import test_interface.dzn;
+import bla.dzn;
+
+component MyComponent
+{
+    provides IMyInterface myInterface;
+    provides IMyInterface myInterface2;
+    provides IMyInterface myInterface3;
+    provides IMyInterface  myInterface4;
+    provides IMyInterface myInterface5;
+
+    behavior {
+        on myInterface.Test(): {
+
+        }
+
+        /* a:
+         *
+         */
+    on myInterface.Tes0t(): {
+
+        }
+    }
+}
+
+component System {
+
+    provides IMyInterface myInterface;
+    
+    system {
+        MyComponent component;
+        component.myInterface <=> component.myInterface2;
+    }
+}

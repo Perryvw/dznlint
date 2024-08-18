@@ -2,13 +2,13 @@ export type ConfigSeverity = "error" | "warning" | "hint";
 export type ConfigValue = ConfigSeverity;
 export type ConfigValueWithData<T> = [ConfigSeverity, T];
 
+export interface DznLintFormatConfiguration {
+    indent: ["tabs" | "spaces", number];
+    braces: "same-line" | "next-line";
+    indent_components_interfaces: boolean;
+}
+
 export interface DznLintConfiguration {
-    // Format configuration
-    // format: {
-    //     indent: "tabs" | "spaces",
-    //     indentWidth: number,
-    //     braces: "same-line" | "next-line"
-    // };
     // Rule configuration
     call_arguments_must_match: ConfigValue;
     dead_code: ConfigValue;
@@ -54,3 +54,9 @@ export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =
 export type DznLintUserConfiguration = {
     [P in keyof DznLintConfiguration]?: false | ConfigSeverity | DznLintConfiguration[P];
 };
+
+export type DznLintFormatUserConfiguration = {
+    [P in keyof DznLintFormatConfiguration]?: DznLintFormatConfiguration[P];
+};
+
+export type DznLintCombinedUserConfiguration = DznLintUserConfiguration & { format?: DznLintFormatConfiguration };

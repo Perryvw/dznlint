@@ -1,0 +1,761 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`comments in trigger list 1`] = `
+"interface I
+{
+    behavior
+    {
+        on a, b,
+        // bla
+        c, d,
+        // foo
+        e: { reply(Result.Ok); }
+    }
+}
+"
+`;
+
+exports[`different interface formatting (component) 1`] = `
+"component C
+{
+    requires I i;
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+
+        [s.S]
+        {
+            on i.A():
+            {
+                s = S.T;
+                C;
+                reply(true);
+            }
+        }
+        [s.T]
+        {
+            on i.B():
+            {
+                s = S.S;
+                C;
+                reply(false);
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`different interface formatting (interface) 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+
+        [s.S] on A: { s = S.T; C; reply(true); }
+        [s.T] on B: { s = S.S; C; reply(false); }
+
+        [s.S]
+        {
+            on A: { s = S.T; C; reply(true); }
+        }
+        [s.T]
+        {
+            on B: { s = S.S; C; reply(false); }
+        }
+
+        [s.S]
+        {
+            on A:
+            {
+                [true] { s = S.T; C; reply(true); }
+                [true] { s = S.S; C; reply(false); }
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`enum missing ; 1`] = `
+"interface I
+{
+    enum E
+    {
+        A,
+        B
+    };
+}
+"
+`;
+
+exports[`error 1`] = `
+"interface I {
+                enum E
+                {
+"
+`;
+
+exports[`format file files/component.dzn 1`] = `
+"import interface.dzn;
+
+component HelloWorld
+{
+    provides IHelloWorld api;
+
+    requires IRequired required;
+    requires injected IInjected requiredInjected;
+
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+
+        [s.Hello]
+        {
+            on api.hello():
+            {
+                s = State.World;
+            }
+        }
+
+        [s.World]
+        {
+            on api.world():
+            {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+
+        bool bla(in bool a)
+        {
+            bool c = a;
+            if (c == false) {}
+            c = true;
+        }
+    }
+}
+"
+`;
+
+exports[`format file files/demo.dzn 1`] = `
+"extern int $int$;
+
+interface HelloWorld
+{
+    in void hello();
+    in void world();
+
+    out void helloWorld();
+
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+
+        [s.Hello]
+        {
+            on hello: { s = State.World; }
+
+            on world: illegal;
+        }
+
+        [s.World]
+        {
+            on world: { helloWorld; s = State.Hello; }
+        }
+    }
+}
+
+component HelloWorld
+{
+    provides IHelloWorld api;
+
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+
+        [s.Hello]
+        {
+            on api.hello():
+            {
+                s = State.World;
+            }
+
+            on api.hello():
+            {
+                s = State.World;
+                Result r = doSomething();
+            }
+        }
+
+        [s.World]
+        {
+            on api.world():
+            {
+                api.helloWorld();
+                s = State.Hello;
+            }
+        }
+
+        int myFunction(in int s, in bool t, in bool t)
+        {
+            return 4;
+            api.foo();
+        }
+
+        int myOtherFunction(int t) {}
+    }
+}
+
+component HelloWorldSystem
+{
+    provides IHelloWorld api;
+    requires IFooBar foobar;
+
+    system
+    {
+        HelloWorld helloWorld;
+        MyType myinstance;
+        api <=> helloWold.api;
+        blabla <=> helloWorld.api;
+
+        HelloWorldSystem recursiveSystem;
+    }
+}
+"
+`;
+
+exports[`format file files/format-component.dzn 1`] = `
+"import test_interface.dzn;
+import bla.dzn;
+
+component MyComponent
+{
+    provides IMyInterface myInterface;
+    provides IMyInterface myInterface2;
+    provides IMyInterface myInterface3;
+    provides IMyInterface myInterface4;
+    provides IMyInterface myInterface5;
+
+    behavior
+    {
+        on myInterface.Test(): {}
+
+        /* a:
+         *
+         */
+        on myInterface.Tes0t(): {}
+    }
+}
+
+component System
+{
+    provides IMyInterface myInterface;
+
+    system
+    {
+        MyComponent component;
+        component.myInterface <=> component.myInterface2;
+    }
+}
+"
+`;
+
+exports[`format file files/interface.dzn 1`] = `
+"interface IHelloWorld
+{
+    in void hello();
+    in void world();
+
+    out void helloWorld();
+
+    behavior
+    {
+        enum State
+        {
+            Hello,
+            World
+        };
+        State s = State.Hello;
+
+        [s.Hello]
+        {
+            on hello: { s = State.World; }
+        }
+
+        [s.World]
+        {
+            on world: { helloWorld; s = State.Hello; }
+        }
+    }
+}
+"
+`;
+
+exports[`format file files/system.dzn 1`] = `
+"import component.dzn;
+
+component HelloWorldSystem
+{
+    provides IHelloWorld api;
+    requires IRequired required;
+
+    system
+    {
+        HelloWorld helloWorld;
+        api <=> helloWorld.api;
+        helloWorld.required <=> required;
+    }
+}
+"
+`;
+
+exports[`formatting configuration braces ("next-line") 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
+    }
+}
+"
+`;
+
+exports[`formatting configuration braces ("same-line") 1`] = `
+"interface I {
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior {
+        enum State {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
+    }
+}
+"
+`;
+
+exports[`formatting configuration braces if statement ("next-line") 1`] = `
+"component C
+{
+    behavior
+    {
+        void foo()
+        {
+            if (true)
+            {
+                // foo
+            }
+            else
+            {
+                // bar
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`formatting configuration braces if statement ("same-line") 1`] = `
+"component C {
+    behavior {
+        void foo() {
+            if (true) {
+                // foo
+            } else {
+                // bar
+            }
+        }
+    }
+}
+"
+`;
+
+exports[`formatting configuration indent (2) 1`] = `
+"interface I
+{
+  in void A();
+  in void B();
+
+  out void C();
+
+  behavior
+  {
+    enum State
+    {
+      S,
+      T
+    };
+    State s = State.S;
+    [s.S] on A: { s = S.T; C; }
+    [s.T] on B: { s = S.S; C; }
+  }
+}
+"
+`;
+
+exports[`formatting configuration indent (4) 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
+    }
+}
+"
+`;
+
+exports[`formatting configuration indent (8) 1`] = `
+"interface I
+{
+        in void A();
+        in void B();
+
+        out void C();
+
+        behavior
+        {
+                enum State
+                {
+                        S,
+                        T
+                };
+                State s = State.S;
+                [s.S] on A: { s = S.T; C; }
+                [s.T] on B: { s = S.S; C; }
+        }
+}
+"
+`;
+
+exports[`formatting configuration indenting components and interfaces (false) 1`] = `
+"interface I
+{
+in void A();
+in void B();
+
+out void C();
+
+behavior
+{
+    enum State
+    {
+        S,
+        T
+    };
+    State s = State.S;
+    [s.S] on A: { s = S.T; C; }
+    [s.T] on B: { s = S.S; C; }
+}
+}
+
+component C
+{
+provides I p;
+requires I r;
+behavior
+{
+}
+}
+"
+`;
+
+exports[`formatting configuration indenting components and interfaces (true) 1`] = `
+"interface I
+{
+    in void A();
+    in void B();
+
+    out void C();
+
+    behavior
+    {
+        enum State
+        {
+            S,
+            T
+        };
+        State s = State.S;
+        [s.S] on A: { s = S.T; C; }
+        [s.T] on B: { s = S.S; C; }
+    }
+}
+
+component C
+{
+    provides I p;
+    requires I r;
+    behavior
+    {
+    }
+}
+"
+`;
+
+exports[`guard missing ; 1`] = `
+"interface I
+{
+    behavior
+    {
+        [c] illegal
+    }
+}
+"
+`;
+
+exports[`leading comments 1`] = `
+"component C
+{
+    system
+    {
+        Instance instance;
+        /*|*/ Instance instance;
+        /*|--*/ Instance isntance;
+    }
+}
+"
+`;
+
+exports[`multi-line comments 1`] = `
+"/* Hi
+ * Hello
+ */
+interface I /* sup */
+{
+    enum E
+    {
+        /* foo */
+        A,
+        B /*bar
+         * foo
+         */
+    };
+
+    /* Trailing E
+     * 
+     * blala */
+}
+
+/*
+ * Trailing I
+ */
+"
+`;
+
+exports[`namespaces 1`] = `
+"namespace A { namespace B { namespace C {
+
+enum MyEnum
+{
+    A,
+    B
+};
+
+interface I
+{
+    in void Bla();
+
+    behavior
+    {
+    }
+}
+
+component C
+{
+    provides I i;
+}
+
+}}}
+"
+`;
+
+exports[`on missing ; 1`] = `
+"interface I
+{
+    behavior
+    {
+        on a: illegal;
+    }
+}
+"
+`;
+
+exports[`one line if statement 1`] = `
+"component C
+{
+    behavior
+    {
+        void bla()
+        {
+            if (!foo(bar)) return baz();
+        }
+    }
+}
+"
+`;
+
+exports[`pop expected types 1`] = `
+"interface I
+{
+    behavior
+    {
+        on Foo, Bar:
+        {
+            [true] reply(true);
+            [true] reply(false);
+        }
+
+        on Baz: reply(Foo.Bar);
+    }
+}
+component C
+{
+    behavior
+    {
+        on port.Action(): reply(Foo.Bar);
+        on port.Action(): s = Foo.Bar;
+    }
+}
+"
+`;
+
+exports[`single-line comments 1`] = `
+"// Hi
+interface I // Hello
+{
+    enum E
+    {
+        // Foo
+        A,
+        B, //Bar
+        C, // Baz
+        // Buzz
+        D
+    };
+
+    // Trailing E
+
+    behavior
+    {
+        void foo(/* hello */ in bool b)
+        {
+            bool a = true; // Hello
+            // Hi
+            bool b = false;
+        }
+    }
+}
+// Trailing I
+"
+`;
+
+exports[`spaces before trailing comments 1`] = `
+"interface A
+{
+    in bool Bla(); // Hello
+    in bool Bar(); // World
+    in bool Bar();  // World
+    in bool Bar();   // World
+}
+"
+`;
+
+exports[`trailing comments after guard 1`] = `
+"component C
+{
+    behavior
+    {
+        State s = State.A;
+
+        [true]
+        {
+            // hi
+        } // abc
+
+        [true]
+        {
+            // ho
+        } // def
+    }
+}
+"
+`;
+
+exports[`variable missing ; 1`] = `
+"interface I
+{bool b = false
+}
+"
+`;
+
+exports[`whiteline after behavior 1`] = `
+"component C
+{
+    behavior
+    {
+    }
+
+}
+"
+`;
