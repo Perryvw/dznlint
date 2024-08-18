@@ -3,6 +3,7 @@ import { testdznlint } from "./util";
 
 test("temporary variable in event trigger", () => {
     testdznlint({
+        config: { inline_temporary_variables: "hint" },
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
             behavior {
@@ -28,6 +29,7 @@ test("temporary variable in event trigger", () => {
 
 test("temporary variable in function", () => {
     testdznlint({
+        config: { inline_temporary_variables: "hint" },
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
             behavior {

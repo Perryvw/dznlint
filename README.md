@@ -91,7 +91,7 @@ Do not mark events explicitly illegal. As of Dezyne 2.14, events not mentioned a
 
 Temporary variables that are only referred to once should be inlined.
 
-**Possible values:** **"hint"** | "warning" | "error"
+**Possible values:** "hint" | "warning" | "error"
 
 ---
 

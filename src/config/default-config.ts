@@ -10,7 +10,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     call_arguments_must_match: "error",
     dead_code: "error",
     implicit_illegal: "warning",
-    inline_temporary_variables: "hint",
+    inline_temporary_variables: false,
     naming_convention: [
         "hint",
         {
