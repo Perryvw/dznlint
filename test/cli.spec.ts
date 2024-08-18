@@ -49,6 +49,16 @@ describe("argument parsing", () => {
         }
     });
 
+    test.each(["--format", "-f"])("can request formatting (%p)", flag => {
+        const parsedArgs = parseCommandLineArguments([flag, "myFile.dzn"]);
+        if (parsedArgs.success === true) {
+            expect(parsedArgs.arguments.format).toBe(true);
+            expect(parsedArgs.arguments.files).toEqual(["myFile.dzn"]);
+        } else {
+            expect(parsedArgs.success).toEqual(true);
+        }
+    });
+
     test("fails gracefully for unknown option", () => {
         const parsedArgs = parseCommandLineArguments(["--unknown-opt"]);
         if (parsedArgs.success === false) {

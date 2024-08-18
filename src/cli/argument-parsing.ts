@@ -1,5 +1,6 @@
 interface CommandLineArguments {
     configFile?: string;
+    format: boolean;
     help: boolean;
     files: string[];
     includePaths: string[];
@@ -10,17 +11,23 @@ type ParsedCommandLineArguments =
     | { success: true; arguments: CommandLineArguments };
 
 export function parseCommandLineArguments(args: string[]): ParsedCommandLineArguments {
-    const result: CommandLineArguments = { help: false, files: [], includePaths: [] };
+    const result: CommandLineArguments = { format: false, help: false, files: [], includePaths: [] };
 
     let index = 0;
     while (args[index]) {
         if (args[index].startsWith("-")) {
             switch (args[index]) {
                 case "--help":
-                    return { success: true, arguments: { help: true, files: [], includePaths: [] } };
+                    return { success: true, arguments: { format: false, help: true, files: [], includePaths: [] } };
                 case "--config-file":
                     result.configFile = args[index + 1];
                     index += 2;
+                    break;
+                case "--format":
+                case "-f":
+                case "-F":
+                    result.format = true;
+                    index++;
                     break;
                 case "--include":
                 case "-I":

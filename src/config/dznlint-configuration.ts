@@ -58,3 +58,5 @@ export type DznLintUserConfiguration = {
 export type DznLintFormatUserConfiguration = {
     [P in keyof DznLintFormatConfiguration]?: DznLintFormatConfiguration[P];
 };
+
+export type DznLintCombinedUserConfiguration = DznLintUserConfiguration & { format?: DznLintFormatConfiguration };
