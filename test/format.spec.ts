@@ -275,6 +275,36 @@ test("namespaces", async () => {
     });
 });
 
+test("one line if statement", () => {
+    testFormat({
+        input: `
+        component C {
+            behavior {
+                void bla() {
+                    if (!foo(bar)) return baz();
+                }
+            }
+        }
+        `
+    })
+});
+
+test("comments in trigger list", () => {
+    testFormat({
+        input: `
+        interface I {
+            behavior {
+                on a, b,
+                // bla
+                c, d,
+                // foo
+                e: { reply(Result.Ok); }
+            }
+        }
+        `
+    })
+})
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

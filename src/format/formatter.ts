@@ -225,7 +225,7 @@ export class Formatter {
     }
 
     public return() {
-        this.requirePrecedingNewLine();
+        this.requirePrecedingSpace();
         this.keyword("return");
     }
 
@@ -482,12 +482,18 @@ export class Formatter {
         }
     }
     public requirePrecedingSpace() {
+        if (this.previousToken === Token.SingleLineComment)
+        {
+            // If previous token was a single line comment, require a new line instead
+            return this.requirePrecedingNewLine();
+        }
         if (
             this.previousToken !== Token.NewLine &&
             this.previousToken !== Token.Space &&
             this.previousToken !== Token.ParenOpen &&
             this.previousToken !== Token.BracketOpen &&
-            this.previousToken !== Token.Dot
+            this.previousToken !== Token.Dot &&
+            this.previousToken !== Token.UnaryOperator
         ) {
             this.space();
         }

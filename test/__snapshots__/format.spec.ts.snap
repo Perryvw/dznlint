@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`comments in trigger list 1`] = `
+"interface I
+{
+    behavior
+    {
+        on a, b,
+        // bla
+        c, d,
+        // foo
+        e: { reply(Result.Ok); }
+    }
+}
+"
+`;
+
 exports[`different interface formatting (component) 1`] = `
 "component C
 {
@@ -556,6 +571,20 @@ exports[`leading comments 1`] = `
         Instance instance;
         /*|*/ Instance instance;
         /*|--*/ Instance isntance;
+    }
+}
+"
+`;
+
+exports[`michael 1 1`] = `
+"component C
+{
+    behavior
+    {
+        void bla()
+        {
+            if (!foo(bar)) return baz();
+        }
     }
 }
 "
