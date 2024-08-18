@@ -1,3 +1,5 @@
+// <declarations file auto-generated from grammar.json>
+
 export interface BaseNode {
     isNamed: boolean;
     isError: boolean;

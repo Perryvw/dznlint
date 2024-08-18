@@ -71,6 +71,7 @@ type RuleNode =
     | StringNode
     | SymbolReference;
 
+result.push("// <declarations file auto-generated from grammar.json>\n");
 result.push(`export interface BaseNode {
     isNamed: boolean;
     isError: boolean;

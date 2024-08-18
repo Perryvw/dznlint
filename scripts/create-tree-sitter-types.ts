@@ -13,6 +13,7 @@ interface Field {
 
 const result = [];
 
+result.push("// <declarations file auto-generated from node-types.json>\n");
 result.push('import type * as Parser from "web-tree-sitter";');
 
 result.push(`

@@ -1,3 +1,5 @@
+// <declarations file auto-generated from node-types.json>
+
 import type * as Parser from "web-tree-sitter";
 
 interface UnnamedNode<T extends string> extends Parser.SyntaxNode {
