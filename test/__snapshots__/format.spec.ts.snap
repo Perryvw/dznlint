@@ -576,20 +576,6 @@ exports[`leading comments 1`] = `
 "
 `;
 
-exports[`michael 1 1`] = `
-"component C
-{
-    behavior
-    {
-        void bla()
-        {
-            if (!foo(bar)) return baz();
-        }
-    }
-}
-"
-`;
-
 exports[`multi-line comments 1`] = `
 "/* Hi
  * Hello
@@ -649,6 +635,20 @@ exports[`on missing ; 1`] = `
     behavior
     {
         on a: illegal;
+    }
+}
+"
+`;
+
+exports[`one line if statement 1`] = `
+"component C
+{
+    behavior
+    {
+        void bla()
+        {
+            if (!foo(bar)) return baz();
+        }
     }
 }
 "
@@ -744,6 +744,17 @@ exports[`trailing comments after guard 1`] = `
 exports[`variable missing ; 1`] = `
 "interface I
 {bool b = false
+}
+"
+`;
+
+exports[`whiteline after behavior 1`] = `
+"component C
+{
+    behavior
+    {
+    }
+
 }
 "
 `;

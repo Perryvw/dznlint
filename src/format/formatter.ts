@@ -38,6 +38,7 @@ enum Token {
     BinaryOperator,
     UnaryOperator,
     NamespaceBrace,
+    Indent,
 }
 
 export enum RequireNewLine {
@@ -271,7 +272,7 @@ export class Formatter {
         this.output.push(lines[0]);
         for (let i = 1; i < lines.length; i++) {
             this.newLine();
-            this.output.push(lines[i]);
+            this.output.push(this.indent, lines[i]);
         }
         this.previousToken = Token.MultiLineComment;
     }
@@ -445,7 +446,7 @@ export class Formatter {
     }
 
     public newLine() {
-        this.output.push("\n", this.indent);
+        this.output.push("\n");
         this.previousToken = Token.NewLine;
     }
 
@@ -477,19 +478,23 @@ export class Formatter {
         if (this.previousToken === Token.LeadingComment) {
             return;
         }
-        if (this.previousToken !== Token.NewLine) {
+        if (this.previousToken !== Token.NewLine && this.previousToken !== Token.Indent) {
             this.newLine();
+        }
+        if (this.previousToken !== Token.Indent) {
+            this.output.push(this.indent);
+            this.previousToken = Token.Indent;
         }
     }
     public requirePrecedingSpace() {
-        if (this.previousToken === Token.SingleLineComment)
-        {
+        if (this.previousToken === Token.SingleLineComment) {
             // If previous token was a single line comment, require a new line instead
             return this.requirePrecedingNewLine();
         }
         if (
             this.previousToken !== Token.NewLine &&
             this.previousToken !== Token.Space &&
+            this.previousToken !== Token.Indent &&
             this.previousToken !== Token.ParenOpen &&
             this.previousToken !== Token.BracketOpen &&
             this.previousToken !== Token.Dot &&

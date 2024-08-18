@@ -285,8 +285,8 @@ test("one line if statement", () => {
                 }
             }
         }
-        `
-    })
+        `,
+    });
 });
 
 test("comments in trigger list", () => {
@@ -301,9 +301,21 @@ test("comments in trigger list", () => {
                 e: { reply(Result.Ok); }
             }
         }
-        `
-    })
-})
+        `,
+    });
+});
+
+test("whiteline after behavior", () => {
+    testFormat({
+        input: `
+        component C {
+            behavior {
+            }
+
+        }
+        `,
+    });
+});
 
 test.each([
     "files/component.dzn",
