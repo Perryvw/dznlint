@@ -2,7 +2,7 @@ import { DEFAULT_DZNLINT_FORMAT_CONFIG } from "../config/default-config";
 import { DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../config/dznlint-configuration";
 import { treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
-import { Formatter, RequireNewLine } from "./formatter";
+import { Formatter } from "./formatter";
 import * as Grammar from "../grammar/tree-sitter-types-formatter";
 import { WhitespaceSensitiveCursor } from "./whitespace-sensitive-cursor";
 
@@ -21,7 +21,9 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
 }
 
 // Sanity check to help verify we handled all possible cases in the if statement
-function assertNever(x: never): void {}
+function assertNever(x: never): void {
+    console.log("never", x);
+}
 
 // Statements
 
@@ -275,7 +277,7 @@ function formatEnum(cursor: Grammar.CursorPosition<Grammar.enum_Node>, formatter
             case ";":
                 formatter.endEnum();
                 break;
-            case "fields":
+            case "fields": {
                 cursor.gotoFirstChild();
                 const c2 = cursor.pos();
                 do {
@@ -312,6 +314,7 @@ function formatEnum(cursor: Grammar.CursorPosition<Grammar.enum_Node>, formatter
                 // back up to parent
                 cursor.gotoParent();
                 break;
+            }
             // generics
             case "comment":
                 formatComment(cursor.currentNode, formatter);
@@ -349,7 +352,7 @@ function formatComponent(cursor: Grammar.CursorPosition<Grammar.component_Node>,
             case "scoped_name":
                 formatter.name(cursor.nodeText);
                 break;
-            case "body":
+            case "body": {
                 const c2 = cursor as unknown as Grammar.CursorPosition<typeof cursor.currentNode>;
                 cursor.gotoFirstChild();
                 do {
@@ -378,6 +381,7 @@ function formatComponent(cursor: Grammar.CursorPosition<Grammar.component_Node>,
 
                 cursor.gotoParent();
                 break;
+            }
             // generics
             case "comment":
                 formatComment(cursor.currentNode, formatter);
@@ -444,7 +448,7 @@ function formatSystem(cursor: Grammar.CursorPosition<Grammar.system_Node>, forma
             case "system":
                 formatter.startSystem();
                 break;
-            case "system_body":
+            case "system_body": {
                 const c2 = cursor.pos();
                 cursor.gotoFirstChild();
                 do {
@@ -479,6 +483,7 @@ function formatSystem(cursor: Grammar.CursorPosition<Grammar.system_Node>, forma
 
                 cursor.gotoParent();
                 break;
+            }
             // generics
             case "comment":
                 formatComment(cursor.currentNode, formatter);
@@ -576,7 +581,7 @@ function formatBehavior(cursor: Grammar.CursorPosition<Grammar.behavior_Node>, f
             case "name":
                 formatter.name(cursor.nodeText);
                 break;
-            case "behavior_body":
+            case "behavior_body": {
                 cursor.gotoFirstChild();
                 const c2 = cursor.pos();
                 do {
@@ -642,6 +647,7 @@ function formatBehavior(cursor: Grammar.CursorPosition<Grammar.behavior_Node>, f
                 // back up to parent
                 cursor.gotoParent();
                 break;
+            }
             // generics
             case "comment":
                 formatComment(cursor.currentNode, formatter);
@@ -1186,9 +1192,6 @@ function formatBlocking(cursor: Grammar.CursorPosition<Grammar.blocking_Node>, f
             case "interface_action":
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
-            case "on":
-                formatOn(cursor, formatter);
-                break;
             case "reply":
                 formatReply(cursor.pos(), formatter);
                 break;
@@ -1223,7 +1226,7 @@ function formatTriggers(cursor: Grammar.CursorPosition<Grammar.triggers_Node>, f
     cursor.gotoFirstChild();
     do {
         switch (cursor.nodeType) {
-            case "trigger":
+            case "trigger": {
                 cursor.gotoFirstChild();
                 const c2 = cursor.pos();
                 do {
@@ -1258,6 +1261,7 @@ function formatTriggers(cursor: Grammar.CursorPosition<Grammar.triggers_Node>, f
 
                 cursor.gotoParent();
                 break;
+            }
             case ",":
                 formatter.nextTrigger();
                 break;
@@ -1327,7 +1331,7 @@ function formatTriggerFormals(cursor: Grammar.CursorPosition<Grammar.trigger_for
             case ")":
                 formatter.closeParen();
                 break;
-            case "trigger_formal":
+            case "trigger_formal": {
                 cursor.gotoFirstChild();
                 const c2 = cursor.pos();
                 do {
@@ -1356,6 +1360,7 @@ function formatTriggerFormals(cursor: Grammar.CursorPosition<Grammar.trigger_for
 
                 cursor.gotoParent();
                 break;
+            }
             // generics
             case "comment":
                 formatComment(cursor.currentNode, formatter);

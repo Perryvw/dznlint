@@ -1,5 +1,4 @@
-import type * as Parser from "web-tree-sitter";
-interface BaseNode {
+export interface BaseNode {
     isNamed: boolean;
     isError: boolean;
     text: string;
@@ -45,7 +44,9 @@ interface TreeCursorOfType<T extends AllNodes> {
     pos(): CursorPosition<T>;
 }
 
-type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<WalkerNodes<TNode>>];
+export type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<
+    WalkerNodes<TNode>
+>];
 
 interface root_Node extends BaseNode {
     type: "root";
@@ -1158,7 +1159,7 @@ interface comment_Node extends BaseNode {
         | ERROR_Node
     >;
 }
-type AllNodes =
+export type AllNodes =
     | root_Node
     | comment_Node
     | import_Node

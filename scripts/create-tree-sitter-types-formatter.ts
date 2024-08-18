@@ -71,9 +71,7 @@ type RuleNode =
     | StringNode
     | SymbolReference;
 
-result.push('import type * as Parser from "web-tree-sitter";');
-
-result.push(`interface BaseNode {
+result.push(`export interface BaseNode {
     isNamed: boolean;
     isError: boolean;
     text: string;
@@ -122,7 +120,7 @@ interface TreeCursorOfType<T extends AllNodes> {
     pos(): CursorPosition<T>;
 }
 
-type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<WalkerNodes<TNode>>];
+export type CursorPosition<TNode extends BaseNode> = CursorRecord<WalkerNodes<TNode>>[keyof CursorRecord<WalkerNodes<TNode>>];
 `);
 const allTypes = new Set<string>();
 for (const extra of extras) {
@@ -156,7 +154,7 @@ for (const [type, rule] of Object.entries(rules)) {
 }
 
 result.push(
-    `type AllNodes = ${["root_Node", ...allTypes.values()].join(" | ")} | Pattern | whiteline_Node | ERROR_Node;`
+    `export type AllNodes = ${["root_Node", ...allTypes.values()].join(" | ")} | Pattern | whiteline_Node | ERROR_Node;`
 );
 
 fs.writeFileSync(`${__dirname}/../src/grammar/tree-sitter-types-formatter.d.ts`, result.join("\n"));
@@ -207,8 +205,7 @@ function getAllChildNodes(node: RuleNode, seen: Map<string, RuleNode[]>): RuleNo
         case "BLANK":
             return [];
         default:
-            // @ts-ignore
-            throw `Unknown node type ${node.type}`;
+            throw `Unknown node type ${node}`;
     }
 }
 

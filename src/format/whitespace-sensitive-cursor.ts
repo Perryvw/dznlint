@@ -11,13 +11,14 @@ declare module "../grammar/tree-sitter-types-formatter" {
     }
 }
 
-export class WhitespaceSensitiveCursor<TNode extends Extract<Grammar.AllNodes, { walk(): Grammar.TypedCursor<any> }>>
-    implements Grammar.TypedCursor<Grammar.WalkerNodes<TNode>>
+export class WhitespaceSensitiveCursor<
+    TNode extends Extract<Grammar.AllNodes, { walk(): Grammar.TypedCursor<unknown> }>,
+> implements Grammar.TypedCursor<Grammar.WalkerNodes<TNode>>
 {
     private cursor: TreeCursor;
 
     constructor(node: TNode) {
-        this.cursor = node.walk() as any;
+        this.cursor = node.walk() as TreeCursor;
     }
 
     private syntheticNode: Grammar.WalkerNodes<TNode> | undefined;
@@ -66,7 +67,8 @@ export class WhitespaceSensitiveCursor<TNode extends Extract<Grammar.AllNodes, {
                         isError: false,
                         isNamed: true,
                         text: "",
-                    } as any;
+                        childCount: 0,
+                    } as Grammar.WalkerNodes<TNode>;
                 }
                 if (newNode.type === "comment") {
                     if (previousNode.endPosition.row === newNode.startPosition.row) {
