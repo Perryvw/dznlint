@@ -35,6 +35,7 @@ jobs:
               with:
                   node-version: 16.13.2
             - run: npm ci
+            - run: npm run build
             - run: npx jest --maxWorkers 2 --coverage
               env:
                   CI: true
