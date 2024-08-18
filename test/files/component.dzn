@@ -23,11 +23,11 @@ component HelloWorld {
             }
         }
 
-        bool bla(bool a) {
+        bool bla(in bool a) {
             bool c = a;
             if (c == false) {
-                
             }
+            c = true;
         }
     }
 }
