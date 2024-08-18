@@ -61,6 +61,24 @@ No code allowed after return statements in functions.
 
 ---
 
+## format
+
+Dznlint formatting options, will be used when supplying cli with the `--format` or `--f` flag to format files instead of linting.
+
+Default formatting settings are:
+
+```json
+{
+    "format": {
+        "indent": ["spaces", 4], // ["spaces" | "tabs", indent width] - indentation
+        "braces": "next-line", // "next-line" | "same-line" - where to put opening braces
+        "indent_components_interfaces": true // indent component/interface root
+    }
+}
+```
+
+---
+
 ## implicit_illegal
 
 Do not mark events explicitly illegal. As of Dezyne 2.14, events not mentioned are implicitly assumed to be illegal.
