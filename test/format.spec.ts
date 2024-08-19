@@ -317,6 +317,27 @@ test("whiteline after behavior", () => {
     });
 });
 
+test("long lists of events in component", () => {
+    testFormat({
+        input: `
+        component C {
+            behavior {
+                on port.MyLongEventName1(),
+                port.MyLongEventName2(),
+                port.MyLongEventName3(foobar),
+                port.MyLongEventName4(),
+                port.MyLongEventName5(abcdefghijklm),
+                port.MyLongEventName6(),
+                port.MyLongEventName7(),
+                // Some comment
+                port.MyLongEventName8(),
+                port.MyLongEventName9(): reply(true);
+            }
+        }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",
@@ -399,6 +420,30 @@ describe("formatting configuration", () => {
             `,
             config: {
                 indent_components_interfaces: doIndent,
+            },
+        });
+    });
+
+    test.each([40, 80, 120])("target width (%p)", targetWidth => {
+        testFormat({
+            input: `
+            interface I {
+                behavior {
+                    on MyLongEventName1,
+                    MyLongEventName2,
+                    MyLongEventName3,
+                    MyLongEventName4,
+                    MyLongEventName5,
+                    MyLongEventName6,
+                    MyLongEventName7,
+                    // Some comment
+                    MyLongEventName8,
+                    MyLongEventName9: reply(true);
+                }
+            }
+            `,
+            config: {
+                target_width: targetWidth,
             },
         });
     });

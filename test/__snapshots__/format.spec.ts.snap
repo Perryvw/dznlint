@@ -6,10 +6,10 @@ exports[`comments in trigger list 1`] = `
     behavior
     {
         on a, b,
-        // bla
-        c, d,
-        // foo
-        e: { reply(Result.Ok); }
+           // bla
+           c, d,
+           // foo
+           e: { reply(Result.Ok); }
     }
 }
 "
@@ -553,6 +553,49 @@ component C
 "
 `;
 
+exports[`formatting configuration target width (40) 1`] = `
+"interface I
+{
+    behavior
+    {
+        on MyLongEventName1, MyLongEventName2,
+           MyLongEventName3, MyLongEventName4,
+           MyLongEventName5, MyLongEventName6,
+           MyLongEventName7,
+           // Some comment
+           MyLongEventName8, MyLongEventName9: reply(true);
+    }
+}
+"
+`;
+
+exports[`formatting configuration target width (80) 1`] = `
+"interface I
+{
+    behavior
+    {
+        on MyLongEventName1, MyLongEventName2, MyLongEventName3, MyLongEventName4,
+           MyLongEventName5, MyLongEventName6, MyLongEventName7,
+           // Some comment
+           MyLongEventName8, MyLongEventName9: reply(true);
+    }
+}
+"
+`;
+
+exports[`formatting configuration target width (120) 1`] = `
+"interface I
+{
+    behavior
+    {
+        on MyLongEventName1, MyLongEventName2, MyLongEventName3, MyLongEventName4, MyLongEventName5, MyLongEventName6, MyLongEventName7,
+           // Some comment
+           MyLongEventName8, MyLongEventName9: reply(true);
+    }
+}
+"
+`;
+
 exports[`guard missing ; 1`] = `
 "interface I
 {
@@ -572,6 +615,21 @@ exports[`leading comments 1`] = `
         Instance instance;
         /*|*/ Instance instance;
         /*|--*/ Instance isntance;
+    }
+}
+"
+`;
+
+exports[`long lists of events in component 1`] = `
+"component C
+{
+    behavior
+    {
+        on port.MyLongEventName1(), port.MyLongEventName2(), port.MyLongEventName3(foobar),
+           port.MyLongEventName4(), port.MyLongEventName5(abcdefghijklm), port.MyLongEventName6(),
+           port.MyLongEventName7(),
+           // Some comment
+           port.MyLongEventName8(), port.MyLongEventName9(): reply(true);
     }
 }
 "

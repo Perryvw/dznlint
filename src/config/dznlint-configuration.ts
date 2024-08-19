@@ -6,6 +6,7 @@ export interface DznLintFormatConfiguration {
     indent: ["tabs" | "spaces", number];
     braces: "same-line" | "next-line";
     indent_components_interfaces: boolean;
+    target_width: number;
 }
 
 export interface DznLintConfiguration {

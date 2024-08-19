@@ -52,6 +52,7 @@ export class Formatter {
     private currentType: PrintingType[] = [PrintingType.File];
     private previousToken: Token = Token.NewLine;
     private indentStep: string;
+    private column = 0;
 
     constructor(private config: DznLintFormatConfiguration) {
         const [indentType, indentCount] = config.indent;
@@ -200,6 +201,24 @@ export class Formatter {
         this.popCurrentType(PrintingType.On);
     }
 
+    public startTriggers() {
+        // push indent by 3
+        this.indent += "   ";
+    }
+
+    public endTriggers() {
+        // pop indent by 3
+        this.indent = this.indent.substring(0, this.indent.length - 3);
+    }
+
+    public startTrigger() {
+        if (this.column < this.config.target_width) {
+            this.requirePrecedingSpace();
+        } else {
+            this.requirePrecedingNewLine();
+        }
+    }
+
     // Function
 
     public startFunction(returnType: string) {
@@ -342,36 +361,42 @@ export class Formatter {
     public name(name: string) {
         this.requirePrecedingSpace();
         this.output.push(name);
+        this.column += name.length;
         this.previousToken = Token.Name;
     }
 
     public type(name: string) {
         this.requirePrecedingSpace();
         this.output.push(name);
+        this.column += name.length;
         this.previousToken = Token.Name;
     }
 
     public keyword(keyword: string) {
         this.requirePrecedingSpace();
         this.output.push(keyword);
+        this.column += keyword.length;
         this.previousToken = Token.Keyword;
     }
 
     public literal(literal: string) {
         this.requirePrecedingSpace();
         this.output.push(literal);
+        this.column += literal.length;
         this.previousToken = Token.Literal;
     }
 
     public binaryOperator(operator: string) {
         this.requirePrecedingSpace();
         this.output.push(operator);
+        this.column += operator.length;
         this.previousToken = Token.BinaryOperator;
     }
 
     public unaryOperator(operator: string) {
         this.requirePrecedingSpace();
         this.output.push(operator);
+        this.column += operator.length;
         this.previousToken = Token.UnaryOperator;
     }
 
@@ -384,69 +409,83 @@ export class Formatter {
 
     public comma() {
         this.output.push(",");
+        this.column++;
         this.previousToken = Token.Comma;
     }
 
     public dot() {
         this.output.push(".");
+        this.column++;
         this.previousToken = Token.Dot;
     }
 
     public colon() {
         this.output.push(":");
+        this.column++;
     }
 
     public semicolon() {
         this.output.push(";");
+        this.column++;
         this.previousToken = Token.Semicolon;
     }
 
     public dollar() {
         this.output.push("$");
+        this.column++;
         this.previousToken = Token.Literal;
     }
 
     public verbatim(str: string) {
         this.output.push(str);
+        this.column += str.length;
     }
 
     public openParen() {
         this.output.push("(");
+        this.column++;
         this.previousToken = Token.ParenOpen;
     }
 
     public closeParen() {
         this.output.push(")");
+        this.column++;
         this.previousToken = Token.ParenClose;
     }
 
     public openBracket() {
         this.output.push("[");
+        this.column++;
         this.previousToken = Token.BracketOpen;
     }
 
     public closeBracket() {
         this.output.push("]");
+        this.column++;
         this.previousToken = Token.BracketClose;
     }
 
     public openBrace() {
         this.output.push("{");
+        this.column++;
         this.previousToken = Token.BraceOpen;
     }
 
     public closeBrace() {
         this.output.push("}");
+        this.column++;
         this.previousToken = Token.BraceClose;
     }
 
     public space() {
         this.output.push(" ");
+        this.column++;
         this.previousToken = Token.Space;
     }
 
     public newLine() {
         this.output.push("\n");
+        this.column = 0;
         this.previousToken = Token.NewLine;
     }
 
@@ -483,6 +522,7 @@ export class Formatter {
         }
         if (this.previousToken !== Token.Indent) {
             this.output.push(this.indent);
+            this.column += this.indent.length;
             this.previousToken = Token.Indent;
         }
     }

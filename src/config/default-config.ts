@@ -47,4 +47,5 @@ export const DEFAULT_DZNLINT_FORMAT_CONFIG: DznLintFormatConfiguration = {
     indent: ["spaces", 4],
     braces: "next-line",
     indent_components_interfaces: true,
+    target_width: 80,
 };
