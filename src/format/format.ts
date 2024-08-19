@@ -12,6 +12,7 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
         braces: config?.braces ?? DEFAULT_DZNLINT_FORMAT_CONFIG.braces,
         indent_components_interfaces:
             config?.indent_components_interfaces ?? DEFAULT_DZNLINT_FORMAT_CONFIG.indent_components_interfaces,
+        target_width: config?.target_width ?? DEFAULT_DZNLINT_FORMAT_CONFIG.target_width,
     };
     const formatter = new Formatter(fullConfig);
     const tree = (await treeSitterParse(source)) as Grammar.BaseNode as Grammar.root_Node;
@@ -1224,10 +1225,12 @@ function formatBlocking(cursor: Grammar.CursorPosition<Grammar.blocking_Node>, f
 
 function formatTriggers(cursor: Grammar.CursorPosition<Grammar.triggers_Node>, formatter: Formatter) {
     cursor.gotoFirstChild();
+    formatter.startTriggers();
     do {
         switch (cursor.nodeType) {
             case "trigger": {
                 cursor.gotoFirstChild();
+                formatter.startTrigger();
                 const c2 = cursor.pos();
                 do {
                     switch (c2.nodeType) {
@@ -1280,6 +1283,7 @@ function formatTriggers(cursor: Grammar.CursorPosition<Grammar.triggers_Node>, f
                 throw `cannot format triggers child ${cursor}`;
         }
     } while (cursor.gotoNextSibling());
+    formatter.endTriggers();
     cursor.gotoParent();
 }
 

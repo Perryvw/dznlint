@@ -72,7 +72,8 @@ Default formatting settings are:
     "format": {
         "indent": ["spaces", 4], // ["spaces" | "tabs", indent width] - indentation
         "braces": "next-line", // "next-line" | "same-line" - where to put opening braces
-        "indent_components_interfaces": true // indent component/interface root
+        "indent_components_interfaces": true, // indent component/interface root
+        "target_width": 80 // width of the file after which formatter might insert extra newlines
     }
 }
 ```
