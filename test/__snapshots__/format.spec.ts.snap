@@ -738,6 +738,20 @@ component C
 "
 `;
 
+exports[`return parenthesized expression 1`] = `
+"component C
+{
+    behavior
+    {
+        void foo()
+        {
+            return ((a && b) || c);
+        }
+    }
+}
+"
+`;
+
 exports[`single-line comments 1`] = `
 "// Hi
 interface I // Hello

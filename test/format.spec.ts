@@ -338,6 +338,20 @@ test("long lists of events in component", () => {
     });
 });
 
+test("return parenthesized expression", () => {
+    testFormat({
+        input: `
+        component C {
+            behavior {
+                void foo() {
+                    return ((a&&b)||c);
+                }
+            }
+        }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

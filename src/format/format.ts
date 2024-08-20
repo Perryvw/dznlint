@@ -2033,6 +2033,7 @@ function formatDollars(cursor: Grammar.CursorPosition<Grammar.dollars_Node>, for
 
 function formatGroup(cursor: Grammar.CursorPosition<Grammar.group_Node>, formatter: Formatter) {
     cursor.gotoFirstChild();
+    formatter.requirePrecedingSpace();
     do {
         switch (cursor.nodeType) {
             case "(":
