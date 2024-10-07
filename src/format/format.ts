@@ -45,7 +45,6 @@ function formatRoot(cursor: Grammar.CursorPosition<Grammar.root_Node>, formatter
                     formatComponent(cursor.pos(), formatter);
                     break;
                 case "extern":
-                    formatter.requirePrecedingNewLine();
                     formatExtern(cursor.pos(), formatter);
                     break;
                 case "dollars":
@@ -618,7 +617,6 @@ function formatBehavior(cursor: Grammar.CursorPosition<Grammar.behavior_Node>, f
                             formatCompound(c2, formatter);
                             break;
                         case "extern":
-                            formatter.requirePrecedingNewLine();
                             formatExtern(c2.pos(), formatter);
                             break;
                         case "on":
@@ -1631,6 +1629,7 @@ function formatExtern(cursor: Grammar.CursorPosition<Grammar.extern_Node>, forma
     do {
         switch (cursor.nodeType) {
             case "extern":
+                formatter.requirePrecedingNewLine();
                 formatter.keyword("extern");
                 break;
             case "scoped_name":

@@ -352,6 +352,42 @@ test("return parenthesized expression", () => {
     });
 });
 
+test("multiple extern statements", () => {
+    testFormat({
+        input: `
+        extern A $A$;
+        extern B $B$;
+        `,
+    });
+});
+
+test("multiple extern statements in namespace", () => {
+    testFormat({
+        input: `
+        namespace NS {
+            extern A $A$;
+            extern B $B$;
+        }
+        `,
+        config: { indent_components_interfaces: true },
+    });
+});
+
+test("multiple extern statements in behavior body", () => {
+    testFormat({
+        input: `
+        namespace NS {
+            component C {
+                behavior {
+                    extern A $A$;
+                    extern B $B$;
+                }
+            }
+        }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

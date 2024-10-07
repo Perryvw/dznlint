@@ -661,6 +661,34 @@ interface I /* sup */
 "
 `;
 
+exports[`multiple extern statements 1`] = `
+"extern A $A$;
+extern B $B$;
+"
+`;
+
+exports[`multiple extern statements in behavior body 1`] = `
+"namespace NS {
+component C
+{
+    behavior
+    {
+        extern A $A$;
+        extern B $B$;
+    }
+}
+}
+"
+`;
+
+exports[`multiple extern statements in namespace 1`] = `
+"namespace NS {
+extern A $A$;
+extern B $B$;
+}
+"
+`;
+
 exports[`namespaces 1`] = `
 "namespace A { namespace B { namespace C {
 
