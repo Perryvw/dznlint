@@ -1675,7 +1675,7 @@ function formatInt(cursor: Grammar.CursorPosition<Grammar.int_Node>, formatter: 
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
             case "{":
-                formatter.space();
+                formatter.requirePrecedingSpace();
                 formatter.openBrace();
                 break;
             case "number":
@@ -1685,6 +1685,7 @@ function formatInt(cursor: Grammar.CursorPosition<Grammar.int_Node>, formatter: 
                 formatter.binaryOperator("..");
                 break;
             case "}":
+                formatter.requirePrecedingSpace();
                 formatter.closeBrace();
                 break;
             case ";":

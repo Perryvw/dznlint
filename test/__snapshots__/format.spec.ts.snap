@@ -821,6 +821,11 @@ exports[`spaces before trailing comments 1`] = `
 "
 `;
 
+exports[`subint spacing (#23) 1`] = `
+"subint MyInt { 0 .. 10 };
+"
+`;
+
 exports[`trailing comments after guard 1`] = `
 "component C
 {

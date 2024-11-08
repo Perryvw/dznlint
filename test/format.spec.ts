@@ -388,6 +388,15 @@ test("multiple extern statements in behavior body", () => {
     });
 });
 
+// https://github.com/Perryvw/dznlint/issues/32
+test("subint spacing (#23)", () => {
+    testFormat({
+        input: `
+            subint MyInt {0..10};
+        `
+    })
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",
