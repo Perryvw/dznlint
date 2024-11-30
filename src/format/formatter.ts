@@ -529,7 +529,11 @@ export class Formatter {
     public requirePrecedingSpace() {
         if (this.previousToken === Token.SingleLineComment) {
             // If previous token was a single line comment, require a new line instead
-            return this.requirePrecedingNewLine();
+            this.newLine();
+            this.output.push(this.indent);
+            this.column += this.indent.length;
+            this.previousToken = Token.Indent;
+            return;
         }
         if (
             this.previousToken !== Token.NewLine &&

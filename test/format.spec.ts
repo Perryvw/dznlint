@@ -393,8 +393,27 @@ test("subint spacing (#23)", () => {
     testFormat({
         input: `
             subint MyInt {0..10};
-        `
-    })
+        `,
+    });
+});
+
+test("one line compound with single line comment", () => {
+    testFormat({
+        input: `
+            interface I
+            {
+                in void Foo();
+
+                behavior
+                {
+                    on Foo:
+                    {
+                        // Bla
+                        state = State.Pending;
+                    }
+                }
+            }`,
+    });
 });
 
 test.each([

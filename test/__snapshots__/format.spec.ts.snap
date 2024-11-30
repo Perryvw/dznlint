@@ -727,6 +727,20 @@ exports[`on missing ; 1`] = `
 "
 `;
 
+exports[`one line compound with single line comment 1`] = `
+"interface I
+{
+    in void Foo();
+
+    behavior
+    {
+        on Foo: { // Bla
+            state = State.Pending; }
+    }
+}
+"
+`;
+
 exports[`one line if statement 1`] = `
 "component C
 {
