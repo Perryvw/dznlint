@@ -56,12 +56,20 @@ export function isFunctionDefinition(statement: ASTNode): statement is parser.fu
     return statement.kind === parser.ASTKinds.function_definition;
 }
 
+export function isInstance(statement: ASTNode): statement is parser.instance {
+    return statement.kind === parser.ASTKinds.instance;
+}
+
 export function isNamespace(node: ASTNode): node is parser.namespace {
     return node.kind === parser.ASTKinds.namespace;
 }
 
 export function isSourceFile(node: ASTNode): node is parser.file {
     return node.kind === parser.ASTKinds.file;
+}
+
+export function isTypeReference(node: ASTNode): node is parser.type_reference {
+    return node.kind === parser.ASTKinds.type_reference;
 }
 
 export function isPort(node: ASTNode): node is parser.port {

@@ -158,7 +158,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context.visit(node.expression, cb);
     },
     [parser.ASTKinds.event]: (node: parser.event, context: VisitorContext, cb: VisitorCallback) => {
-        context.visit(node.type_name, cb);
+        context.visit(node.type, cb);
         context.visit(node.event_name, cb);
 
         if (node.event_params) {
@@ -199,7 +199,7 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.visit(node.type_name, cb);
+        context.visit(node.type, cb);
         context.visit(node.name, cb);
     },
     [parser.ASTKinds.guard]: (node: parser.guard, context: VisitorContext, cb: VisitorCallback) => {
@@ -318,13 +318,16 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
         }
         context.popScope();
     },
+    [parser.ASTKinds.type_reference]: (node: parser.type_reference, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.type_name, cb);
+    },
     [parser.ASTKinds.variable_definition]: (
         node: parser.variable_definition,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
         context.currentScope().variable_declarations[node.name.text] = node.name;
-        context.visit(node.type_name, cb);
+        context.visit(node.type, cb);
         context.visit(node.name, cb);
         if (node.initializer) {
             context.visit(node.initializer.expression, cb);
@@ -425,7 +428,7 @@ const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> =
     },
     [parser.ASTKinds.event]: (node: parser.event) => {
         setParent(node.event_name, node);
-        setParent(node.type_name, node);
+        setParent(node.type, node);
         if (node.event_params) {
             for (const param of headTailToList(node.event_params)) {
                 setParent(param, node);
@@ -450,7 +453,7 @@ const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> =
         }
     },
     [parser.ASTKinds.function_parameter]: (node: parser.function_parameter) => {
-        setParent(node.type_name, node);
+        setParent(node.type, node);
         setParent(node.name, node);
     },
     [parser.ASTKinds.guard]: (node: parser.guard) => {
@@ -551,8 +554,11 @@ const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> =
             setParent(instance_or_binding, node);
         }
     },
-    [parser.ASTKinds.variable_definition]: (node: parser.variable_definition) => {
+    [parser.ASTKinds.type_reference]: (node: parser.type_reference) => {
         setParent(node.type_name, node);
+    },
+    [parser.ASTKinds.variable_definition]: (node: parser.variable_definition) => {
+        setParent(node.type, node);
         if (node.initializer) {
             setParent(node.initializer.expression, node);
         }

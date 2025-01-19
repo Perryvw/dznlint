@@ -36,7 +36,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                         errorMessage +=
                             "\nExpected parameters: " +
                             functionParameters
-                                .map(p => `${nameToString(p.type_name)} ${nameToString(p.name)}`)
+                                .map(p => `${nameToString(p.type.type_name)} ${nameToString(p.name)}`)
                                 .join(", ");
                     }
                     diagnostics.push(
@@ -65,7 +65,9 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                     if (expectedCount > 0) {
                         errorMessage +=
                             "\nExpected parameters: " +
-                            functionParameters.map(p => `${nameToString(p.type)} ${nameToString(p.name)}`).join(", ");
+                            functionParameters
+                                .map(p => `${nameToString(p.type.type_name)} ${nameToString(p.name)}`)
+                                .join(", ");
                     }
                     diagnostics.push(
                         incorrectArgumentCount(

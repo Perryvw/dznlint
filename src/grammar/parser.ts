@@ -22,30 +22,30 @@
 *   namespace_root      := statements={_ statement=namespace_statement _}*
 *   namespace_statement := type_definition | namespace | interface_definition | component
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
-*     event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
+*     event := direction=event_direction __ type=type_reference __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
-*     event_parameter := direction={direction=param_direction __}? type=compound_name __ name=identifier
+*     event_parameter := direction={direction=param_direction __}? type=type_reference __ name=identifier
 *       event_direction := IN | OUT
 *       param_direction := INOUT | IN | OUT
 * component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
 *   body := behavior | system
 *     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
 *       instances_and_bindings := {_{instance | binding}_}*
-*         instance := type=compound_name _ name=identifier _ SEMICOLON
+*         instance := type=type_reference _ name=identifier _ SEMICOLON
 *         binding := start=@ left=binding_expression _ BIND _ right=binding_expression _ SEMICOLON end=@
 *           binding_expression := {start=@ compound=binding_expression DOT name={ asterisk_binding | member_identifier} end=@} | identifier | asterisk_binding
 *           asterisk_binding := start=@ ASTERISK end=@
-*   port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
+*   port := direction=port_direction __ qualifiers=port_qualifiers? type=type_reference _ name=identifier _ SEMICOLON
 *     port_direction := PROVIDES | REQUIRES
 *     port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
 *     parameters := PAREN_OPEN _ parameters=parameter_list? _ PAREN_CLOSE
 *       parameter_list := head=function_parameter tail={ _ COMMA _ elem=function_parameter }*
-*       function_parameter := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
+*       function_parameter := start=@ direction={direction=param_direction __}? type=type_reference __ name=identifier end=@
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-*         function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=function_body
+*         function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body=function_body
 *         function_body := compound=compound
 * declarative_statement := on | guard | compound
 *   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ body=on_body end=@
@@ -67,7 +67,7 @@
 *   expression_statement  := start=@ expression=expression SEMICOLON end=@
 *   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
 *     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _
-*   variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
+*   variable_definition   := start=@ type=type_reference _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
 *   return_statement      := start=@ RETURN &{'\s' | SEMICOLON } _ expression=expression? _ SEMICOLON end=@
 * expression := binary_expression | unary_expression
 *   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
@@ -83,6 +83,7 @@
 * compound_name := {start=@ compound=compound_name? DOT name=member_identifier end=@} | identifier
 * identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 * member_identifier   := start=@ text='[a-zA-Z0-9_]+' end=@
+* type_reference      := type_name=compound_name
 * NUMBER              := MINUS? '[0-9]+'
 * ASTERISK            := '\*'
 * DOLLAR              := '\$'
@@ -321,6 +322,7 @@ export enum ASTKinds {
     compound_name_$0 = "compound_name_$0",
     identifier = "identifier",
     member_identifier = "member_identifier",
+    type_reference = "type_reference",
     NUMBER = "NUMBER",
     ASTERISK = "ASTERISK",
     DOLLAR = "DOLLAR",
@@ -497,7 +499,7 @@ export type interface_definition_$0_$0_2 = event;
 export interface event {
     kind: ASTKinds.event;
     direction: event_direction;
-    type_name: compound_name;
+    type: type_reference;
     event_name: identifier;
     event_params: Nullable<event_params>;
 }
@@ -513,7 +515,7 @@ export interface event_params_$0 {
 export interface event_parameter {
     kind: ASTKinds.event_parameter;
     direction: Nullable<event_parameter_$0>;
-    type: compound_name;
+    type: type_reference;
     name: identifier;
 }
 export interface event_parameter_$0 {
@@ -565,7 +567,7 @@ export type instances_and_bindings_$0_$0_1 = instance;
 export type instances_and_bindings_$0_$0_2 = binding;
 export interface instance {
     kind: ASTKinds.instance;
-    type: compound_name;
+    type: type_reference;
     name: identifier;
 }
 export interface binding {
@@ -598,7 +600,7 @@ export interface port {
     kind: ASTKinds.port;
     direction: port_direction;
     qualifiers: Nullable<port_qualifiers>;
-    type: compound_name;
+    type: type_reference;
     name: identifier;
 }
 export type port_direction = port_direction_1 | port_direction_2;
@@ -630,7 +632,7 @@ export interface function_parameter {
     kind: ASTKinds.function_parameter;
     start: PosInfo;
     direction: Nullable<function_parameter_$0>;
-    type_name: compound_name;
+    type: type_reference;
     name: identifier;
     end: PosInfo;
 }
@@ -661,7 +663,7 @@ export type behavior_statement_5 = type_definition;
 export type behavior_statement_6 = sl_comment;
 export interface function_definition {
     kind: ASTKinds.function_definition;
-    return_type: compound_name;
+    return_type: type_reference;
     name: identifier;
     parameters: parameters;
     body: function_body;
@@ -814,7 +816,7 @@ export interface else_statement_$0 {
 export interface variable_definition {
     kind: ASTKinds.variable_definition;
     start: PosInfo;
-    type_name: compound_name;
+    type: type_reference;
     name: identifier;
     initializer: Nullable<variable_definition_$0>;
     end: PosInfo;
@@ -914,6 +916,10 @@ export interface member_identifier {
     start: PosInfo;
     text: string;
     end: PosInfo;
+}
+export interface type_reference {
+    kind: ASTKinds.type_reference;
+    type_name: compound_name;
 }
 export interface NUMBER {
     kind: ASTKinds.NUMBER;
@@ -1399,14 +1405,14 @@ export class Parser {
         return this.run<event>($$dpth,
             () => {
                 let $scope$direction: Nullable<event_direction>;
-                let $scope$type_name: Nullable<compound_name>;
+                let $scope$type: Nullable<type_reference>;
                 let $scope$event_name: Nullable<identifier>;
                 let $scope$event_params: Nullable<Nullable<event_params>>;
                 let $$res: Nullable<event> = null;
                 if (true
                     && ($scope$direction = this.matchevent_direction($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
-                    && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$event_name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -1418,7 +1424,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.event, direction: $scope$direction, type_name: $scope$type_name, event_name: $scope$event_name, event_params: $scope$event_params};
+                    $$res = {kind: ASTKinds.event, direction: $scope$direction, type: $scope$type, event_name: $scope$event_name, event_params: $scope$event_params};
                 }
                 return $$res;
             });
@@ -1458,12 +1464,12 @@ export class Parser {
         return this.run<event_parameter>($$dpth,
             () => {
                 let $scope$direction: Nullable<Nullable<event_parameter_$0>>;
-                let $scope$type: Nullable<compound_name>;
+                let $scope$type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $$res: Nullable<event_parameter> = null;
                 if (true
                     && (($scope$direction = this.matchevent_parameter_$0($$dpth + 1, $$cr)) || true)
-                    && ($scope$type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                 ) {
@@ -1649,11 +1655,11 @@ export class Parser {
     public matchinstance($$dpth: number, $$cr?: ErrorTracker): Nullable<instance> {
         return this.run<instance>($$dpth,
             () => {
-                let $scope$type: Nullable<compound_name>;
+                let $scope$type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $$res: Nullable<instance> = null;
                 if (true
-                    && ($scope$type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -1783,14 +1789,14 @@ export class Parser {
             () => {
                 let $scope$direction: Nullable<port_direction>;
                 let $scope$qualifiers: Nullable<Nullable<port_qualifiers>>;
-                let $scope$type: Nullable<compound_name>;
+                let $scope$type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $$res: Nullable<port> = null;
                 if (true
                     && ($scope$direction = this.matchport_direction($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && (($scope$qualifiers = this.matchport_qualifiers($$dpth + 1, $$cr)) || true)
-                    && ($scope$type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -1900,19 +1906,19 @@ export class Parser {
             () => {
                 let $scope$start: Nullable<PosInfo>;
                 let $scope$direction: Nullable<Nullable<function_parameter_$0>>;
-                let $scope$type_name: Nullable<compound_name>;
+                let $scope$type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<function_parameter> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
                     && (($scope$direction = this.matchfunction_parameter_$0($$dpth + 1, $$cr)) || true)
-                    && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.function_parameter, start: $scope$start, direction: $scope$direction, type_name: $scope$type_name, name: $scope$name, end: $scope$end};
+                    $$res = {kind: ASTKinds.function_parameter, start: $scope$start, direction: $scope$direction, type: $scope$type, name: $scope$name, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2015,13 +2021,13 @@ export class Parser {
     public matchfunction_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<function_definition> {
         return this.run<function_definition>($$dpth,
             () => {
-                let $scope$return_type: Nullable<compound_name>;
+                let $scope$return_type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$parameters: Nullable<parameters>;
                 let $scope$body: Nullable<function_body>;
                 let $$res: Nullable<function_definition> = null;
                 if (true
-                    && ($scope$return_type = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$return_type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -2544,14 +2550,14 @@ export class Parser {
         return this.run<variable_definition>($$dpth,
             () => {
                 let $scope$start: Nullable<PosInfo>;
-                let $scope$type_name: Nullable<compound_name>;
+                let $scope$type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$initializer: Nullable<Nullable<variable_definition_$0>>;
                 let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<variable_definition> = null;
                 if (true
                     && ($scope$start = this.mark()) !== null
-                    && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                    && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
@@ -2559,7 +2565,7 @@ export class Parser {
                     && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
                     && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.variable_definition, start: $scope$start, type_name: $scope$type_name, name: $scope$name, initializer: $scope$initializer, end: $scope$end};
+                    $$res = {kind: ASTKinds.variable_definition, start: $scope$start, type: $scope$type, name: $scope$name, initializer: $scope$initializer, end: $scope$end};
                 }
                 return $$res;
             });
@@ -2950,6 +2956,19 @@ export class Parser {
                     && ($scope$end = this.mark()) !== null
                 ) {
                     $$res = {kind: ASTKinds.member_identifier, start: $scope$start, text: $scope$text, end: $scope$end};
+                }
+                return $$res;
+            });
+    }
+    public matchtype_reference($$dpth: number, $$cr?: ErrorTracker): Nullable<type_reference> {
+        return this.run<type_reference>($$dpth,
+            () => {
+                let $scope$type_name: Nullable<compound_name>;
+                let $$res: Nullable<type_reference> = null;
+                if (true
+                    && ($scope$type_name = this.matchcompound_name($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.type_reference, type_name: $scope$type_name};
                 }
                 return $$res;
             });

@@ -1129,3 +1129,18 @@ describe("used variables missing from on triggers (#23)", () => {
         });
     });
 });
+
+test("namespace and instance with same name", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        namespace myNS {
+            component C {}
+            component S {
+                system {
+                    myNS.C myNS;
+                }
+            }
+        }`,
+    });
+});

@@ -41,7 +41,9 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
                         if (expectedParameterCount > 0) {
                             errorMessage +=
                                 "\nExpected event parameters: " +
-                                eventParameters.map(p => `${nameToString(p.type)} ${nameToString(p.name)}`).join(", ");
+                                eventParameters
+                                    .map(p => `${nameToString(p.type.type_name)} ${nameToString(p.name)}`)
+                                    .join(", ");
                         }
                         diagnostics.push(
                             incorrectOnParameterCount(

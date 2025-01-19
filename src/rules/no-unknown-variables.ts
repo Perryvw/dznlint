@@ -32,7 +32,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
 
         factoryContext.registerRule<parser.instance>(parser.ASTKinds.instance, (node: parser.instance, context) => {
             if (context.typeChecker.symbolOfNode(node.type) === undefined) {
-                return [createUnknownCompoundNameDiagnostic(node.type, "type", context)];
+                return [createUnknownCompoundNameDiagnostic(node.type.type_name, "type", context)];
             } else return [];
         });
 
@@ -40,8 +40,8 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             const diagnostics = [];
 
             // Check return type
-            if (context.typeChecker.symbolOfNode(node.type_name) === undefined) {
-                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type_name, "type", context));
+            if (context.typeChecker.symbolOfNode(node.type) === undefined) {
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.type_name, "type", context));
             }
 
             // Check parameter types
@@ -49,7 +49,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                 for (const param of headTailToList(node.event_params)) {
                     const typeSymbol = context.typeChecker.symbolOfNode(param.type);
                     if (typeSymbol === undefined) {
-                        diagnostics.push(createUnknownCompoundNameDiagnostic(param.type, "type", context));
+                        diagnostics.push(createUnknownCompoundNameDiagnostic(param.type.type_name, "type", context));
                     }
                 }
             }
@@ -125,13 +125,15 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                 const diagnostics = [];
 
                 if (context.typeChecker.symbolOfNode(node.return_type) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.return_type, "type", context));
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.return_type.type_name, "type", context));
                 }
 
                 if (node.parameters.parameters) {
                     for (const parameter of headTailToList(node.parameters.parameters)) {
-                        if (context.typeChecker.symbolOfNode(parameter.type_name) === undefined) {
-                            diagnostics.push(createUnknownCompoundNameDiagnostic(parameter.type_name, "type", context));
+                        if (context.typeChecker.symbolOfNode(parameter.type) === undefined) {
+                            diagnostics.push(
+                                createUnknownCompoundNameDiagnostic(parameter.type.type_name, "type", context)
+                            );
                         }
                     }
                 }
@@ -160,8 +162,8 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             (node: parser.variable_definition, context) => {
                 const diagnostics = [];
 
-                if (context.typeChecker.symbolOfNode(node.type_name) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.type_name, "type", context));
+                if (context.typeChecker.symbolOfNode(node.type) === undefined) {
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.type_name, "type", context));
                 }
 
                 if (node.initializer) {
@@ -184,7 +186,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
 
             for (const { port } of node.ports) {
                 if (context.typeChecker.symbolOfNode(port.type) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(port.type, "interface", context));
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(port.type.type_name, "interface", context));
                 }
             }
 

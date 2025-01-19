@@ -12,6 +12,7 @@ import {
     nameToString,
     ScopedBlock,
     isNamespace,
+    isTypeReference,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -56,8 +57,8 @@ const ERROR_TYPE = {
 export class TypeChecker {
     public constructor(private program: Program) {}
 
-    public typeOfNode(node: ASTNode): Type {
-        const symbol = this.symbolOfNode(node);
+    public typeOfNode(node: ASTNode, typeReference = false): Type {
+        const symbol = this.symbolOfNode(node, typeReference);
         if (!symbol) return ERROR_TYPE;
         return this.typeOfSymbol(symbol);
     }
@@ -74,8 +75,12 @@ export class TypeChecker {
         ["inevitable", new SemanticSymbol(null!)],
     ]);
 
-    public symbolOfNode(node: ASTNode): SemanticSymbol | undefined {
+    public symbolOfNode(node: ASTNode, typeReference = false): SemanticSymbol | undefined {
         if (this.symbols.has(node)) return this.symbols.get(node);
+        if (isTypeReference(node)) {
+            typeReference = true;
+            node = node.type_name;
+        }
 
         // First check if this is a built-in type
         if (
@@ -101,7 +106,7 @@ export class TypeChecker {
             const scopeNamespaces = [];
             while (scope) {
                 const symbol = this.findVariableInScope(node.text, scope, scopeNamespaces);
-                if (symbol) return symbol;
+                if (symbol && (!typeReference || this.isTypeSymbol(symbol))) return symbol;
 
                 if (isNamespace(scope)) {
                     scopeNamespaces.push(nameToString(scope.name));
@@ -110,7 +115,7 @@ export class TypeChecker {
             }
             return undefined;
         } else if (isCompoundName(node) && node.compound !== null) {
-            const ownerType = this.typeOfNode(node.compound);
+            const ownerType = this.typeOfNode(node.compound, typeReference);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
             const ownerMembers = this.getMembersOfType(ownerType);
             return ownerMembers.get(node.name.text);
@@ -139,6 +144,17 @@ export class TypeChecker {
                 node
             )}`;
         }
+    }
+
+    private isTypeSymbol(symbol: SemanticSymbol) {
+        return (
+            symbol.declaration.kind === parser.ASTKinds.component ||
+            symbol.declaration.kind === parser.ASTKinds.enum_definition ||
+            symbol.declaration.kind === parser.ASTKinds.extern_definition ||
+            symbol.declaration.kind === parser.ASTKinds.interface_definition ||
+            symbol.declaration.kind === parser.ASTKinds.int ||
+            symbol.declaration.kind === parser.ASTKinds.namespace
+        );
     }
 
     private findVariableInScope(
@@ -177,12 +193,12 @@ export class TypeChecker {
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === parser.ASTKinds.variable_definition) {
             const definition = declaration as parser.variable_definition;
-            const typeSymbol = this.symbolOfNode(definition.type_name);
+            const typeSymbol = this.symbolOfNode(definition.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === parser.ASTKinds.function_parameter) {
             const definition = declaration as parser.function_parameter;
-            const typeSymbol = this.symbolOfNode(definition.type_name);
+            const typeSymbol = this.symbolOfNode(definition.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === parser.ASTKinds.enum_definition) {

@@ -2,7 +2,7 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, compound_name, function_definition, interface_definition } from "../grammar/parser";
+import { ASTKinds, compound_name, function_definition, interface_definition, type_reference } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
 import { headTailToList, nodeToSourceRange } from "../util";
@@ -13,12 +13,12 @@ export const no_bool_out_parameters: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_bool_out_parameters", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        const createDiagnostic = (node: compound_name, source: InputSource) =>
+        const boolNotAllowedForOutParameter = (node: type_reference, source: InputSource) =>
             illegalBoolOutParameter(
                 config.severity,
                 "Type 'bool' is not allowed for out parameters",
                 source,
-                nodeToSourceRange(node)
+                nodeToSourceRange(node.type_name)
             );
 
         factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
@@ -26,8 +26,8 @@ export const no_bool_out_parameters: RuleFactory = factoryContext => {
 
             if (node.parameters.parameters) {
                 for (const parameter of headTailToList(node.parameters.parameters)) {
-                    if (parameter.direction?.direction === "out" && isBoolIdentifier(parameter.type_name)) {
-                        diagnostics.push(createDiagnostic(parameter.type_name, context.source));
+                    if (parameter.direction?.direction === "out" && isBoolIdentifier(parameter.type.type_name)) {
+                        diagnostics.push(boolNotAllowedForOutParameter(parameter.type, context.source));
                     }
                 }
             }
@@ -41,8 +41,8 @@ export const no_bool_out_parameters: RuleFactory = factoryContext => {
             for (const { type_or_event } of node.body) {
                 if (type_or_event.kind === ASTKinds.event && type_or_event.event_params) {
                     for (const parameter of headTailToList(type_or_event.event_params)) {
-                        if (parameter.direction?.direction === "out" && isBoolIdentifier(parameter.type)) {
-                            diagnostics.push(createDiagnostic(parameter.type, context.source));
+                        if (parameter.direction?.direction === "out" && isBoolIdentifier(parameter.type.type_name)) {
+                            diagnostics.push(boolNotAllowedForOutParameter(parameter.type, context.source));
                         }
                     }
                 }

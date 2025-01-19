@@ -27,9 +27,9 @@ namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ 
   namespace_statement := type_definition | namespace | interface_definition | component
 
 interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
-    event := direction=event_direction __ type_name=compound_name __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
+    event := direction=event_direction __ type=type_reference __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
-    event_parameter := direction={direction=param_direction __}? type=compound_name __ name=identifier
+    event_parameter := direction={direction=param_direction __}? type=type_reference __ name=identifier
       event_direction := IN | OUT
       param_direction := INOUT | IN | OUT
 
@@ -37,23 +37,23 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
   body := behavior | system
     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
       instances_and_bindings := {_{instance | binding}_}*
-        instance := type=compound_name _ name=identifier _ SEMICOLON
+        instance := type=type_reference _ name=identifier _ SEMICOLON
         binding := start=@ left=binding_expression _ BIND _ right=binding_expression _ SEMICOLON end=@
           binding_expression := {start=@ compound=binding_expression DOT name={ asterisk_binding | member_identifier} end=@} | identifier | asterisk_binding
           asterisk_binding := start=@ ASTERISK end=@
 
-  port := direction=port_direction __ qualifiers=port_qualifiers? type=compound_name _ name=identifier _ SEMICOLON
+  port := direction=port_direction __ qualifiers=port_qualifiers? type=type_reference _ name=identifier _ SEMICOLON
     port_direction := PROVIDES | REQUIRES
     port_qualifiers := {_ qualifier={EXTERNAL | INJECTED | BLOCKING} __}*
     parameters := PAREN_OPEN _ parameters=parameter_list? _ PAREN_CLOSE
       parameter_list := head=function_parameter tail={ _ COMMA _ elem=function_parameter }*
-      function_parameter := start=@ direction={direction=param_direction __}? type_name=compound_name __ name=identifier end=@
+      function_parameter := start=@ direction={direction=param_direction __}? type=type_reference __ name=identifier end=@
 
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
     behavior_statements := {_ statement=behavior_statement _}*
       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-        function_definition := return_type=compound_name _ name=identifier _ parameters=parameters _ body=function_body
+        function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body=function_body
         function_body := compound=compound
 
 declarative_statement := on | guard | compound
@@ -78,7 +78,7 @@ imperative_statement :=  if_statement | return_statement | variable_definition |
   expression_statement  := start=@ expression=expression SEMICOLON end=@
   if_statement          := start=@ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE _ statement=imperative_statement _ else_statements=else_statement* end=@
     else_statement      := ELSE elseif={__ IF _ PAREN_OPEN _ expression=expression _ PAREN_CLOSE}? _ statement=imperative_statement _
-  variable_definition   := start=@ type_name=compound_name _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
+  variable_definition   := start=@ type=type_reference _ name=identifier _ initializer={ASSIGN _ expression=expression _}? SEMICOLON end=@
   return_statement      := start=@ RETURN &{'\s' | SEMICOLON } _ expression=expression? _ SEMICOLON end=@
 
 expression := binary_expression | unary_expression
@@ -99,6 +99,7 @@ compound_name := {start=@ compound=compound_name? DOT name=member_identifier end
 
 identifier          := start=@ text='[a-zA-Z_][a-zA-Z0-9_]*' end=@
 member_identifier   := start=@ text='[a-zA-Z0-9_]+' end=@
+type_reference      := type_name=compound_name
 
 NUMBER              := MINUS? '[0-9]+'
 ASTERISK            := '\*'

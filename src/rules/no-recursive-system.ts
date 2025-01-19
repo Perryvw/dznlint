@@ -20,7 +20,7 @@ export const no_recursive_system: RuleFactory = factoryContext => {
 
             // Check if the type of any of the instances of the system is the same system
             for (const instance of systemInstances(node)) {
-                const instanceType = instance.type;
+                const instanceType = instance.type.type_name;
                 if (instanceType.kind === ASTKinds.identifier && instanceType.text === componentName) {
                     diagnostics.push(
                         recursiveSystem(
