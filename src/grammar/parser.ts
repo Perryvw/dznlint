@@ -45,7 +45,7 @@
 * behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
-*       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
+*       behavior_statement := port | function_definition | invariant_statement | variable_definition | declarative_statement | type_definition | sl_comment
 *         function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body={ compound | function_inline_body }
 *         function_inline_body := ASSIGN _ expression=expression _ SEMICOLON
 * declarative_statement := on | guard | invariant_statement | compound
@@ -249,6 +249,7 @@ export enum ASTKinds {
     behavior_statement_4 = "behavior_statement_4",
     behavior_statement_5 = "behavior_statement_5",
     behavior_statement_6 = "behavior_statement_6",
+    behavior_statement_7 = "behavior_statement_7",
     function_definition = "function_definition",
     function_definition_$0_1 = "function_definition_$0_1",
     function_definition_$0_2 = "function_definition_$0_2",
@@ -669,13 +670,14 @@ export interface behavior_statements_$0 {
     kind: ASTKinds.behavior_statements_$0;
     statement: behavior_statement;
 }
-export type behavior_statement = behavior_statement_1 | behavior_statement_2 | behavior_statement_3 | behavior_statement_4 | behavior_statement_5 | behavior_statement_6;
+export type behavior_statement = behavior_statement_1 | behavior_statement_2 | behavior_statement_3 | behavior_statement_4 | behavior_statement_5 | behavior_statement_6 | behavior_statement_7;
 export type behavior_statement_1 = port;
 export type behavior_statement_2 = function_definition;
-export type behavior_statement_3 = variable_definition;
-export type behavior_statement_4 = declarative_statement;
-export type behavior_statement_5 = type_definition;
-export type behavior_statement_6 = sl_comment;
+export type behavior_statement_3 = invariant_statement;
+export type behavior_statement_4 = variable_definition;
+export type behavior_statement_5 = declarative_statement;
+export type behavior_statement_6 = type_definition;
+export type behavior_statement_7 = sl_comment;
 export interface function_definition {
     kind: ASTKinds.function_definition;
     return_type: type_reference;
@@ -2034,6 +2036,7 @@ export class Parser {
             () => this.matchbehavior_statement_4($$dpth + 1, $$cr),
             () => this.matchbehavior_statement_5($$dpth + 1, $$cr),
             () => this.matchbehavior_statement_6($$dpth + 1, $$cr),
+            () => this.matchbehavior_statement_7($$dpth + 1, $$cr),
         ]);
     }
     public matchbehavior_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_1> {
@@ -2043,15 +2046,18 @@ export class Parser {
         return this.matchfunction_definition($$dpth + 1, $$cr);
     }
     public matchbehavior_statement_3($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_3> {
-        return this.matchvariable_definition($$dpth + 1, $$cr);
+        return this.matchinvariant_statement($$dpth + 1, $$cr);
     }
     public matchbehavior_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_4> {
-        return this.matchdeclarative_statement($$dpth + 1, $$cr);
+        return this.matchvariable_definition($$dpth + 1, $$cr);
     }
     public matchbehavior_statement_5($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_5> {
-        return this.matchtype_definition($$dpth + 1, $$cr);
+        return this.matchdeclarative_statement($$dpth + 1, $$cr);
     }
     public matchbehavior_statement_6($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_6> {
+        return this.matchtype_definition($$dpth + 1, $$cr);
+    }
+    public matchbehavior_statement_7($$dpth: number, $$cr?: ErrorTracker): Nullable<behavior_statement_7> {
         return this.matchsl_comment($$dpth + 1, $$cr);
     }
     public matchfunction_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<function_definition> {

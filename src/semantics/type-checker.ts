@@ -14,6 +14,7 @@ import {
     isNamespace,
     isTypeReference,
     isInterfaceDefinition,
+    isCallExpression,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -31,6 +32,7 @@ export class SemanticSymbol {
 
 export enum TypeKind {
     Invalid,
+    Bool,
     External,
     Enum,
     Port,
@@ -55,10 +57,28 @@ const ERROR_TYPE = {
     declaration: null!,
 } satisfies Type;
 
+const BOOL_TYPE = {
+    kind: TypeKind.Bool,
+    name: "bool",
+} satisfies Type;
+
+const BOOL_SYMBOL = new SemanticSymbol(null!);
+
+const TRUE_DECLARATION: ASTNode = { kind: parser.ASTKinds.TRUE };
+const FALSE_DECLARATION: ASTNode = { kind: parser.ASTKinds.FALSE };
+
 export class TypeChecker {
     public constructor(private program: Program) {}
 
     public typeOfNode(node: ASTNode, typeReference = false): Type {
+        if (node.kind === parser.ASTKinds.binary_expression) {
+            return BOOL_TYPE;
+        } else if (isCallExpression(node)) {
+            const functionSymbol = this.symbolOfNode(node.expression);
+            if (!functionSymbol) return ERROR_TYPE;
+            const functionDefinition = functionSymbol.declaration as parser.function_definition;
+            return this.typeOfNode(functionDefinition.return_type);
+        }
         const symbol = this.symbolOfNode(node, typeReference);
         if (!symbol) return ERROR_TYPE;
         return this.typeOfSymbol(symbol);
@@ -68,9 +88,9 @@ export class TypeChecker {
 
     private builtInSymbols = new Map<string, SemanticSymbol>([
         ["void", new SemanticSymbol(null!)],
-        ["bool", new SemanticSymbol(null!)],
-        ["true", new SemanticSymbol(null!)],
-        ["false", new SemanticSymbol(null!)],
+        ["bool", BOOL_SYMBOL],
+        ["true", new SemanticSymbol(TRUE_DECLARATION)],
+        ["false", new SemanticSymbol(FALSE_DECLARATION)],
         ["reply", new SemanticSymbol(null!)],
         ["optional", new SemanticSymbol(null!)],
         ["inevitable", new SemanticSymbol(null!)],
@@ -183,6 +203,7 @@ export class TypeChecker {
     }
 
     public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {
+        if (symbol === BOOL_SYMBOL) return BOOL_TYPE;
         if (symbol.declaration === null) return ERROR_TYPE;
 
         const declaration = symbol.declaration;
@@ -229,6 +250,17 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === parser.ASTKinds.function_definition) {
             const definition = declaration as parser.function_definition;
             return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
+        } else if (symbol.declaration.kind === parser.ASTKinds.member_identifier) {
+            if (!symbol.declaration.parent) return ERROR_TYPE;
+            const parentType = this.typeOfNode(symbol.declaration.parent);
+            if (parentType === ERROR_TYPE) return ERROR_TYPE;
+            if (parentType.kind === TypeKind.Enum) return BOOL_TYPE;
+            return ERROR_TYPE;
+        } else if (
+            symbol.declaration.kind === parser.ASTKinds.TRUE ||
+            symbol.declaration.kind === parser.ASTKinds.FALSE
+        ) {
+            return BOOL_TYPE;
         } else if (symbol.declaration.kind === parser.ASTKinds.int) {
             const definition = declaration as parser.int;
             return { kind: TypeKind.IntegerRange, declaration: symbol.declaration, name: definition.name.text };

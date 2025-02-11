@@ -53,7 +53,7 @@ component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=
 behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
     behavior_statements := {_ statement=behavior_statement _}*
-      behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
+      behavior_statement := port | function_definition | invariant_statement | variable_definition | declarative_statement | type_definition | sl_comment
         function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body={ compound | function_inline_body }
         function_inline_body := ASSIGN _ expression=expression _ SEMICOLON
 
