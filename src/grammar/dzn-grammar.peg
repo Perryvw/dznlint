@@ -8,6 +8,7 @@ root_statement :=
   | interface_definition
   | component
   | sl_comment
+  | function_definition
   | statement
 
 extern_definition := EXTERN __ name=identifier __ literal=dollars _ SEMICOLON
@@ -24,7 +25,7 @@ type_definition := enum_definition | int | extern_definition
 
 namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
   namespace_root      := statements={_ statement=namespace_statement _}*
-  namespace_statement := type_definition | namespace | interface_definition | component
+  namespace_statement := type_definition | namespace | interface_definition | component | function_definition
 
 interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
     event := direction=event_direction __ type=type_reference __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
@@ -53,10 +54,10 @@ behavior := BEHAVIOR _ name=identifier? _ block=behavior_compound
   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
     behavior_statements := {_ statement=behavior_statement _}*
       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-        function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body=function_body
-        function_body := compound=compound
+        function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body={ compound | function_inline_body }
+        function_inline_body := ASSIGN _ expression=expression _ SEMICOLON
 
-declarative_statement := on | guard | compound
+declarative_statement := on | guard | invariant_statement | compound
   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ body=on_body end=@
     on_body := statement=statement
     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
@@ -65,6 +66,7 @@ declarative_statement := on | guard | compound
       on_parameter_list := head=on_parameter tail={ _ COMMA _ elem=on_parameter }*
         on_parameter := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
   guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
+  invariant_statement := start=@ INVARIANT __ expression=expression _ SEMICOLON end=@
 
 compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
   statements  := {_ statement=statement _}*
@@ -83,7 +85,7 @@ imperative_statement :=  if_statement | return_statement | variable_definition |
 
 expression := binary_expression | unary_expression
   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
-    binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
+    binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS | IMPLIES
 
 unary_expression := parenthesized_expression | call_expression | dollars | ILLEGAL | compound_name | numeric_literal | unary_operator_expression
   call_expression             := expression=expression _ arguments=arguments
@@ -122,6 +124,7 @@ OR                  := '\|\|'
 AND                 := '&&'
 EQUAL               := '=='
 NOT_EQUAL           := '!='
+IMPLIES             := '=>'
 LESS                := '<'
 LESS_EQUAL          := '<='
 GREATER             := '>'
@@ -148,6 +151,7 @@ IN                  := 'in'
 INEVITABLE          := 'inevitable'
 INJECTED            := 'injected'
 INOUT               := 'inout'
+INVARIANT           := 'invariant'
 INTERFACE           := 'interface'
 NAMESPACE           := 'namespace'
 ON                  := 'on'

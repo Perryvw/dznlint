@@ -1144,3 +1144,114 @@ test("namespace and instance with same name", () => {
         }`,
     });
 });
+
+test("variables in invariant", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        component C {
+            behavior {
+                enum State {
+                    A,
+                    B
+                };
+                State s = State.A;
+
+                invariant s.A => s.B; // tautology but variables should be known
+            }
+        }`,
+        fail: `
+        component C {
+            behavior {
+                enum State {
+                    A,
+                    B
+                };
+                State s = State.A;
+
+                invariant s.A => s.C;
+            }
+        }`,
+    });
+});
+
+test("invariant using predicate function", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        component C {
+            behavior {
+                bool predicate() = true;
+                invariant predicate();
+            }
+        }`,
+        fail: `
+        component C {
+            behavior {
+                invariant predicate();
+            }
+        }`,
+    });
+});
+
+test("call global function", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        component C {
+            behavior {
+                bool foo = bar();
+            }
+        }
+            
+        bool bar() {
+            return true;
+        }`,
+    });
+});
+
+test("call global function in namespace", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        component C {
+            behavior {
+                bool foo = baz.bar();
+            }
+        }
+            
+        namespace baz {
+            bool bar() {
+                return true;
+            }
+        }`,
+    });
+});
+
+test("global function with port", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        interface I {
+            behavior {
+                enum State { A, B };
+                State s = State.A;
+            }
+        }
+            
+        bool bar(in I port) {
+            return port.s.B;
+        }`,
+        fail: `
+        interface I {
+            behavior {
+                enum State { A, B };
+                State s = State.A;
+            }
+        }
+            
+        bool bar(in I port) {
+            return port.s.C; // C does not exist
+        }`,
+    });
+});

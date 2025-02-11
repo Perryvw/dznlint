@@ -13,6 +13,7 @@ import {
     ScopedBlock,
     isNamespace,
     isTypeReference,
+    isInterfaceDefinition,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -257,7 +258,7 @@ export class TypeChecker {
                 result.set(name, this.getOrCreateSymbol(declaration));
             }
 
-            if (type.declaration.kind === parser.ASTKinds.interface_definition) {
+            if (isInterfaceDefinition(type.declaration)) {
                 // Also add reply as a member of the interface
                 result.set("reply", this.builtInSymbols.get("reply")!);
 
@@ -306,7 +307,8 @@ export class TypeChecker {
                     statement.kind === parser.ASTKinds.component ||
                     statement.kind === parser.ASTKinds.interface_definition ||
                     statement.kind === parser.ASTKinds.extern_definition ||
-                    statement.kind === parser.ASTKinds.int
+                    statement.kind === parser.ASTKinds.int ||
+                    statement.kind === parser.ASTKinds.function_definition
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === parser.ASTKinds.namespace) {
@@ -346,10 +348,9 @@ export class TypeChecker {
                     result.set(statement.name.text, statement);
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.function_body) {
-            const functionDefinition = scope.parent as parser.function_definition;
-            if (functionDefinition.parameters.parameters) {
-                for (const parameter of headTailToList(functionDefinition.parameters.parameters)) {
+        } else if (scope.kind === parser.ASTKinds.function_definition) {
+            if (scope.parameters.parameters) {
+                for (const parameter of headTailToList(scope.parameters.parameters)) {
                     result.set(parameter.name.text, parameter);
                 }
             }
@@ -360,7 +361,8 @@ export class TypeChecker {
                     statement.kind === parser.ASTKinds.component ||
                     statement.kind === parser.ASTKinds.interface_definition ||
                     statement.kind === parser.ASTKinds.extern_definition ||
-                    statement.kind === parser.ASTKinds.int
+                    statement.kind === parser.ASTKinds.int ||
+                    statement.kind === parser.ASTKinds.function_definition
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === parser.ASTKinds.namespace) {

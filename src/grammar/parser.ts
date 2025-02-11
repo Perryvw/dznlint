@@ -9,6 +9,7 @@
 *   | interface_definition
 *   | component
 *   | sl_comment
+*   | function_definition
 *   | statement
 * extern_definition := EXTERN __ name=identifier __ literal=dollars _ SEMICOLON
 * import_statement := start=@ IMPORT __ file_name=file_name _ SEMICOLON end=@
@@ -20,7 +21,7 @@
 *     range := from=NUMBER _ DOTDOT _ to=NUMBER
 * namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ BRACE_CLOSE
 *   namespace_root      := statements={_ statement=namespace_statement _}*
-*   namespace_statement := type_definition | namespace | interface_definition | component
+*   namespace_statement := type_definition | namespace | interface_definition | component | function_definition
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
 *     event := direction=event_direction __ type=type_reference __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
@@ -45,9 +46,9 @@
 *   behavior_compound := BRACE_OPEN _ statements=behavior_statements _ BRACE_CLOSE
 *     behavior_statements := {_ statement=behavior_statement _}*
 *       behavior_statement := port | function_definition | variable_definition | declarative_statement | type_definition | sl_comment
-*         function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body=function_body
-*         function_body := compound=compound
-* declarative_statement := on | guard | compound
+*         function_definition := return_type=type_reference _ name=identifier _ parameters=parameters _ body={ compound | function_inline_body }
+*         function_inline_body := ASSIGN _ expression=expression _ SEMICOLON
+* declarative_statement := on | guard | invariant_statement | compound
 *   on := start=@ blocking=BLOCKING? _ ON _  on_trigger_list=on_trigger_list _ COLON _ body=on_body end=@
 *     on_body := statement=statement
 *     on_trigger_list := head=on_trigger? tail={ _ COMMA _ elem=on_trigger }*
@@ -56,6 +57,7 @@
 *       on_parameter_list := head=on_parameter tail={ _ COMMA _ elem=on_parameter }*
 *         on_parameter := name=identifier _ assignment={LEFT_ARROW _ name=identifier}?
 *   guard := start=@ blocking=BLOCKING? _ BRACKET_OPEN _ condition={OTHERWISE | expression}? _ BRACKET_CLOSE _ statement=statement end=@
+*   invariant_statement := start=@ INVARIANT __ expression=expression _ SEMICOLON end=@
 * compound := start=@ blocking=BLOCKING? _ BRACE_OPEN _ statements=statements _ BRACE_CLOSE end=@
 *   statements  := {_ statement=statement _}*
 *   statement   := declarative_statement | imperative_statement
@@ -71,7 +73,7 @@
 *   return_statement      := start=@ RETURN &{'\s' | SEMICOLON } _ expression=expression? _ SEMICOLON end=@
 * expression := binary_expression | unary_expression
 *   binary_expression   := left=unary_expression _ operator=binary_operator _ right=expression
-*     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS
+*     binary_operator   := AND | OR | EQUAL | NOT_EQUAL | LESS_EQUAL | LESS | GREATER_EQUAL | GREATER | PLUS | MINUS | IMPLIES
 * unary_expression := parenthesized_expression | call_expression | dollars | ILLEGAL | compound_name | numeric_literal | unary_operator_expression
 *   call_expression             := expression=expression _ arguments=arguments
 *     arguments                 := start=@ PAREN_OPEN arguments={_ expression=expression _ COMMA?}* PAREN_CLOSE end=@
@@ -105,6 +107,7 @@
 * AND                 := '&&'
 * EQUAL               := '=='
 * NOT_EQUAL           := '!='
+* IMPLIES             := '=>'
 * LESS                := '<'
 * LESS_EQUAL          := '<='
 * GREATER             := '>'
@@ -130,6 +133,7 @@
 * INEVITABLE          := 'inevitable'
 * INJECTED            := 'injected'
 * INOUT               := 'inout'
+* INVARIANT           := 'invariant'
 * INTERFACE           := 'interface'
 * NAMESPACE           := 'namespace'
 * ON                  := 'on'
@@ -167,6 +171,7 @@ export enum ASTKinds {
     root_statement_6 = "root_statement_6",
     root_statement_7 = "root_statement_7",
     root_statement_8 = "root_statement_8",
+    root_statement_9 = "root_statement_9",
     extern_definition = "extern_definition",
     import_statement = "import_statement",
     file_name = "file_name",
@@ -185,6 +190,7 @@ export enum ASTKinds {
     namespace_statement_2 = "namespace_statement_2",
     namespace_statement_3 = "namespace_statement_3",
     namespace_statement_4 = "namespace_statement_4",
+    namespace_statement_5 = "namespace_statement_5",
     interface_definition = "interface_definition",
     interface_definition_$0 = "interface_definition_$0",
     interface_definition_$0_$0_1 = "interface_definition_$0_$0_1",
@@ -244,10 +250,13 @@ export enum ASTKinds {
     behavior_statement_5 = "behavior_statement_5",
     behavior_statement_6 = "behavior_statement_6",
     function_definition = "function_definition",
-    function_body = "function_body",
+    function_definition_$0_1 = "function_definition_$0_1",
+    function_definition_$0_2 = "function_definition_$0_2",
+    function_inline_body = "function_inline_body",
     declarative_statement_1 = "declarative_statement_1",
     declarative_statement_2 = "declarative_statement_2",
     declarative_statement_3 = "declarative_statement_3",
+    declarative_statement_4 = "declarative_statement_4",
     on = "on",
     on_body = "on_body",
     on_trigger_list = "on_trigger_list",
@@ -261,6 +270,7 @@ export enum ASTKinds {
     guard = "guard",
     guard_$0_1 = "guard_$0_1",
     guard_$0_2 = "guard_$0_2",
+    invariant_statement = "invariant_statement",
     compound = "compound",
     statements = "statements",
     statements_$0 = "statements_$0",
@@ -302,6 +312,7 @@ export enum ASTKinds {
     binary_operator_8 = "binary_operator_8",
     binary_operator_9 = "binary_operator_9",
     binary_operator_10 = "binary_operator_10",
+    binary_operator_11 = "binary_operator_11",
     unary_expression_1 = "unary_expression_1",
     unary_expression_2 = "unary_expression_2",
     unary_expression_3 = "unary_expression_3",
@@ -344,6 +355,7 @@ export enum ASTKinds {
     AND = "AND",
     EQUAL = "EQUAL",
     NOT_EQUAL = "NOT_EQUAL",
+    IMPLIES = "IMPLIES",
     LESS = "LESS",
     LESS_EQUAL = "LESS_EQUAL",
     GREATER = "GREATER",
@@ -375,6 +387,7 @@ export enum ASTKinds {
     INEVITABLE = "INEVITABLE",
     INJECTED = "INJECTED",
     INOUT = "INOUT",
+    INVARIANT = "INVARIANT",
     INTERFACE = "INTERFACE",
     NAMESPACE = "NAMESPACE",
     ON = "ON",
@@ -416,7 +429,7 @@ export interface file_$0 {
     kind: ASTKinds.file_$0;
     statement: root_statement;
 }
-export type root_statement = root_statement_1 | root_statement_2 | root_statement_3 | root_statement_4 | root_statement_5 | root_statement_6 | root_statement_7 | root_statement_8;
+export type root_statement = root_statement_1 | root_statement_2 | root_statement_3 | root_statement_4 | root_statement_5 | root_statement_6 | root_statement_7 | root_statement_8 | root_statement_9;
 export type root_statement_1 = namespace;
 export type root_statement_2 = extern_definition;
 export type root_statement_3 = type_definition;
@@ -424,7 +437,8 @@ export type root_statement_4 = import_statement;
 export type root_statement_5 = interface_definition;
 export type root_statement_6 = component;
 export type root_statement_7 = sl_comment;
-export type root_statement_8 = statement;
+export type root_statement_8 = function_definition;
+export type root_statement_9 = statement;
 export interface extern_definition {
     kind: ASTKinds.extern_definition;
     name: identifier;
@@ -478,11 +492,12 @@ export interface namespace_root_$0 {
     kind: ASTKinds.namespace_root_$0;
     statement: namespace_statement;
 }
-export type namespace_statement = namespace_statement_1 | namespace_statement_2 | namespace_statement_3 | namespace_statement_4;
+export type namespace_statement = namespace_statement_1 | namespace_statement_2 | namespace_statement_3 | namespace_statement_4 | namespace_statement_5;
 export type namespace_statement_1 = type_definition;
 export type namespace_statement_2 = namespace;
 export type namespace_statement_3 = interface_definition;
 export type namespace_statement_4 = component;
+export type namespace_statement_5 = function_definition;
 export interface interface_definition {
     kind: ASTKinds.interface_definition;
     name: identifier;
@@ -666,16 +681,20 @@ export interface function_definition {
     return_type: type_reference;
     name: identifier;
     parameters: parameters;
-    body: function_body;
+    body: function_definition_$0;
 }
-export interface function_body {
-    kind: ASTKinds.function_body;
-    compound: compound;
+export type function_definition_$0 = function_definition_$0_1 | function_definition_$0_2;
+export type function_definition_$0_1 = compound;
+export type function_definition_$0_2 = function_inline_body;
+export interface function_inline_body {
+    kind: ASTKinds.function_inline_body;
+    expression: expression;
 }
-export type declarative_statement = declarative_statement_1 | declarative_statement_2 | declarative_statement_3;
+export type declarative_statement = declarative_statement_1 | declarative_statement_2 | declarative_statement_3 | declarative_statement_4;
 export type declarative_statement_1 = on;
 export type declarative_statement_2 = guard;
-export type declarative_statement_3 = compound;
+export type declarative_statement_3 = invariant_statement;
+export type declarative_statement_4 = compound;
 export interface on {
     kind: ASTKinds.on;
     start: PosInfo;
@@ -737,6 +756,12 @@ export interface guard {
 export type guard_$0 = guard_$0_1 | guard_$0_2;
 export type guard_$0_1 = OTHERWISE;
 export type guard_$0_2 = expression;
+export interface invariant_statement {
+    kind: ASTKinds.invariant_statement;
+    start: PosInfo;
+    expression: expression;
+    end: PosInfo;
+}
 export interface compound {
     kind: ASTKinds.compound;
     start: PosInfo;
@@ -843,7 +868,7 @@ export interface binary_expression {
     operator: binary_operator;
     right: expression;
 }
-export type binary_operator = binary_operator_1 | binary_operator_2 | binary_operator_3 | binary_operator_4 | binary_operator_5 | binary_operator_6 | binary_operator_7 | binary_operator_8 | binary_operator_9 | binary_operator_10;
+export type binary_operator = binary_operator_1 | binary_operator_2 | binary_operator_3 | binary_operator_4 | binary_operator_5 | binary_operator_6 | binary_operator_7 | binary_operator_8 | binary_operator_9 | binary_operator_10 | binary_operator_11;
 export type binary_operator_1 = AND;
 export type binary_operator_2 = OR;
 export type binary_operator_3 = EQUAL;
@@ -854,6 +879,7 @@ export type binary_operator_7 = GREATER_EQUAL;
 export type binary_operator_8 = GREATER;
 export type binary_operator_9 = PLUS;
 export type binary_operator_10 = MINUS;
+export type binary_operator_11 = IMPLIES;
 export type unary_expression = unary_expression_1 | unary_expression_2 | unary_expression_3 | unary_expression_4 | unary_expression_5 | unary_expression_6 | unary_expression_7;
 export type unary_expression_1 = parenthesized_expression;
 export type unary_expression_2 = call_expression;
@@ -944,6 +970,7 @@ export type OR = string;
 export type AND = string;
 export type EQUAL = string;
 export type NOT_EQUAL = string;
+export type IMPLIES = string;
 export type LESS = string;
 export type LESS_EQUAL = string;
 export type GREATER = string;
@@ -981,6 +1008,7 @@ export type IN = string;
 export type INEVITABLE = string;
 export type INJECTED = string;
 export type INOUT = string;
+export type INVARIANT = string;
 export type INTERFACE = string;
 export type NAMESPACE = string;
 export type ON = string;
@@ -1097,6 +1125,7 @@ export class Parser {
             () => this.matchroot_statement_6($$dpth + 1, $$cr),
             () => this.matchroot_statement_7($$dpth + 1, $$cr),
             () => this.matchroot_statement_8($$dpth + 1, $$cr),
+            () => this.matchroot_statement_9($$dpth + 1, $$cr),
         ]);
     }
     public matchroot_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<root_statement_1> {
@@ -1121,6 +1150,9 @@ export class Parser {
         return this.matchsl_comment($$dpth + 1, $$cr);
     }
     public matchroot_statement_8($$dpth: number, $$cr?: ErrorTracker): Nullable<root_statement_8> {
+        return this.matchfunction_definition($$dpth + 1, $$cr);
+    }
+    public matchroot_statement_9($$dpth: number, $$cr?: ErrorTracker): Nullable<root_statement_9> {
         return this.matchstatement($$dpth + 1, $$cr);
     }
     public matchextern_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<extern_definition> {
@@ -1335,6 +1367,7 @@ export class Parser {
             () => this.matchnamespace_statement_2($$dpth + 1, $$cr),
             () => this.matchnamespace_statement_3($$dpth + 1, $$cr),
             () => this.matchnamespace_statement_4($$dpth + 1, $$cr),
+            () => this.matchnamespace_statement_5($$dpth + 1, $$cr),
         ]);
     }
     public matchnamespace_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<namespace_statement_1> {
@@ -1348,6 +1381,9 @@ export class Parser {
     }
     public matchnamespace_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<namespace_statement_4> {
         return this.matchcomponent($$dpth + 1, $$cr);
+    }
+    public matchnamespace_statement_5($$dpth: number, $$cr?: ErrorTracker): Nullable<namespace_statement_5> {
+        return this.matchfunction_definition($$dpth + 1, $$cr);
     }
     public matchinterface_definition($$dpth: number, $$cr?: ErrorTracker): Nullable<interface_definition> {
         return this.run<interface_definition>($$dpth,
@@ -2024,7 +2060,7 @@ export class Parser {
                 let $scope$return_type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
                 let $scope$parameters: Nullable<parameters>;
-                let $scope$body: Nullable<function_body>;
+                let $scope$body: Nullable<function_definition_$0>;
                 let $$res: Nullable<function_definition> = null;
                 if (true
                     && ($scope$return_type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
@@ -2033,22 +2069,38 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$parameters = this.matchparameters($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$body = this.matchfunction_body($$dpth + 1, $$cr)) !== null
+                    && ($scope$body = this.matchfunction_definition_$0($$dpth + 1, $$cr)) !== null
                 ) {
                     $$res = {kind: ASTKinds.function_definition, return_type: $scope$return_type, name: $scope$name, parameters: $scope$parameters, body: $scope$body};
                 }
                 return $$res;
             });
     }
-    public matchfunction_body($$dpth: number, $$cr?: ErrorTracker): Nullable<function_body> {
-        return this.run<function_body>($$dpth,
+    public matchfunction_definition_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<function_definition_$0> {
+        return this.choice<function_definition_$0>([
+            () => this.matchfunction_definition_$0_1($$dpth + 1, $$cr),
+            () => this.matchfunction_definition_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchfunction_definition_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<function_definition_$0_1> {
+        return this.matchcompound($$dpth + 1, $$cr);
+    }
+    public matchfunction_definition_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<function_definition_$0_2> {
+        return this.matchfunction_inline_body($$dpth + 1, $$cr);
+    }
+    public matchfunction_inline_body($$dpth: number, $$cr?: ErrorTracker): Nullable<function_inline_body> {
+        return this.run<function_inline_body>($$dpth,
             () => {
-                let $scope$compound: Nullable<compound>;
-                let $$res: Nullable<function_body> = null;
+                let $scope$expression: Nullable<expression>;
+                let $$res: Nullable<function_inline_body> = null;
                 if (true
-                    && ($scope$compound = this.matchcompound($$dpth + 1, $$cr)) !== null
+                    && this.matchASSIGN($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.function_body, compound: $scope$compound};
+                    $$res = {kind: ASTKinds.function_inline_body, expression: $scope$expression};
                 }
                 return $$res;
             });
@@ -2058,6 +2110,7 @@ export class Parser {
             () => this.matchdeclarative_statement_1($$dpth + 1, $$cr),
             () => this.matchdeclarative_statement_2($$dpth + 1, $$cr),
             () => this.matchdeclarative_statement_3($$dpth + 1, $$cr),
+            () => this.matchdeclarative_statement_4($$dpth + 1, $$cr),
         ]);
     }
     public matchdeclarative_statement_1($$dpth: number, $$cr?: ErrorTracker): Nullable<declarative_statement_1> {
@@ -2067,6 +2120,9 @@ export class Parser {
         return this.matchguard($$dpth + 1, $$cr);
     }
     public matchdeclarative_statement_3($$dpth: number, $$cr?: ErrorTracker): Nullable<declarative_statement_3> {
+        return this.matchinvariant_statement($$dpth + 1, $$cr);
+    }
+    public matchdeclarative_statement_4($$dpth: number, $$cr?: ErrorTracker): Nullable<declarative_statement_4> {
         return this.matchcompound($$dpth + 1, $$cr);
     }
     public matchon($$dpth: number, $$cr?: ErrorTracker): Nullable<on> {
@@ -2277,6 +2333,27 @@ export class Parser {
     }
     public matchguard_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<guard_$0_2> {
         return this.matchexpression($$dpth + 1, $$cr);
+    }
+    public matchinvariant_statement($$dpth: number, $$cr?: ErrorTracker): Nullable<invariant_statement> {
+        return this.run<invariant_statement>($$dpth,
+            () => {
+                let $scope$start: Nullable<PosInfo>;
+                let $scope$expression: Nullable<expression>;
+                let $scope$end: Nullable<PosInfo>;
+                let $$res: Nullable<invariant_statement> = null;
+                if (true
+                    && ($scope$start = this.mark()) !== null
+                    && this.matchINVARIANT($$dpth + 1, $$cr) !== null
+                    && this.match__($$dpth + 1, $$cr) !== null
+                    && ($scope$expression = this.matchexpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.matchSEMICOLON($$dpth + 1, $$cr) !== null
+                    && ($scope$end = this.mark()) !== null
+                ) {
+                    $$res = {kind: ASTKinds.invariant_statement, start: $scope$start, expression: $scope$expression, end: $scope$end};
+                }
+                return $$res;
+            });
     }
     public matchcompound($$dpth: number, $$cr?: ErrorTracker): Nullable<compound> {
         return this.run<compound>($$dpth,
@@ -2689,6 +2766,7 @@ export class Parser {
             () => this.matchbinary_operator_8($$dpth + 1, $$cr),
             () => this.matchbinary_operator_9($$dpth + 1, $$cr),
             () => this.matchbinary_operator_10($$dpth + 1, $$cr),
+            () => this.matchbinary_operator_11($$dpth + 1, $$cr),
         ]);
     }
     public matchbinary_operator_1($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_1> {
@@ -2720,6 +2798,9 @@ export class Parser {
     }
     public matchbinary_operator_10($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_10> {
         return this.matchMINUS($$dpth + 1, $$cr);
+    }
+    public matchbinary_operator_11($$dpth: number, $$cr?: ErrorTracker): Nullable<binary_operator_11> {
+        return this.matchIMPLIES($$dpth + 1, $$cr);
     }
     public matchunary_expression($$dpth: number, $$cr?: ErrorTracker): Nullable<unary_expression> {
         return this.choice<unary_expression>([
@@ -3046,6 +3127,9 @@ export class Parser {
     public matchNOT_EQUAL($$dpth: number, $$cr?: ErrorTracker): Nullable<NOT_EQUAL> {
         return this.regexAccept(String.raw`(?:!=)`, "", $$dpth + 1, $$cr);
     }
+    public matchIMPLIES($$dpth: number, $$cr?: ErrorTracker): Nullable<IMPLIES> {
+        return this.regexAccept(String.raw`(?:=>)`, "", $$dpth + 1, $$cr);
+    }
     public matchLESS($$dpth: number, $$cr?: ErrorTracker): Nullable<LESS> {
         return this.regexAccept(String.raw`(?:<)`, "", $$dpth + 1, $$cr);
     }
@@ -3167,6 +3251,9 @@ export class Parser {
     }
     public matchINOUT($$dpth: number, $$cr?: ErrorTracker): Nullable<INOUT> {
         return this.regexAccept(String.raw`(?:inout)`, "", $$dpth + 1, $$cr);
+    }
+    public matchINVARIANT($$dpth: number, $$cr?: ErrorTracker): Nullable<INVARIANT> {
+        return this.regexAccept(String.raw`(?:invariant)`, "", $$dpth + 1, $$cr);
     }
     public matchINTERFACE($$dpth: number, $$cr?: ErrorTracker): Nullable<INTERFACE> {
         return this.regexAccept(String.raw`(?:interface)`, "", $$dpth + 1, $$cr);
