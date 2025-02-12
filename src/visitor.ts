@@ -174,9 +174,6 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     ) => {
         context.visit(node.expression, cb);
     },
-    [parser.ASTKinds.function_body]: (node: parser.function_body, context: VisitorContext, cb: VisitorCallback) => {
-        context.visit(node.compound, cb);
-    },
     [parser.ASTKinds.function_definition]: (
         node: parser.function_definition,
         context: VisitorContext,
@@ -191,7 +188,11 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
                 context.visit(parameter, cb);
             }
         }
-        context.visit(node.body.compound, cb);
+        if (node.body.kind === parser.ASTKinds.function_inline_body) {
+            context.visit(node.body.expression, cb);
+        } else {
+            context.visit(node.body, cb);
+        }
         context.popScope();
     },
     [parser.ASTKinds.function_parameter]: (
@@ -250,6 +251,13 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             }
         }
         context.popScope();
+    },
+    [parser.ASTKinds.invariant_statement]: (
+        node: parser.invariant_statement,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        context.visit(node.expression, cb);
     },
     [parser.ASTKinds.namespace]: (node: parser.namespace, context: VisitorContext, cb: VisitorCallback) => {
         context.pushScope(node);
@@ -442,7 +450,11 @@ const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> =
     },
     [parser.ASTKinds.function_definition]: (node: parser.function_definition) => {
         setParent(node.body, node);
-        setParent(node.body.compound, node.body);
+        if (node.body.kind === parser.ASTKinds.compound) {
+            setParent(node.body, node);
+        } else {
+            setParent(node.body.expression, node);
+        }
         setParent(node.return_type, node);
         setParent(node.name, node);
 
@@ -496,6 +508,9 @@ const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> =
                 setParent(statement, node.behavior);
             }
         }
+    },
+    [parser.ASTKinds.invariant_statement]: (node: parser.invariant_statement) => {
+        setParent(node.expression, node);
     },
     [parser.ASTKinds.namespace]: (node: parser.namespace) => {
         while (node.name.kind !== parser.ASTKinds.identifier && node.name.compound) {

@@ -96,6 +96,14 @@ Temporary variables that are only referred to once should be inlined.
 
 ---
 
+## invariant_must_be_bool
+
+Expressions in invariant statements must evaluate to type `bool`
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## naming_convention
 
 Naming convention for various different variables.

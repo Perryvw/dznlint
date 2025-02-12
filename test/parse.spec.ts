@@ -418,6 +418,53 @@ test("dollars statement", () => {
     `);
 });
 
+test("invariant", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            behavior {
+                invariant foo == bar;
+            }
+        } 
+    `);
+});
+
+test("implies statement", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            behavior {
+                invariant foo => bar;
+            }
+        } 
+    `);
+});
+
+test("invariant inside guard", () => {
+    expectCanParseWithoutDiagnostics(`
+        component c {
+            behavior {
+                [true]
+                {
+                    invariant foo == bar;
+                }
+            }
+        } 
+    `);
+});
+
+test("global functions", () => {
+    expectCanParseWithoutDiagnostics(`
+        interface I {} 
+
+        void foo(in I i) {}
+    `);
+});
+
+test("one line function syntax", () => {
+    expectCanParseWithoutDiagnostics(`
+        bool foo() = true;
+    `);
+});
+
 function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
     const parseOnlyHost: LinterHost = {
         includePaths: [],

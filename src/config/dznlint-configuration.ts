@@ -15,6 +15,7 @@ export interface DznLintConfiguration {
     dead_code: ConfigValue;
     implicit_illegal: ConfigValue;
     inline_temporary_variables: ConfigValue;
+    invariant_must_be_bool: ConfigValue;
     naming_convention: ConfigValueWithData<{
         component: string;
         enum: string;

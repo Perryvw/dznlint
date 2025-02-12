@@ -17,6 +17,7 @@ import call_arguments_must_match from "./rules/call-arguments-must-match";
 import dead_code from "./rules/dead-code";
 import implicit_illegal from "./rules/implicit-illegal";
 import inline_temporary_variables from "./rules/inline-temporary-variables";
+import invariant_must_be_bool from "./rules/invariant-must-be-bool";
 import naming_convention from "./rules/naming-convention";
 import { never_fired_event } from "./rules/never-fired-event";
 import { never_legal_event } from "./rules/never-legal-event";
@@ -45,6 +46,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         dead_code,
         implicit_illegal,
         inline_temporary_variables,
+        invariant_must_be_bool,
         naming_convention,
         never_fired_event,
         never_legal_event,

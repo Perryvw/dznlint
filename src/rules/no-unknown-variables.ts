@@ -236,6 +236,13 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             }
         );
 
+        factoryContext.registerRule<parser.invariant_statement>(
+            parser.ASTKinds.invariant_statement,
+            (node: parser.invariant_statement, context) => {
+                return checkExpressionNames(node.expression, "name", context);
+            }
+        );
+
         const createUnknownCompoundNameDiagnostic = (
             compoundName: parser.compound_name | parser.binding_expression,
             typeForMessage: string,
@@ -308,7 +315,8 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             } else if (expr.kind === parser.ASTKinds.unary_operator_expression) {
                 return findUsedNames(expr.expression);
             } else if (expr.kind === parser.ASTKinds.call_expression) {
-                return findUsedNames(expr.expression);
+                // Ignore, already covered by its own call_expression rule (in this file)
+                return [];
             }
 
             const result: parser.compound_name[] = [];
