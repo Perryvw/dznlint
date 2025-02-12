@@ -5,7 +5,7 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, invariant_statement, variable_definition } from "../grammar/parser";
+import { ASTKinds, invariant_statement } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { TypeKind } from "../semantics/type-checker";
 import { nodeToSourceRange } from "../util";
