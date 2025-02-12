@@ -46,19 +46,19 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
         diagnostic.severity === DiagnosticSeverity.Error
             ? FgRed
             : diagnostic.severity === DiagnosticSeverity.Warning
-            ? FgYellow
-            : diagnostic.severity === DiagnosticSeverity.Hint
-            ? FgCyan
-            : "";
+              ? FgYellow
+              : diagnostic.severity === DiagnosticSeverity.Hint
+                ? FgCyan
+                : "";
 
     const typeLabel =
         diagnostic.severity === DiagnosticSeverity.Error
             ? color + "error" + Reset
             : diagnostic.severity === DiagnosticSeverity.Warning
-            ? color + "warning" + Reset
-            : diagnostic.severity === DiagnosticSeverity.Hint
-            ? color + "hint" + Reset
-            : "";
+              ? color + "warning" + Reset
+              : diagnostic.severity === DiagnosticSeverity.Hint
+                ? color + "hint" + Reset
+                : "";
 
     const idLabel = `${Dim}DZNLINT-${diagnostic.code}:${Reset}`;
 
