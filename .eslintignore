@@ -1,5 +1,0 @@
-/dist
-/node_modules
-
-# Don't lint generated parser
-/src/grammar/parser.ts
