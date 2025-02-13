@@ -32,7 +32,7 @@ interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type
     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
     event_parameter := direction={direction=param_direction __}? type=type_reference __ name=identifier
       event_direction := IN | OUT
-      param_direction := INOUT | IN | OUT
+      param_direction := INOUT | IN | OUT | PROVIDES | REQUIRES
 
 component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
   body := behavior | system

@@ -455,7 +455,8 @@ test("global functions", () => {
     expectCanParseWithoutDiagnostics(`
         interface I {} 
 
-        void foo(in I i) {}
+        void foo(provides I i) {}
+        void foo(requires I i) {}
     `);
 });
 

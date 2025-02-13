@@ -25,6 +25,21 @@ test("invariant must evaluate to a boolean type", () => {
     });
 });
 
+test("invariant with negation", () => {
+    testdznlint({
+        diagnostic: invariantNotABool.code,
+        pass: `
+        component C {
+            behaviour {
+                enum State { A, B };
+                State s = State.A;
+
+                invariant !s.B;
+            }
+        }`,
+    });
+});
+
 test.each(["true", "false"])("literal bool in predicate (%p)", v => {
     testdznlint({
         diagnostic: invariantNotABool.code,

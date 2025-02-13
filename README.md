@@ -265,8 +265,18 @@ Parameter direction (in/out/inout) should always be specified.
 
 **Possible values:** "hint" | **"warning"** | "error"
 
+---
+
 ## port_missing_redundant_blocking
 
 As of Dezyne 2.15, a provided port should be marked blocking if any of its calls is implemented using the `blocking` keyword. On the other hand, if no `blocking` is used in the behavior for this port, it should **not** be marked as blocking.
 
 **Possible values:** "hint" | "warning" | "error" (Default: disabled for backwards compatibility)
+
+---
+
+## port_parameter_direction
+
+Function parameters that are ports must be annotated with `provides` or `required`. Function parameters that are not ports must **not** be marked with these two.
+
+**Possible values:** "hint" | "warning" | **"error"**

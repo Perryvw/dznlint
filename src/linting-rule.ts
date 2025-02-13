@@ -38,6 +38,7 @@ import on_parameters_must_match from "./rules/on-parameters-must-match";
 import parameter_direction from "./rules/parameter-direction";
 import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
+import port_parameter_direction from "./rules/port-parameter-direction";
 import { nodeToSourceRange } from "./util";
 
 export function loadLinters(config: DznLintUserConfiguration) {
@@ -67,6 +68,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         on_parameters_must_match,
         parameter_direction,
         port_missing_redundant_blocking,
+        port_parameter_direction,
     ];
 
     const linters = new Map<parser.ASTKinds, Linter<ASTNode>[]>();

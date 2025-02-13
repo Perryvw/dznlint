@@ -43,6 +43,7 @@ export interface DznLintConfiguration {
     on_parameters_must_match: ConfigValue;
     parameter_direction: ConfigValue;
     port_missing_redundant_blocking: ConfigValue;
+    port_parameter_direction: ConfigValue;
 }
 
 export type UserRuleConfig<TRule extends keyof DznLintConfiguration> =

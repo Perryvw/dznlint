@@ -27,7 +27,7 @@
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
 *     event_parameter := direction={direction=param_direction __}? type=type_reference __ name=identifier
 *       event_direction := IN | OUT
-*       param_direction := INOUT | IN | OUT
+*       param_direction := INOUT | IN | OUT | PROVIDES | REQUIRES
 * component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
 *   body := behavior | system
 *     system := SYSTEM _ BRACE_OPEN _ instances_and_bindings={_ instance_or_binding={instance | binding} _}* _ BRACE_CLOSE
@@ -205,6 +205,8 @@ export enum ASTKinds {
     param_direction_1 = "param_direction_1",
     param_direction_2 = "param_direction_2",
     param_direction_3 = "param_direction_3",
+    param_direction_4 = "param_direction_4",
+    param_direction_5 = "param_direction_5",
     component = "component",
     component_$0 = "component_$0",
     body_1 = "body_1",
@@ -541,10 +543,12 @@ export interface event_parameter_$0 {
 export type event_direction = event_direction_1 | event_direction_2;
 export type event_direction_1 = IN;
 export type event_direction_2 = OUT;
-export type param_direction = param_direction_1 | param_direction_2 | param_direction_3;
+export type param_direction = param_direction_1 | param_direction_2 | param_direction_3 | param_direction_4 | param_direction_5;
 export type param_direction_1 = INOUT;
 export type param_direction_2 = IN;
 export type param_direction_3 = OUT;
+export type param_direction_4 = PROVIDES;
+export type param_direction_5 = REQUIRES;
 export interface component {
     kind: ASTKinds.component;
     c1: __;
@@ -1547,6 +1551,8 @@ export class Parser {
             () => this.matchparam_direction_1($$dpth + 1, $$cr),
             () => this.matchparam_direction_2($$dpth + 1, $$cr),
             () => this.matchparam_direction_3($$dpth + 1, $$cr),
+            () => this.matchparam_direction_4($$dpth + 1, $$cr),
+            () => this.matchparam_direction_5($$dpth + 1, $$cr),
         ]);
     }
     public matchparam_direction_1($$dpth: number, $$cr?: ErrorTracker): Nullable<param_direction_1> {
@@ -1557,6 +1563,12 @@ export class Parser {
     }
     public matchparam_direction_3($$dpth: number, $$cr?: ErrorTracker): Nullable<param_direction_3> {
         return this.matchOUT($$dpth + 1, $$cr);
+    }
+    public matchparam_direction_4($$dpth: number, $$cr?: ErrorTracker): Nullable<param_direction_4> {
+        return this.matchPROVIDES($$dpth + 1, $$cr);
+    }
+    public matchparam_direction_5($$dpth: number, $$cr?: ErrorTracker): Nullable<param_direction_5> {
+        return this.matchREQUIRES($$dpth + 1, $$cr);
     }
     public matchcomponent($$dpth: number, $$cr?: ErrorTracker): Nullable<component> {
         return this.run<component>($$dpth,

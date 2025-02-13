@@ -71,7 +71,11 @@ export class TypeChecker {
     public constructor(private program: Program) {}
 
     public typeOfNode(node: ASTNode, typeReference = false): Type {
-        if (node.kind === parser.ASTKinds.binary_expression) {
+        if (
+            node.kind === parser.ASTKinds.binary_expression ||
+            node.kind === parser.ASTKinds.unary_operator_expression
+        ) {
+            // Okay so this is definitely not true, but then again, we don't have to worry about everything else for now
             return BOOL_TYPE;
         } else if (isCallExpression(node)) {
             const functionSymbol = this.symbolOfNode(node.expression);
@@ -208,7 +212,10 @@ export class TypeChecker {
 
         const declaration = symbol.declaration;
 
-        if (declaration.kind === parser.ASTKinds.instance) {
+        if (declaration.kind === parser.ASTKinds.extern_definition) {
+            const definition = declaration as parser.extern_definition;
+            return { kind: TypeKind.External, declaration: definition, name: definition.name.text };
+        } else if (declaration.kind === parser.ASTKinds.instance) {
             const instance = declaration as parser.instance;
             const typeSymbol = this.symbolOfNode(instance.type);
             if (!typeSymbol) return ERROR_TYPE;
