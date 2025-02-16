@@ -607,6 +607,28 @@ exports[`guard missing ; 1`] = `
 "
 `;
 
+exports[`invariant 1`] = `
+"component C
+{
+    behavior
+    {
+        invariant !abc.def;
+    }
+}
+"
+`;
+
+exports[`invariant implication 1`] = `
+"component C
+{
+    behavior
+    {
+        invariant foo.bar => !abc.def;
+    }
+}
+"
+`;
+
 exports[`leading comments 1`] = `
 "component C
 {
@@ -750,6 +772,19 @@ exports[`one line if statement 1`] = `
         {
             if (!foo(bar)) return baz();
         }
+    }
+}
+"
+`;
+
+exports[`one-line function 1`] = `
+"component C
+{
+    behavior
+    {
+        bool f() = foo.bar => !abc.def;
+        bool g() = $blablab$;
+        bool h() = foo();
     }
 }
 "

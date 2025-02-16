@@ -55,6 +55,9 @@ function formatRoot(cursor: Grammar.CursorPosition<Grammar.root_Node>, formatter
                     formatter.requirePrecedingNewLine();
                     formatEnum(cursor.pos(), formatter);
                     break;
+                case "function":
+                    formatFunction(cursor.pos(), formatter);
+                    break;
                 case "int":
                     formatter.requirePrecedingNewLine();
                     formatInt(cursor.pos(), formatter);
@@ -131,6 +134,9 @@ function formatNamespace(cursor: Grammar.CursorPosition<Grammar.namespace_Node>,
                 break;
             case "extern":
                 formatExtern(cursor.pos(), formatter);
+                break;
+            case "function":
+                formatFunction(cursor.pos(), formatter);
                 break;
             case "int":
                 formatInt(cursor.pos(), formatter);
@@ -627,6 +633,9 @@ function formatBehavior(cursor: Grammar.CursorPosition<Grammar.behavior_Node>, f
                             formatter.requirePrecedingNewLine();
                             formatBlocking(c2, formatter);
                             break;
+                        case "invariant":
+                            formatInvariant(c2.pos(), formatter);
+                            break;
                         // generics
                         case "comment":
                             formatComment(c2.currentNode, formatter);
@@ -731,6 +740,9 @@ function formatGuard(cursor: Grammar.CursorPosition<Grammar.guard_Node>, formatt
                 break;
             case "interface_action":
                 formatCompoundName(cursor.currentNode, formatter);
+                break;
+            case "invariant":
+                formatInvariant(cursor.pos(), formatter);
                 break;
             case ";":
                 formatter.semicolon();
@@ -838,6 +850,38 @@ function formatFunction(cursor: Grammar.CursorPosition<Grammar.function_Node>, f
                 break;
             case "compound":
                 formatCompound(cursor, formatter);
+                formatter.endFunction();
+                break;
+            // one-line functions
+            case "=":
+                formatter.binaryOperator("=");
+                break;
+            case "action":
+                formatAction(cursor.pos(), formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(cursor, formatter);
+                break;
+            case "call":
+                formatCall(cursor.pos(), formatter);
+                break;
+            case "compound_name":
+                formatCompoundName(cursor.currentNode, formatter);
+                break;
+            case "dollars":
+                formatDollars(cursor.pos(), formatter);
+                break;
+            case "group":
+                formatGroup(cursor, formatter);
+                break;
+            case "literal":
+                formatter.literal(cursor.nodeText);
+                break;
+            case "unary_expression":
+                formatUnaryExpression(cursor, formatter);
+                break;
+            case ";":
+                formatter.semicolon();
                 formatter.endFunction();
                 break;
             // generics
@@ -985,6 +1029,9 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
                 formatter.requirePrecedingNewLine();
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
+            case "invariant":
+                formatInvariant(cursor.pos(), formatter);
+                break;
             case ";":
                 formatter.semicolon();
                 break;
@@ -1120,6 +1167,9 @@ function formatOn(cursor: Grammar.CursorPosition<Grammar.on_Node>, formatter: Fo
             case "interface_action":
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
+            case "invariant":
+                formatInvariant(cursor.pos(), formatter);
+                break;
             case "reply":
                 formatReply(cursor.pos(), formatter);
                 break;
@@ -1190,6 +1240,9 @@ function formatBlocking(cursor: Grammar.CursorPosition<Grammar.blocking_Node>, f
                 break;
             case "interface_action":
                 formatCompoundName(cursor.currentNode, formatter);
+                break;
+            case "invariant":
+                formatInvariant(cursor.pos(), formatter);
                 break;
             case "reply":
                 formatReply(cursor.pos(), formatter);
@@ -1709,6 +1762,59 @@ function formatInt(cursor: Grammar.CursorPosition<Grammar.int_Node>, formatter: 
     cursor.gotoParent();
 }
 
+function formatInvariant(cursor: Grammar.CursorPosition<Grammar.invariant_Node>, formatter: Formatter) {
+    cursor.gotoFirstChild();
+    do {
+        switch (cursor.nodeType) {
+            case "invariant":
+                formatter.requirePrecedingNewLine();
+                formatter.keyword("invariant");
+                break;
+            case "action":
+                formatAction(cursor.pos(), formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(cursor, formatter);
+                break;
+            case "call":
+                formatCall(cursor.pos(), formatter);
+                break;
+            case "compound_name":
+                formatCompoundName(cursor.currentNode, formatter);
+                break;
+            case "dollars":
+                formatDollars(cursor.pos(), formatter);
+                break;
+            case "group":
+                formatGroup(cursor, formatter);
+                break;
+            case "literal":
+                formatter.literal(cursor.nodeText);
+                break;
+            case "unary_expression":
+                formatUnaryExpression(cursor, formatter);
+                break;
+            case ";":
+                formatter.semicolon();
+                break;
+            // generics
+            case "comment":
+                formatComment(cursor.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(cursor.nodeText);
+                break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
+            default:
+                assertNever(cursor);
+                throw `cannot format reply child ${cursor}`;
+        }
+    } while (cursor.gotoNextSibling());
+    cursor.gotoParent();
+}
+
 function formatReply(cursor: Grammar.CursorPosition<Grammar.reply_Node>, formatter: Formatter) {
     cursor.gotoFirstChild();
     do {
@@ -1839,6 +1945,7 @@ function formatBinaryExpression(cursor: Grammar.CursorPosition<Grammar.binary_ex
             case ">":
             case ">=":
             case "||":
+            case "=>":
                 formatter.binaryOperator(cursor.nodeText);
                 break;
             case "action":

@@ -275,8 +275,8 @@ test("namespaces", async () => {
     });
 });
 
-test("one line if statement", () => {
-    testFormat({
+test("one line if statement", async () => {
+    await testFormat({
         input: `
         component C {
             behavior {
@@ -289,8 +289,8 @@ test("one line if statement", () => {
     });
 });
 
-test("comments in trigger list", () => {
-    testFormat({
+test("comments in trigger list", async () => {
+    await testFormat({
         input: `
         interface I {
             behavior {
@@ -305,8 +305,8 @@ test("comments in trigger list", () => {
     });
 });
 
-test("whiteline after behavior", () => {
-    testFormat({
+test("whiteline after behavior", async () => {
+    await testFormat({
         input: `
         component C {
             behavior {
@@ -317,8 +317,8 @@ test("whiteline after behavior", () => {
     });
 });
 
-test("long lists of events in component", () => {
-    testFormat({
+test("long lists of events in component", async () => {
+    await testFormat({
         input: `
         component C {
             behavior {
@@ -338,8 +338,8 @@ test("long lists of events in component", () => {
     });
 });
 
-test("return parenthesized expression", () => {
-    testFormat({
+test("return parenthesized expression", async () => {
+    await testFormat({
         input: `
         component C {
             behavior {
@@ -352,8 +352,8 @@ test("return parenthesized expression", () => {
     });
 });
 
-test("multiple extern statements", () => {
-    testFormat({
+test("multiple extern statements", async () => {
+    await testFormat({
         input: `
         extern A $A$;
         extern B $B$;
@@ -361,8 +361,8 @@ test("multiple extern statements", () => {
     });
 });
 
-test("multiple extern statements in namespace", () => {
-    testFormat({
+test("multiple extern statements in namespace", async () => {
+    await testFormat({
         input: `
         namespace NS {
             extern A $A$;
@@ -373,8 +373,8 @@ test("multiple extern statements in namespace", () => {
     });
 });
 
-test("multiple extern statements in behavior body", () => {
-    testFormat({
+test("multiple extern statements in behavior body", async () => {
+    await testFormat({
         input: `
         namespace NS {
             component C {
@@ -389,16 +389,16 @@ test("multiple extern statements in behavior body", () => {
 });
 
 // https://github.com/Perryvw/dznlint/issues/32
-test("subint spacing (#23)", () => {
-    testFormat({
+test("subint spacing (#23)", async () => {
+    await testFormat({
         input: `
             subint MyInt {0..10};
         `,
     });
 });
 
-test("one line compound with single line comment", () => {
-    testFormat({
+test("one line compound with single line comment", async () => {
+    await testFormat({
         input: `
             interface I
             {
@@ -413,6 +413,44 @@ test("one line compound with single line comment", () => {
                     }
                 }
             }`,
+    });
+});
+
+test("invariant", async () => {
+    await testFormat({
+        input: `
+            component C {
+                behavior {
+                    invariant !abc.def;
+                }
+            }
+        `,
+    });
+});
+
+test("invariant implication", async () => {
+    await testFormat({
+        input: `
+            component C {
+                behavior {
+                    invariant foo.bar => !abc.def;
+                }
+            }
+        `,
+    });
+});
+
+test("one-line function", async () => {
+    await testFormat({
+        input: `
+            component C {
+                behavior {
+                    bool f() = foo.bar => !abc.def;
+                    bool g() = $blablab$;
+                    bool h() = foo();
+                }
+            }
+        `,
     });
 });
 
@@ -447,8 +485,8 @@ describe("formatting configuration", () => {
         }
     `;
 
-    test.each([2, 4, 8])("indent (%p)", indent => {
-        testFormat({
+    test.each([2, 4, 8])("indent (%p)", async indent => {
+        await testFormat({
             input: unformatted,
             config: {
                 indent: ["spaces", indent],
@@ -456,16 +494,16 @@ describe("formatting configuration", () => {
         });
     });
 
-    test.each(["same-line", "next-line"] as const)("braces (%p)", braces => {
-        testFormat({
+    test.each(["same-line", "next-line"] as const)("braces (%p)", async braces => {
+        await testFormat({
             input: unformatted,
             config: {
                 braces,
             },
         });
     });
-    test.each(["same-line", "next-line"] as const)("braces if statement (%p)", braces => {
-        testFormat({
+    test.each(["same-line", "next-line"] as const)("braces if statement (%p)", async braces => {
+        await testFormat({
             input: `
                 component C {
                     behavior {
@@ -485,8 +523,8 @@ describe("formatting configuration", () => {
         });
     });
 
-    test.each([true, false])("indenting components and interfaces (%p)", doIndent => {
-        testFormat({
+    test.each([true, false])("indenting components and interfaces (%p)", async doIndent => {
+        await testFormat({
             input:
                 unformatted +
                 `
@@ -502,8 +540,8 @@ describe("formatting configuration", () => {
         });
     });
 
-    test.each([40, 80, 120])("target width (%p)", targetWidth => {
-        testFormat({
+    test.each([40, 80, 120])("target width (%p)", async targetWidth => {
+        await testFormat({
             input: `
             interface I {
                 behavior {
