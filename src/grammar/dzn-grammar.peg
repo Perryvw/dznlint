@@ -30,7 +30,7 @@ namespace := NAMESPACE __ name=compound_name _ BRACE_OPEN root=namespace_root _ 
 interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
     event := direction=event_direction __ type=type_reference __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
-    event_parameter := direction={direction=param_direction __}? type=type_reference __ name=identifier
+    event_parameter := start=@ direction={direction=param_direction __}? type=type_reference __ name=identifier end=@
       event_direction := IN | OUT
       param_direction := INOUT | IN | OUT | PROVIDES | REQUIRES
 

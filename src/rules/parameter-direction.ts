@@ -2,7 +2,7 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, function_definition } from "../grammar/parser";
+import { ASTKinds, event, function_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { headTailToList, nodeToSourceRange } from "../util";
 
@@ -16,6 +16,26 @@ export const parameter_direction: RuleFactory = factoryContext => {
             const diagnostics = [];
 
             const parameters = node.parameters.parameters ? headTailToList(node.parameters.parameters) : [];
+            for (const param of parameters) {
+                if (!param.direction) {
+                    diagnostics.push(
+                        expectedParameterDirection(
+                            config.severity,
+                            "Parameter direction should be specified",
+                            context.source,
+                            nodeToSourceRange(param)
+                        )
+                    );
+                }
+            }
+
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<event>(ASTKinds.event, (node, context) => {
+            const diagnostics = [];
+
+            const parameters = node.event_params ? headTailToList(node.event_params) : [];
             for (const param of parameters) {
                 if (!param.direction) {
                     diagnostics.push(

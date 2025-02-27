@@ -37,6 +37,5 @@ test.each(["provides", "requires"])("non-port external data parameter should not
         fail: `
         extern MyData $$;
         void f(${direction} MyData i){}`,
-        debug: true,
     });
 });

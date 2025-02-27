@@ -25,7 +25,7 @@
 * interface_definition := INTERFACE __ name=identifier _ BRACE_OPEN _ body={_ type_or_event={type_definition | event} _}* _ behavior=behavior? _ BRACE_CLOSE
 *     event := direction=event_direction __ type=type_reference __ event_name=identifier _ PAREN_OPEN _ event_params=event_params? _ PAREN_CLOSE _ SEMICOLON
 *     event_params := head=event_parameter tail={ _ COMMA _ elem=event_parameter }*
-*     event_parameter := direction={direction=param_direction __}? type=type_reference __ name=identifier
+*     event_parameter := start=@ direction={direction=param_direction __}? type=type_reference __ name=identifier end=@
 *       event_direction := IN | OUT
 *       param_direction := INOUT | IN | OUT | PROVIDES | REQUIRES
 * component := COMPONENT c1=__ name=identifier c2=_ BRACE_OPEN c3=_ ports={_ port=port _}* c4=_ body=body? c5=_ BRACE_CLOSE
@@ -532,9 +532,11 @@ export interface event_params_$0 {
 }
 export interface event_parameter {
     kind: ASTKinds.event_parameter;
+    start: PosInfo;
     direction: Nullable<event_parameter_$0>;
     type: type_reference;
     name: identifier;
+    end: PosInfo;
 }
 export interface event_parameter_$0 {
     kind: ASTKinds.event_parameter_$0;
@@ -1505,17 +1507,21 @@ export class Parser {
     public matchevent_parameter($$dpth: number, $$cr?: ErrorTracker): Nullable<event_parameter> {
         return this.run<event_parameter>($$dpth,
             () => {
+                let $scope$start: Nullable<PosInfo>;
                 let $scope$direction: Nullable<Nullable<event_parameter_$0>>;
                 let $scope$type: Nullable<type_reference>;
                 let $scope$name: Nullable<identifier>;
+                let $scope$end: Nullable<PosInfo>;
                 let $$res: Nullable<event_parameter> = null;
                 if (true
+                    && ($scope$start = this.mark()) !== null
                     && (($scope$direction = this.matchevent_parameter_$0($$dpth + 1, $$cr)) || true)
                     && ($scope$type = this.matchtype_reference($$dpth + 1, $$cr)) !== null
                     && this.match__($$dpth + 1, $$cr) !== null
                     && ($scope$name = this.matchidentifier($$dpth + 1, $$cr)) !== null
+                    && ($scope$end = this.mark()) !== null
                 ) {
-                    $$res = {kind: ASTKinds.event_parameter, direction: $scope$direction, type: $scope$type, name: $scope$name};
+                    $$res = {kind: ASTKinds.event_parameter, start: $scope$start, direction: $scope$direction, type: $scope$type, name: $scope$name, end: $scope$end};
                 }
                 return $$res;
             });
