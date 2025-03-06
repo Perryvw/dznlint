@@ -990,7 +990,7 @@ describe("in components", () => {
 
 // https://github.com/Perryvw/dznlint/issues/23
 describe("used variables missing from on triggers (#23)", () => {
-    test("differing parameter count", () => {
+    test("parameter not in all triggers (empty parameter list)", () => {
         testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
@@ -1029,7 +1029,7 @@ describe("used variables missing from on triggers (#23)", () => {
         });
     });
 
-    test("differing parameter count", () => {
+    test("parameter not in all triggers", () => {
         testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
@@ -1067,7 +1067,7 @@ describe("used variables missing from on triggers (#23)", () => {
         });
     });
 
-    test("differing parameter names", () => {
+    test("parameter named differently in some triggers", () => {
         testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
@@ -1256,7 +1256,7 @@ test("global function with port", () => {
     });
 });
 
-test("global function with port", () => {
+test("outside reference to enum type declared inside interface behavior", () => {
     testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
