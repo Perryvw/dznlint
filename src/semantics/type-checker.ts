@@ -158,6 +158,7 @@ export class TypeChecker {
             node.kind === parser.ASTKinds.port ||
             node.kind === parser.ASTKinds.event ||
             node.kind === parser.ASTKinds.extern_definition ||
+            node.kind === parser.ASTKinds.enum_definition ||
             node.kind === parser.ASTKinds.namespace ||
             node.kind === parser.ASTKinds.instance ||
             node.kind === parser.ASTKinds.variable_definition ||
@@ -304,7 +305,10 @@ export class TypeChecker {
                 // Also add variables delcared in the behavior as members for 2.18 shared state
                 if (type.declaration.behavior) {
                     for (const { statement } of type.declaration.behavior.block.statements) {
-                        if (statement.kind === parser.ASTKinds.variable_definition) {
+                        if (
+                            statement.kind === parser.ASTKinds.variable_definition ||
+                            statement.kind === parser.ASTKinds.enum_definition
+                        ) {
                             const symbol = this.symbolOfNode(statement);
                             if (symbol) result.set(statement.name.text, symbol);
                         }

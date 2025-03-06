@@ -1255,3 +1255,24 @@ test("global function with port", () => {
         }`,
     });
 });
+
+test("global function with port", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        interface I {
+            behavior {
+                enum State { A, B };
+                State s = State.A;
+            }
+        }
+            
+        component C {
+            provides I i;
+
+            behavior {
+                [i.s == I.State.A] {}
+            }
+        }`,
+    });
+});
