@@ -165,6 +165,9 @@ export class TypeChecker {
             node.kind === parser.ASTKinds.asterisk_binding
         ) {
             return this.getOrCreateSymbol(node);
+        } else if (node.kind === parser.ASTKinds.on_trigger) {
+            const onTrigger = node as parser.on_trigger;
+            return this.symbolOfNode(onTrigger.name);
         } else {
             throw `I don't know how to find the symbol for node type ${parser.ASTKinds[node.kind]} ${util.inspect(
                 node
@@ -272,6 +275,22 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === parser.ASTKinds.int) {
             const definition = declaration as parser.int;
             return { kind: TypeKind.IntegerRange, declaration: symbol.declaration, name: definition.name.text };
+        } else if (symbol.declaration.kind === parser.ASTKinds.on_parameter) {
+            const definition = symbol.declaration as parser.on_parameter;
+            const parentDeclaration = symbol.declaration.parent as parser.on_trigger;
+            const parentSymbol = this.symbolOfNode(parentDeclaration);
+            if (!parentSymbol) return ERROR_TYPE;
+
+            const triggerParams = parentDeclaration.parameters?.parameters
+                ? headTailToList(parentDeclaration.parameters.parameters)
+                : [];
+            const paramIndex = triggerParams.indexOf(definition);
+
+            const event = parentSymbol.declaration as parser.event;
+            const formal = event.event_params ? headTailToList(event.event_params)[paramIndex] : undefined;
+            if (!formal) return ERROR_TYPE;
+
+            return this.typeOfNode(formal.type);
         } else if (symbol.declaration.kind === parser.ASTKinds.asterisk_binding) {
             return { kind: TypeKind.PortCollection, declaration: symbol.declaration, name: "*" };
         } else if (symbol.declaration.kind === parser.ASTKinds.$EOF) {
@@ -292,6 +311,9 @@ export class TypeChecker {
             for (const d of headTailToList((type.declaration as parser.enum_definition).fields)) {
                 result.set(d.text, this.getOrCreateSymbol(d));
             }
+            return result;
+        } else if (type.kind === TypeKind.External) {
+            // empty, external types have no members (for now)
             return result;
         } else if (isScopedBlock(type.declaration)) {
             for (const [name, declaration] of this.findVariablesDeclaredInScope(type.declaration)) {

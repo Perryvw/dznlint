@@ -1276,3 +1276,40 @@ test("outside reference to enum type declared inside interface behavior", () => 
         }`,
     });
 });
+
+test("trying to call an action on on_trigger parameter", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        fail: `
+        extern ExternType $$;
+        interface I {
+            in void Foo(in ExternType a);
+        }
+            
+        component C {
+            provides I i;
+
+            behavior {
+                on i.Foo(a): {
+                    a.Bar();
+                }
+            }
+        }`,
+    });
+});
+
+test("trying to call an action on function parameter", () => {
+    testdznlint({
+        diagnostic: unknownVariable.code,
+        fail: `
+        extern ExternType $$;
+            
+        component C {
+            behavior {
+                void Foo(in ExternType a) {
+                    a.Bar();
+                }
+            }
+        }`,
+    });
+});
