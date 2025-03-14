@@ -26,7 +26,7 @@ function resolveFromCache(importPath: string, baseDir: string, program: Program)
 function resolveFromDisk(importPath: string, baseDir: string, program: Program): string | undefined {
     const baseImport = path.join(baseDir, importPath);
     if (program.host.fileExists?.(baseImport)) {
-        return baseImport;
+        return absolutePath(baseImport);
     }
 
     // oh no we have to see if we can resolve from include dirs instead
@@ -34,9 +34,17 @@ function resolveFromDisk(importPath: string, baseDir: string, program: Program):
         for (const includePath of program.host.includePaths) {
             const importedFile = path.join(includePath, importPath);
             if (program.host.fileExists?.(importedFile)) {
-                return importedFile;
+                return absolutePath(importedFile);
             }
         }
+    }
+}
+
+function absolutePath(p: string) {
+    if (path.isAbsolute(p)) {
+        return p;
+    } else {
+        return path.resolve(p);
     }
 }
 

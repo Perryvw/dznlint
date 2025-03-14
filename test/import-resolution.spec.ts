@@ -2,6 +2,7 @@ import * as path from "path";
 import * as api from "../src";
 import { expectDiagnosticOfType, expectNoDiagnostics } from "./util";
 import { couldNotResolveFile } from "../src/rules/no-unknown-imports";
+import { normalizePath } from "../src/resolve-imports";
 
 test("basic import", () => {
     const files = [
@@ -111,9 +112,10 @@ test("resolve import from disk", () => {
 
     expect(mockHost.fileExists).toHaveBeenCalledTimes(2);
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(1, "other.dzn"); // Resolve
-    expect(mockHost.fileExists).toHaveBeenNthCalledWith(2, "other.dzn"); // Read
+    const resolvedAbsPath = normalizePath(path.resolve("other.dzn"));
+    expect(mockHost.fileExists).toHaveBeenNthCalledWith(2, resolvedAbsPath); // Read
     expect(mockHost.readFile).toHaveBeenCalledTimes(1);
-    expect(mockHost.readFile).toHaveBeenCalledWith("other.dzn");
+    expect(mockHost.readFile).toHaveBeenCalledWith(resolvedAbsPath);
 });
 
 test("resolve import from disk with include dir", () => {
@@ -150,9 +152,10 @@ test("resolve import from disk with include dir", () => {
     expect(mockHost.fileExists).toHaveNthReturnedWith(1, false); // Resolve
     expect(mockHost.fileExists).toHaveBeenNthCalledWith(2, path.join("mysubdir", "other.dzn")); // Resolve
     expect(mockHost.fileExists).toHaveNthReturnedWith(2, true); // Resolve
-    expect(mockHost.fileExists).toHaveBeenNthCalledWith(2, path.join("mysubdir", "other.dzn")); // Read
+    const resolvedAbsPath = normalizePath(path.resolve("mysubdir", "other.dzn"));
+    expect(mockHost.fileExists).toHaveBeenNthCalledWith(3, resolvedAbsPath); // Read
     expect(mockHost.readFile).toHaveBeenCalledTimes(1);
-    expect(mockHost.readFile).toHaveBeenCalledWith("mysubdir/other.dzn");
+    expect(mockHost.readFile).toHaveBeenCalledWith(resolvedAbsPath);
 });
 
 test("failed to resolve import", () => {
