@@ -16,21 +16,23 @@ const result = [];
 result.push("// <declarations file auto-generated from node-types.json>\n");
 result.push('import type * as Parser from "web-tree-sitter";');
 
+result.push("export type SyntaxNode = Parser.SyntaxNode;");
+
 result.push(`
-interface UnnamedNode<T extends string> extends Parser.SyntaxNode {
+export interface UnnamedNode<T extends string> extends Parser.SyntaxNode {
     type: T;
     isNamed: false;
 }`);
 
 result.push(`
-interface TypedCursor<TNodes extends { type: string }> extends Parser.TreeCursor
+export interface TypedCursor<TNodes extends { type: string }> extends Parser.TreeCursor
 {
     nodeType: TNodes["type"];
 }`);
 
 for (const node of nodeTypes.filter(n => n.named)) {
     result.push(
-        `interface ${nameOfTypeNode(
+        `export interface ${nameOfTypeNode(
             node
         )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstChild"> {`
     );
@@ -60,7 +62,7 @@ for (const node of nodeTypes.filter(n => n.named)) {
 }
 
 result.push(
-    `type AllNodes = ${nodeTypes
+    `export type AllNodes = ${nodeTypes
         .filter(t => t.named)
         .map(nameOfTypeNode)
         .join(" | ")}`

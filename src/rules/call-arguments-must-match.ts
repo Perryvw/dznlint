@@ -2,10 +2,10 @@
 
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, call_expression } from "../grammar/parser";
+import { CallExpression, SyntaxKind } from "../grammar/ast";
 import { RuleFactory } from "../linting-rule";
 import { TypeKind } from "../semantics/type-checker";
-import { headTailToList, isEvent, isFunctionDefinition, nameToString, nodeToSourceRange } from "../util";
+import { isEvent, isFunctionDefinition, nameToString } from "../util";
 
 export const incorrectArgumentCount = createDiagnosticsFactory();
 
@@ -13,7 +13,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
     const config = getRuleConfig("call_arguments_must_match", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<call_expression>(ASTKinds.call_expression, (node, context) => {
+        factoryContext.registerRule<CallExpression>(SyntaxKind.CallExpression, (node, context) => {
             const diagnostics = [];
 
             const functionType = context.typeChecker.typeOfNode(node.expression);
@@ -23,10 +23,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                 functionType.declaration &&
                 isFunctionDefinition(functionType.declaration)
             ) {
-                const functionParameters = functionType.declaration.parameters.parameters
-                    ? headTailToList(functionType.declaration.parameters.parameters)
-                    : [];
-
+                const functionParameters = functionType.declaration.parameters;
                 const argumentCount = node.arguments.arguments.length;
                 const expectedCount = functionParameters.length;
 
@@ -36,7 +33,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                         errorMessage +=
                             "\nExpected parameters: " +
                             functionParameters
-                                .map(p => `${nameToString(p.type.type_name)} ${nameToString(p.name)}`)
+                                .map(p => `${nameToString(p.type)} ${nameToString(p.name)}`)
                                 .join(", ");
                     }
                     diagnostics.push(
@@ -44,7 +41,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                             config.severity,
                             errorMessage,
                             context.source,
-                            nodeToSourceRange(node.arguments)
+                            node.arguments.position
                         )
                     );
                 }
@@ -53,20 +50,17 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                 functionType.declaration &&
                 isEvent(functionType.declaration)
             ) {
-                const functionParameters = functionType.declaration.event_params
-                    ? headTailToList(functionType.declaration.event_params)
-                    : [];
-
+                const functionParameters = functionType.declaration.parameters;
                 const argumentCount = node.arguments.arguments.length;
-                const expectedCount = functionParameters.length;
+                const expectedCount = functionParameters.parameters.length;
 
                 if (argumentCount !== expectedCount) {
                     let errorMessage = `Incorrect argument count. Expected ${expectedCount} arguments but got ${argumentCount}.`;
                     if (expectedCount > 0) {
                         errorMessage +=
                             "\nExpected parameters: " +
-                            functionParameters
-                                .map(p => `${nameToString(p.type.type_name)} ${nameToString(p.name)}`)
+                            functionParameters.parameters
+                                .map(p => `${nameToString(p.type)} ${nameToString(p.name)}`)
                                 .join(", ");
                     }
                     diagnostics.push(
@@ -74,7 +68,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                             config.severity,
                             errorMessage,
                             context.source,
-                            nodeToSourceRange(node.arguments)
+                            node.arguments.position
                         )
                     );
                 }

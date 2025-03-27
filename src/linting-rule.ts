@@ -1,9 +1,10 @@
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
 import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity, SourceRange } from "./diagnostic";
 import { VisitorContext } from "./visitor";
-import * as parser from "./grammar/parser";
+import * as ast from "./grammar/ast";
 
-export type ASTNode = { kind: parser.ASTKinds; parent?: ASTNode };
+//export type ASTNode = { kind: parser.ASTKinds; parent?: ASTNode };
+export type ASTNode = ast.AnyAstNode;
 export type Linter<T extends ASTNode> = (node: T, context: VisitorContext) => Diagnostic[];
 
 export type RuleFactory = (context: RuleFactoryContext) => void;
@@ -71,7 +72,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         port_parameter_direction,
     ];
 
-    const linters = new Map<parser.ASTKinds, Linter<ASTNode>[]>();
+    const linters = new Map<ast.SyntaxKind | string, Linter<ASTNode>[]>();
 
     const ruleFactoryContext: RuleFactoryContext = {
         userConfig: config,
@@ -98,17 +99,7 @@ function wrapErrorHandling(linter: Linter<ASTNode>): Linter<ASTNode> {
         try {
             return linter(node, context);
         } catch (exception) {
-            const range: SourceRange =
-                "start" in node && "end" in node
-                    ? nodeToSourceRange(node as { start: parser.PosInfo; end: parser.PosInfo })
-                    : {
-                          from: { index: 0, line: 0, column: 0 },
-                          to: {
-                              index: context.source.fileContent.indexOf("\n"), // fall back to first line of file
-                              line: 0,
-                              column: context.source.fileContent.indexOf("\n"),
-                          },
-                      };
+            const range: SourceRange = node.position;
             return [
                 dznLintExceptionThrown(
                     DiagnosticSeverity.Error,
