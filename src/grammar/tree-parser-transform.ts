@@ -18,7 +18,7 @@ function transformStatement(node: ChildTypes<parser.root_Node>): ast.Statement {
     }
 }
 
-export function transformRoot(root: parser.root_Node): ast.DznFile {
+export function transformRoot(root: parser.root_Node): ast.File {
     return root.children.map(transformStatement);
 }
 
@@ -32,7 +32,7 @@ function transformFunction(node: parser.function_Node): ast.FunctionDefinition {
 
 function transformComponent(component: parser.component_Node): ast.ComponentDefinition {
     return {
-        kind: ast.SyntaxKind.ComponentDeclaration,
+        kind: ast.SyntaxKind.ComponentDefinition,
         position: nodePosition(component),
     }
 }

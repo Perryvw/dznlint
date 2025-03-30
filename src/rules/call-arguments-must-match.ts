@@ -1,8 +1,8 @@
 // The number of call arguments must match the number of function parameters
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { CallExpression, SyntaxKind } from "../grammar/ast";
 import { RuleFactory } from "../linting-rule";
 import { TypeKind } from "../semantics/type-checker";
 import { isEvent, isFunctionDefinition, nameToString } from "../util";
@@ -13,7 +13,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
     const config = getRuleConfig("call_arguments_must_match", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<CallExpression>(SyntaxKind.CallExpression, (node, context) => {
+        factoryContext.registerRule<ast.CallExpression>(ast.SyntaxKind.CallExpression, (node, context) => {
             const diagnostics = [];
 
             const functionType = context.typeChecker.typeOfNode(node.expression);

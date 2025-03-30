@@ -6,11 +6,11 @@ export enum SyntaxKind {
 
     // Statements
     Compound,
-    ComponentDeclaration,
-    InterfaceDeclaration,
+    ComponentDefinition,
+    InterfaceDefinition,
     ExternDeclaration,
     Event,
-    VariableDeclaration,
+    VariableDefinition,
     FunctionDefinition,
 
     // Expressions
@@ -47,7 +47,10 @@ export interface Keyword<TKind extends string> extends AstNode<SyntaxKind.Keywor
 }
 export type AnyAstNode = AstNode<SyntaxKind | string>;
 
-export type DznFile = RootStatement[];
+export interface File extends AstNode<"file"> {
+    statements: RootStatement[];
+}
+
 export type RootStatement = Namespace | ExternDefinition | TypeDefinition | ImportStatement
     | InterfaceDefinition | ComponentDefinition | FunctionDefinition | Statement
     | SingleLineComment | MultiLineComment;
@@ -98,7 +101,7 @@ export interface Namespace extends AstNode<"namespace"> {
     statements: NamespaceStatement[];
 }
 
-export interface InterfaceDefinition extends AstNode<SyntaxKind.InterfaceDeclaration> {
+export interface InterfaceDefinition extends AstNode<SyntaxKind.InterfaceDefinition> {
     name: Identifier;
     body: Array<TypeDefinition | Event>;
     behavior?: Compound;
@@ -117,7 +120,7 @@ export interface Event extends AstNode<SyntaxKind.Event> {
     parameters: EventParameter[];
 }
 
-export interface ComponentDefinition extends AstNode<SyntaxKind.ComponentDeclaration> {
+export interface ComponentDefinition extends AstNode<SyntaxKind.ComponentDefinition> {
     name: Identifier;
     ports: Port[];
     body: Behavior | System;
@@ -227,7 +230,7 @@ export interface ReturnStatement extends AstNode<"return_statement"> {
     returnValue?: Expression;
 }
 
-export interface VariableDefinition extends AstNode<SyntaxKind.VariableDeclaration> {
+export interface VariableDefinition extends AstNode<SyntaxKind.VariableDefinition> {
     type: TypeReference;
     name: Identifier;
     initializer?: Expression;
