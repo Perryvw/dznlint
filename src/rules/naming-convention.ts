@@ -31,7 +31,7 @@ export const naming_convention: RuleFactory = factoryContext => {
             return [];
         });
 
-        factoryContext.registerRule<ast.EnumDefinition>("enum_definition", (node, context) => {
+        factoryContext.registerRule<ast.EnumDefinition>(ast.SyntaxKind.EnumDefinition, (node, context) => {
             const diagnostics = [];
             if (!identifierMatches(node.name, convention.enum)) {
                 diagnostics.push(fail(node.name, "Enum", convention.enum, context.source));

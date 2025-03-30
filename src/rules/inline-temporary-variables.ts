@@ -22,7 +22,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
                 return [];
             }
 
-            if (context.currentScope().root.kind === ASTKinds.behavior) {
+            if (context.currentScope().root.kind === ast.SyntaxKind.Behavior) {
                 // Don't hint to inline variables in behavior root
                 return [];
             }
@@ -50,7 +50,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
                         config.severity,
                         "This variable is only used once and can be inlined.",
                         context.source,
-                        nodeToSourceRange(node.name)
+                        node.name.position
                     ),
                 ];
             }
@@ -63,7 +63,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
 function canInlineAtLocation(node: ASTNode): boolean {
     if (!node.parent) return true;
 
-    return node.parent.kind !== ASTKinds.return_statement && node.parent.kind !== ASTKinds.call_expression;
+    return node.parent.kind !== ast.SyntaxKind.ReturnStatement && node.parent.kind !== ast.SyntaxKind.CallExpression;
 }
 
 export default inline_temporary_variables;

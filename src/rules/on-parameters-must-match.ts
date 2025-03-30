@@ -1,11 +1,11 @@
 // The number of call parameters in an on statement must match the parameters specified by the event definition
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, on } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { TypeKind } from "../semantics/type-checker";
-import { headTailToList, isEvent, nameToString, nodeToSourceRange } from "../util";
+import { isEvent, nameToString } from "../util";
 
 export const incorrectOnParameterCount = createDiagnosticsFactory();
 
@@ -13,11 +13,11 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
     const config = getRuleConfig("on_parameters_must_match", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<on>(ASTKinds.on, (node, context) => {
+        factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
             const diagnostics = [];
 
-            for (const trigger of headTailToList(node.on_trigger_list)) {
-                if (trigger.parameters === null) continue; // Don't check this on triggers without parameter specified
+            for (const trigger of node.triggers) {
+                if (trigger.parameterList === null) continue; // Don't check this on triggers without parameter specified
 
                 const triggerType = context.typeChecker.typeOfNode(trigger.name);
 
@@ -26,12 +26,8 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
                     triggerType.declaration &&
                     isEvent(triggerType.declaration)
                 ) {
-                    const triggerParameters = trigger.parameters.parameters
-                        ? headTailToList(trigger.parameters.parameters)
-                        : [];
-                    const eventParameters = triggerType.declaration.event_params
-                        ? headTailToList(triggerType.declaration.event_params)
-                        : [];
+                    const triggerParameters = trigger.parameterList?.parameters ?? [];
+                    const eventParameters = triggerType.declaration.parameters;
 
                     const parameterCount = triggerParameters.length;
                     const expectedParameterCount = eventParameters.length;
@@ -42,7 +38,7 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
                             errorMessage +=
                                 "\nExpected event parameters: " +
                                 eventParameters
-                                    .map(p => `${nameToString(p.type.type_name)} ${nameToString(p.name)}`)
+                                    .map(p => `${nameToString(p.type.typeName)} ${nameToString(p.name)}`)
                                     .join(", ");
                         }
                         diagnostics.push(
@@ -50,9 +46,9 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
                                 config.severity,
                                 errorMessage,
                                 context.source,
-                                trigger.parameters
-                                    ? nodeToSourceRange(trigger.parameters)
-                                    : nodeToSourceRange(trigger.name)
+                                trigger.parameterList
+                                    ? trigger.parameterList.position
+                                    : trigger.name.position
                             )
                         );
                     }

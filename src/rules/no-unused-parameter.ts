@@ -1,11 +1,11 @@
 // Not using a parameter is not allowed
 
+import * as ast from "../grammar/ast";
 import { Diagnostic, DiagnosticSeverity } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, function_definition, identifier, on } from "../grammar/parser";
 import { ASTNode, RuleFactory } from "../linting-rule";
-import { headTailToList, isIdentifier, nodeToSourceRange } from "../util";
+import { isIdentifier } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unusedParameter = createDiagnosticsFactory();
@@ -14,20 +14,17 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_unused_parameters", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
-            if (node.parameters.parameters) {
-                const parameterIdentifiers = headTailToList(node.parameters.parameters).map(p => p.name);
-                return findUnusedParameters(parameterIdentifiers, node.body, context, config.severity);
-            }
+        factoryContext.registerRule<ast.FunctionDefinition>(ast.SyntaxKind.FunctionDefinition, (node, context) => {
 
-            return [];
+            const parameterIdentifiers = node.parameters.map(p => p.name);
+            return findUnusedParameters(parameterIdentifiers, node.body, context, config.severity);
         });
 
-        factoryContext.registerRule<on>(ASTKinds.on, (node, context) => {
+        factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
             const parameterIdentifiers = [];
-            for (const { parameters } of headTailToList(node.on_trigger_list)) {
-                if (parameters?.parameters) {
-                    for (const { name, assignment } of headTailToList(parameters.parameters)) {
+            for (const trigger of node.triggers) {
+                if (trigger.parameterList) {
+                    for (const { name, assignment } of trigger.parameterList.parameters) {
                         // Skip parameters with <- assignment
                         if (!assignment) {
                             parameterIdentifiers.push(name);
@@ -36,18 +33,18 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
                 }
             }
 
-            return findUnusedParameters(parameterIdentifiers, node.body.statement, context, config.severity);
+            return findUnusedParameters(parameterIdentifiers, node.body, context, config.severity);
         });
     }
 };
 
 function findUnusedParameters(
-    parameters: identifier[],
+    parameters: ast.Identifier[],
     body: ASTNode,
     context: VisitorContext,
     severity: DiagnosticSeverity
 ): Diagnostic[] {
-    const seenParameters = new Map<string, { node: identifier; seen: boolean }>();
+    const seenParameters = new Map<string, { node: ast.Identifier; seen: boolean }>();
 
     // Add function parameters to map as unseen
     for (const param of parameters) {
@@ -74,7 +71,7 @@ function findUnusedParameters(
                     severity,
                     `This parameter is not referenced anywhere. You can discard it by renaming to _${node.text}.`,
                     context.source,
-                    nodeToSourceRange(node)
+                    node.position
                 )
             );
         }

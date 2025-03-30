@@ -1,10 +1,10 @@
 // Interface events that are never legal in the interface behavior
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
-import { ASTKinds, event, interface_definition, statement, type_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { headTailToList, isExpressionStatement, isIdentifier, isOnStatement, nodeToSourceRange } from "../util";
+import { isIdentifier, isIllegalKeyword, isOnStatement } from "../util";
 import { VisitResult } from "../visitor";
 
 export const neverLegalEvent = createDiagnosticsFactory();
@@ -13,19 +13,19 @@ export const never_legal_event: RuleFactory = factoryContext => {
     const config = getRuleConfig("never_legal_event", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<interface_definition>(ASTKinds.interface_definition, (node, context) => {
+        factoryContext.registerRule<ast.InterfaceDefinition>(ast.SyntaxKind.InterfaceDefinition, (node, context) => {
             const diagnostics: Diagnostic[] = [];
 
             if (node.behavior) {
                 // Find all in-events to check
-                const inEvents = node.body.map(e => e.type_or_event).filter(isInEvent);
-                const unSeenEvents = new Map(inEvents.map(e => [e.event_name.text, e]));
+                const inEvents = node.body.filter(isInEvent);
+                const unSeenEvents = new Map(inEvents.map(e => [e.eventName.text, e]));
 
                 context.visit(node.behavior, subNode => {
                     // Look for 'on X,Y,Z: S' where S is not illegal
-                    if (isOnStatement(subNode) && !isIllegal(subNode.body.statement)) {
+                    if (isOnStatement(subNode) && !isIllegalKeyword(subNode.body)) {
                         // Remove all events from list of unseen events
-                        for (const trigger of headTailToList(subNode.on_trigger_list)) {
+                        for (const trigger of subNode.triggers) {
                             if (isIdentifier(trigger.name) && unSeenEvents.has(trigger.name.text)) {
                                 unSeenEvents.delete(trigger.name.text);
                             }
@@ -45,7 +45,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
                             config.severity,
                             "This event is never legal in the interface behavior",
                             context.source,
-                            nodeToSourceRange(event.event_name)
+                            event.eventName.position
                         )
                     );
                 }
@@ -56,10 +56,6 @@ export const never_legal_event: RuleFactory = factoryContext => {
     }
 };
 
-export function isIllegal(node: statement): boolean {
-    return isExpressionStatement(node) && node.expression.kind === ASTKinds.ILLEGAL;
-}
-
-function isInEvent(node: event | type_definition): node is event {
-    return node.kind === ASTKinds.event && node.direction === "in";
+function isInEvent(node: ast.Event | ast.TypeDefinition): node is ast.Event {
+    return node.kind === ast.SyntaxKind.Event && node.direction.text === "in";
 }

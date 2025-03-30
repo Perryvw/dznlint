@@ -1,10 +1,10 @@
 // No variables that are never used
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, variable_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier, nodeToSourceRange } from "../util";
+import { isIdentifier } from "../util";
 import { VisitResult } from "../visitor";
 
 export const unusedVariable = createDiagnosticsFactory();
@@ -13,7 +13,7 @@ export const no_unused_variables: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_unused_variables", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<variable_definition>(ASTKinds.variable_definition, (node, context) => {
+        factoryContext.registerRule<ast.VariableDefinition>(ast.SyntaxKind.VariableDefinition, (node, context) => {
             const name = node.name.text;
 
             if (name[0] === "_") {
@@ -35,7 +35,7 @@ export const no_unused_variables: RuleFactory = factoryContext => {
                         config.severity,
                         `This variable is never used. You can discard it by renaming to _${name}.`,
                         context.source,
-                        nodeToSourceRange(node.name)
+                        node.name.position
                     ),
                 ];
             }

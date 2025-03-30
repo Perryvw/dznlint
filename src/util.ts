@@ -17,6 +17,13 @@ export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
     };
 }
 
+export function fromToSourceRange(from: ast.SourceRange, to: ast.SourceRange): ast.SourceRange {
+    return {
+        from: from.from,
+        to: to.to
+    }
+}
+
 export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
     const result = [];
     if (obj.head) {
@@ -36,8 +43,8 @@ export function isCompoundName(node: ast.AnyAstNode): node is ast.CompoundName {
     return node.kind === ast.SyntaxKind.CompoundName;
 }
 
-export function isCompoundBindingExpression(node: ast.AnyAstNode): node is ast.BindingExpression {
-    return node.kind === ast.SyntaxKind.BindingExpression;
+export function isCompoundBindingExpression(node: ast.AnyAstNode): node is ast.BindingCompoundName {
+    return node.kind === ast.SyntaxKind.BindingCompoundName;
 }
 
 export function isCallExpression(node: ast.AnyAstNode): node is ast.CallExpression {
@@ -54,6 +61,18 @@ export function isEvent(node: ast.AnyAstNode): node is ast.Event {
 
 export function isFunctionDefinition(statement: ast.AnyAstNode): statement is ast.FunctionDefinition {
     return statement.kind === ast.SyntaxKind.FunctionDefinition;
+}
+
+export function isAsterisk(node: ast.AnyAstNode): node is ast.Keyword<"*"> {
+    return isKeyword(node) && node.text === "*";
+}
+
+export function isIllegalKeyword(node: ast.AnyAstNode): node is ast.Keyword<"illegal"> {
+    return (isKeyword(node) && node.text === "illegal") || (isExpressionStatement(node) && isIllegalKeyword(node.expression));
+}
+
+export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
+    return node.kind === ast.SyntaxKind.Keyword;
 }
 
 export function isInstance(statement: ast.AnyAstNode): statement is ast.Instance {
@@ -77,7 +96,7 @@ export function isPort(node: ast.AnyAstNode): node is ast.Port {
 }
 
 export function isInjected(port: ast.Port) {
-    return port.qualifiers.some(q => q.name === "injected") === true;
+    return port.qualifiers.some(q => q.text === "injected") === true;
 }
 
 export function isExpressionStatement(node: ast.AnyAstNode): node is ast.ExpressionStatement {
@@ -145,10 +164,10 @@ export function nameToString(name: ast.Name): string {
     if (name.kind === ast.SyntaxKind.Identifier) {
         return name.text;
     } else {
-        if (name.head) {
-            return `${nameToString(name.head)}.${name.tail}`;
+        if (name.compound) {
+            return `${nameToString(name.compound)}.${name.name}`;
         } else {
-            return `.${name.tail}`;
+            return `.${name.name}`;
         }
     }
 }

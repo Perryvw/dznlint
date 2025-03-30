@@ -33,7 +33,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                         errorMessage +=
                             "\nExpected parameters: " +
                             functionParameters
-                                .map(p => `${nameToString(p.type)} ${nameToString(p.name)}`)
+                                .map(p => `${nameToString(p.type.typeName)} ${nameToString(p.name)}`)
                                 .join(", ");
                     }
                     diagnostics.push(
@@ -52,15 +52,15 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
             ) {
                 const functionParameters = functionType.declaration.parameters;
                 const argumentCount = node.arguments.arguments.length;
-                const expectedCount = functionParameters.parameters.length;
+                const expectedCount = functionParameters.length;
 
                 if (argumentCount !== expectedCount) {
                     let errorMessage = `Incorrect argument count. Expected ${expectedCount} arguments but got ${argumentCount}.`;
                     if (expectedCount > 0) {
                         errorMessage +=
                             "\nExpected parameters: " +
-                            functionParameters.parameters
-                                .map(p => `${nameToString(p.type)} ${nameToString(p.name)}`)
+                            functionParameters
+                                .map(p => `${nameToString(p.type.typeName)} ${nameToString(p.name)}`)
                                 .join(", ");
                     }
                     diagnostics.push(

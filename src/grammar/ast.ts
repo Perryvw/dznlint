@@ -1,27 +1,53 @@
 // WIP: Custom AST
 export enum SyntaxKind {
+    File,
     Keyword,
-    SingleLineComment,
-    MultiLineComment,
+    Namespace,
 
     // Statements
+    AssignmentStatement,
+    Behavior,
+    Binding,
     Compound,
     ComponentDefinition,
-    InterfaceDefinition,
-    ExternDeclaration,
+    DeferStatement,
+    EnumDefinition,
     Event,
-    VariableDefinition,
+    ExpressionStatement,
+    ExternDeclaration,
     FunctionDefinition,
+    GuardStatement,
+    IfStatement,
+    ImportStatement,
+    Instance,
+    IntDefinition,
+    InterfaceDefinition,
+    InvariantStatement,
+    OnStatement,
+    Port,
+    ReturnStatement,
+    System,
+    VariableDefinition,
 
     // Expressions
+    BinaryExpression,
+    BindingCompoundName,
+    CallExpression,
     CompoundName,
     DollarLiteral,
     Identifier,
-    CallExpression,
+    NumericLiteral,
+    ParenthesizedExpression,
+    UnaryOperatorExpression,
 
     // Misc
-    FunctionParameter,
     CallArguments,
+    DeferArguments,
+    EventParameter,
+    FunctionParameter,
+    OnParameter,
+    OnTrigger,
+    OnTriggerParameters,
     TypeReference
 }
 
@@ -37,66 +63,58 @@ export interface SourceRange {
     to: SourcePosition;
 }
 
-export interface AstNode<TKind extends SyntaxKind | string> {
+export interface AstNode<TKind extends SyntaxKind> {
     kind: TKind;
     position: SourceRange;
     parent?: AnyAstNode;
 }
 export interface Keyword<TKind extends string> extends AstNode<SyntaxKind.Keyword> {
-    name: TKind;
+    text: TKind;
 }
-export type AnyAstNode = AstNode<SyntaxKind | string>;
+export type AnyAstNode = AstNode<SyntaxKind>;
 
-export interface File extends AstNode<"file"> {
+export interface File extends AstNode<SyntaxKind.File> {
     statements: RootStatement[];
 }
 
 export type RootStatement = Namespace | ExternDefinition | TypeDefinition | ImportStatement
-    | InterfaceDefinition | ComponentDefinition | FunctionDefinition | Statement
-    | SingleLineComment | MultiLineComment;
+    | InterfaceDefinition | ComponentDefinition | FunctionDefinition | Statement;
 
 export type Statement = DeclarativeStatement | ImperativeStatement;
 
-export interface SingleLineComment extends AstNode<SyntaxKind.SingleLineComment> {
-    text: string;
-}
-
-export interface MultiLineComment extends AstNode<SyntaxKind.MultiLineComment> {
-    text: string;
-}
-
 export interface Compound extends AstNode<SyntaxKind.Compound> {
+    blocking?: Keyword<"blocking">;
     statements: Statement[];
 }
 
 // Declarations
 
-export interface ImportStatement extends AstNode<"import_statement"> {
+export interface ImportStatement extends AstNode<SyntaxKind.ImportStatement> {
     file: string;
 }
 
 export type TypeDefinition = EnumDefinition | IntDefinition | ExternDefinition;
-
-export interface EnumDefinition extends AstNode<"enum_definition"> {
-    name: Identifier;
-    members: Identifier[];
-}
-
-export interface IntDefinition extends AstNode<"int_definition"> {
-    name: Identifier;
-    from: number;
-    to: number;
-}
 
 export interface ExternDefinition extends AstNode<SyntaxKind.ExternDeclaration> {
     name: Identifier;
     value: DollarsLiteral;
 }
 
+export interface EnumDefinition extends AstNode<SyntaxKind.EnumDefinition> {
+    name: Identifier;
+    members: Identifier[];
+}
+
+export interface IntDefinition extends AstNode<SyntaxKind.IntDefinition> {
+    name: Identifier;
+    from: number;
+    to: number;
+}
+
 type NamespaceStatement = TypeDefinition | Namespace | InterfaceDefinition | ComponentDefinition
     | FunctionDefinition;
 
-export interface Namespace extends AstNode<"namespace"> {
+export interface Namespace extends AstNode<SyntaxKind.Namespace> {
     name: Name;
     statements: NamespaceStatement[];
 }
@@ -107,10 +125,10 @@ export interface InterfaceDefinition extends AstNode<SyntaxKind.InterfaceDefinit
     behavior?: Compound;
 }
 
-export type EventDirection = Keyword<"in"> | Keyword<"out">; 
-export interface EventParameter extends AstNode<"event_parameter"> {
-    direction?: string;
-    type: Identifier;
+export type EventDirection = Keyword<"in"> | Keyword<"out">;
+export interface EventParameter extends AstNode<SyntaxKind.EventParameter> {
+    direction?: ParameterDirection;
+    type: TypeReference;
     name: Name;
 }
 export interface Event extends AstNode<SyntaxKind.Event> {
@@ -126,47 +144,52 @@ export interface ComponentDefinition extends AstNode<SyntaxKind.ComponentDefinit
     body: Behavior | System;
 }
 
-export interface System extends AstNode<"system"> {
+export interface System extends AstNode<SyntaxKind.System> {
     instancesAndBindings: Array<Instance | Binding>;
 }
 
-export interface Instance extends AstNode<"instance"> {
+export interface Instance extends AstNode<SyntaxKind.Instance> {
     type: TypeReference;
     name: Identifier;
 }
 
-export interface Binding extends AstNode<"binding"> {
+export interface Binding extends AstNode<SyntaxKind.Binding> {
     left: BindingExpression;
     right: BindingExpression;
 }
 
-export interface BindingExpression extends AstNode<"binding_expression"> {
-    compound: Name;
+export type BindingExpression = Identifier | BindingCompoundName | Keyword<"*">;
+export interface BindingCompoundName extends AstNode<SyntaxKind.BindingCompoundName> {
+    compound: BindingExpression;
     name: Keyword<"*"> | Identifier;
 }
 
 export type PortDirection = Keyword<"provides"> | Keyword<"requires">;
-export interface Port extends AstNode<"port"> {
+export interface Port extends AstNode<SyntaxKind.Port> {
     direction: PortDirection;
     qualifiers: Array<Keyword<"external"> | Keyword<"injected"> | Keyword<"blocking">>;
+    type: TypeReference;
     name: Identifier;
 }
 
-type BehaviorStatement = Port | FunctionDefinition | InvariantStatement | VariableDefinition | DeclarativeStatement | TypeDefinition | SingleLineComment | MultiLineComment
+type BehaviorStatement = Port | FunctionDefinition | InvariantStatement | VariableDefinition | DeclarativeStatement | TypeDefinition;
 
-export interface Behavior extends AstNode<"behavior"> {
+export interface Behavior extends AstNode<SyntaxKind.Behavior> {
     name?: Identifier;
     statements: BehaviorStatement[];
 }
 
 export interface FunctionDefinition extends AstNode<SyntaxKind.FunctionDefinition> {
+    returnType: TypeReference;
     name: Identifier;
     parameters: FunctionParameter[];
-    body?: Compound;
+    body: Compound | Statement;
 }
 
+export type ParameterDirection = Keyword<"in"> | Keyword<"out">;
 export interface FunctionParameter extends AstNode<SyntaxKind.FunctionParameter> {
-    type: Name;
+    direction?: ParameterDirection;
+    type: TypeReference;
     name: Identifier;
 }
 
@@ -174,29 +197,33 @@ export interface FunctionParameter extends AstNode<SyntaxKind.FunctionParameter>
 
 type DeclarativeStatement = OnStatement | GuardStatement | InvariantStatement | Compound;
 
-export interface OnParameter extends AstNode<"on_parameter"> {
+export interface OnParameter extends AstNode<SyntaxKind.OnParameter> {
     name: Identifier;
     assignment?: Identifier; // port.event(parameter <- assignment)
 }
 
-export interface OnTrigger extends AstNode<"on_trigger"> {
-    trigger: CompoundName;
-    parameters: Identifier;
+export interface OnTriggerParameters extends AstNode<SyntaxKind.OnTriggerParameters> {
+    parameters: OnParameter[];
 }
 
-export interface OnStatement extends AstNode<"on"> {
+export interface OnTrigger extends AstNode<SyntaxKind.OnTrigger> {
+    name: Name;
+    parameterList?: OnTriggerParameters;
+}
+
+export interface OnStatement extends AstNode<SyntaxKind.OnStatement> {
     blocking?: Keyword<"blocking">;
     triggers: OnTrigger[];
     body: Statement;
 }
 
-export interface GuardStatement extends AstNode<"guard"> {
+export interface GuardStatement extends AstNode<SyntaxKind.GuardStatement> {
     blocking?: Keyword<"blocking">;
     condition?: Keyword<"otherwise"> | Expression;
     statement: Statement;
 }
 
-export interface InvariantStatement extends AstNode<"invariant"> {
+export interface InvariantStatement extends AstNode<SyntaxKind.InvariantStatement> {
     invariant: Keyword<"invariant">;
     expression: Expression;
 }
@@ -206,27 +233,31 @@ export interface InvariantStatement extends AstNode<"invariant"> {
 export type ImperativeStatement = IfStatement | ReturnStatement | VariableDefinition 
     | AssignmentStatement | DeferStatement | ExpressionStatement | Compound;
 
-export interface AssignmentStatement extends AstNode<"assignment_statement">{
+export interface AssignmentStatement extends AstNode<SyntaxKind.AssignmentStatement>{
     left: Identifier;
     right: Expression;
 }
 
-export interface DeferStatement extends AstNode<"defer_statement"> {
+export interface DeferArguments extends AstNode<SyntaxKind.DeferArguments> {
     arguments: Expression[];
+}
+
+export interface DeferStatement extends AstNode<SyntaxKind.DeferStatement> {
+    arguments?: DeferArguments;
     statement: ImperativeStatement;
 }
 
-export interface ExpressionStatement extends AstNode<"expression_statement"> {
+export interface ExpressionStatement extends AstNode<SyntaxKind.ExpressionStatement> {
     expression: Expression;
 }
 
-export interface IfStatement extends AstNode<"if_statement"> {
+export interface IfStatement extends AstNode<SyntaxKind.IfStatement> {
     condition: Expression;
     statement: ImperativeStatement;
     else?: ImperativeStatement;
 }
 
-export interface ReturnStatement extends AstNode<"return_statement"> {
+export interface ReturnStatement extends AstNode<SyntaxKind.ReturnStatement> {
     returnValue?: Expression;
 }
 
@@ -240,18 +271,18 @@ export interface VariableDefinition extends AstNode<SyntaxKind.VariableDefinitio
 
 export type Expression = UnaryExpression | BinaryExpression;
 export type UnaryExpression = ParenthesizedExpression | CallExpression | DollarsLiteral 
-    | Keyword<"illegal"> | Name | NumericLiteral | UnaryOperatorExpression;
+    | Name | NumericLiteral | UnaryOperatorExpression | Keyword<"illegal"> | Keyword<"otherwise">;
 
 type BinaryOperator = Keyword<"&&"> | Keyword<"||"> | Keyword<"=="> | Keyword<"!="> | Keyword<"<=">
     | Keyword<"<"> | Keyword<">="> | Keyword<">"> | Keyword<"+"> | Keyword<"-"> | Keyword<"=>">;
 
-export interface BinaryExpression extends AstNode<"binary_expression"> {
+export interface BinaryExpression extends AstNode<SyntaxKind.BinaryExpression> {
     left: UnaryExpression;
     operator: BinaryOperator;
     right: Expression;
 }
 
-export interface ParenthesizedExpression extends AstNode<"parenthesized_expression"> {
+export interface ParenthesizedExpression extends AstNode<SyntaxKind.ParenthesizedExpression> {
     expression: Expression;
 }
 
@@ -273,17 +304,17 @@ export interface CallExpression extends AstNode<SyntaxKind.CallExpression> {
 }
 
 export interface CompoundName extends AstNode<SyntaxKind.CompoundName> {
-    head?: CompoundName | Identifier;
-    tail: string;
+    compound?: CompoundName | Identifier;
+    name: Identifier;
 }
 
-export interface NumericLiteral extends AstNode<"numeric_literal"> {
+export interface NumericLiteral extends AstNode<SyntaxKind.NumericLiteral> {
     value: number;
 }
 
 type UnaryOperator = Keyword<"!">;
 
-export interface UnaryOperatorExpression extends AstNode<"unary_expression_operator"> {
+export interface UnaryOperatorExpression extends AstNode<SyntaxKind.UnaryOperatorExpression> {
     operator: UnaryOperator;
     expression: Expression;
 }
@@ -293,5 +324,5 @@ export interface UnaryOperatorExpression extends AstNode<"unary_expression_opera
 export type Name = Identifier | CompoundName;
 
 export interface TypeReference extends AstNode<SyntaxKind.TypeReference> {
-    type: Name;
+    typeName: Name;
 } 

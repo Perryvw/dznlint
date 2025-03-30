@@ -1,10 +1,10 @@
 // No instances that are not connected
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, instance, system } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier, nodeToSourceRange, systemBindings, systemInstances } from "../util";
+import { isIdentifier, systemBindings, systemInstances } from "../util";
 
 export const unusedInstance = createDiagnosticsFactory();
 
@@ -12,8 +12,8 @@ export const no_unused_instances: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_unused_instances", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<system>(ASTKinds.system, (node, context) => {
-            const seenInstances = new Map<string, { instance: instance; seen: boolean }>();
+        factoryContext.registerRule<ast.System>(ast.SyntaxKind.System, (node, context) => {
+            const seenInstances = new Map<string, { instance: ast.Instance; seen: boolean }>();
             for (const instance of systemInstances(node)) {
                 seenInstances.set(instance.name.text, { instance, seen: false });
             }
@@ -35,7 +35,7 @@ export const no_unused_instances: RuleFactory = factoryContext => {
                             config.severity,
                             "This instance is not bound to anything.",
                             context.source,
-                            nodeToSourceRange(instance.name)
+                            instance.name.position
                         )
                     );
                 }

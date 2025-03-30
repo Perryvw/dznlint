@@ -1,4 +1,4 @@
-import * as parser from "./grammar/parser";
+import * as ast from "./grammar/ast";
 import { ASTNode } from "./linting-rule";
 import { InputSource, Program } from "./semantics/program";
 import { TypeChecker } from "./semantics/type-checker";
@@ -7,21 +7,20 @@ import { headTailToList } from "./util";
 const stopVisiting = () => {};
 
 type ScopeRoot =
-    | parser.behavior
-    | parser.component
-    | parser.compound
-    | parser.file
-    | parser.function_definition
-    | parser.if_statement
-    | parser.else_statement
-    | parser.interface_definition
-    | parser.namespace
-    | parser.on
-    | parser.system;
+    | ast.Behavior
+    | ast.ComponentDefinition
+    | ast.Compound
+    | ast.File
+    | ast.FunctionDefinition
+    | ast.IfStatement
+    | ast.InterfaceDefinition
+    | ast.Namespace
+    | ast.OnStatement
+    | ast.System;
 
 interface Scope {
     root: ScopeRoot;
-    variable_declarations: Record<string, parser.identifier>;
+    variable_declarations: Record<string, ast.Identifier>;
 }
 
 export class VisitorContext {

@@ -1,10 +1,10 @@
 // always: Always explicitly mention the direction of parameters
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "../diagnostic";
-import { ASTKinds, component, compound, compound_name, port } from "../grammar/parser";
 import { ASTNode, RuleFactory } from "../linting-rule";
-import { headTailToList, isCompound, isIdentifier, isOnStatement, nodeToSourceRange } from "../util";
+import { isCompound, isIdentifier, isOnStatement } from "../util";
 
 export const portMissingBlocking = createDiagnosticsFactory();
 export const portRedundantBlocking = createDiagnosticsFactory();
@@ -13,27 +13,27 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
     const config = getRuleConfig("port_missing_redundant_blocking", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<component>(ASTKinds.component, (node, context) => {
-            if (!node.body || node.body.kind === ASTKinds.system) {
+        factoryContext.registerRule<ast.ComponentDefinition>(ast.SyntaxKind.ComponentDefinition, (node, context) => {
+            if (!node.body || node.body.kind === ast.SyntaxKind.System) {
                 return [];
             }
 
             const diagnostics: Diagnostic[] = [];
 
             const hasBlockingRequiresPorts = node.ports.some(
-                p => p.port.direction === "requires" && isPortBlocking(p.port)
+                p => p.direction.text === "requires" && isPortBlocking(p)
             );
 
             // If requires ports are present, all provided ports should be blocking
             if (hasBlockingRequiresPorts) {
-                for (const port of node.ports.filter(p => p.port.direction === "provides")) {
-                    if (!isPortBlocking(port.port)) {
+                for (const port of node.ports.filter(p => p.direction.text === "provides")) {
+                    if (!isPortBlocking(port)) {
                         diagnostics.push(
                             portMissingBlocking(
                                 config.severity,
                                 "Port needs to be blocking because component has blocking requires ports.",
                                 context.source,
-                                nodeToSourceRange(port.port.name)
+                                port.name.position
                             )
                         );
                     }
@@ -45,18 +45,18 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
             // Otherwise, check for blocking keywords in the component behavior
             const ports = new Map(
                 node.ports
-                    .filter(p => p.port.direction === "provides")
-                    .map(p => [p.port.name.text, { port: p.port, blockingOns: [] as compound_name[] }])
+                    .filter(p => p.direction.text === "provides")
+                    .map(p => [p.name.text, { port: p, blockingOns: [] as ast.CompoundName[] }])
             );
 
             context.visit(node.body, subNode => {
                 // Look for 'blocking on X: Y' or 'on X: blocking Y'
                 if (isOnStatement(subNode)) {
-                    if (subNode.blocking || isBlockingCompound(subNode.body.statement)) {
+                    if (subNode.blocking || isBlockingCompound(subNode.body)) {
                         // Mark all ports as needing blocking
-                        for (const { name } of headTailToList(subNode.on_trigger_list)) {
-                            if (!isIdentifier(name) && name.compound && isIdentifier(name.compound)) {
-                                ports.get(name.compound.text)?.blockingOns.push(name);
+                        for (const trigger of subNode.triggers) {
+                            if (!isIdentifier(trigger.name) && trigger.name.compound && isIdentifier(trigger.name.compound)) {
+                                ports.get(trigger.name.compound.text)?.blockingOns.push(trigger.name);
                             }
                         }
                     }
@@ -74,7 +74,7 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
                             config.severity,
                             "Port needs to be blocking because it is used in blocking 'on's.",
                             context.source,
-                            nodeToSourceRange(port.name)
+                            port.name.position
                         )
                     );
 
@@ -85,7 +85,7 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
                                 DiagnosticSeverity.Hint,
                                 `Blocking on for port ${port.name.text} here.`,
                                 context.source,
-                                nodeToSourceRange(on)
+                                on.position
                             )
                         );
                     }
@@ -97,7 +97,7 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
                             config.severity,
                             "Port is marked blocking but is never used in a blocking way.",
                             context.source,
-                            nodeToSourceRange(port.name)
+                            port.name.position
                         )
                     );
                 }
@@ -108,10 +108,10 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
     }
 };
 
-function isPortBlocking(port: port) {
-    return port.qualifiers?.some(q => q.qualifier === "blocking") ?? false;
+function isPortBlocking(port: ast.Port) {
+    return port.qualifiers?.some(q => q.text === "blocking") ?? false;
 }
 
-function isBlockingCompound(node: ASTNode): node is compound {
-    return isCompound(node) && node.blocking !== null;
+function isBlockingCompound(node: ASTNode): node is ast.Compound {
+    return isCompound(node) && node.blocking !== undefined;
 }

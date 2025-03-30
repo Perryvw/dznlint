@@ -1,10 +1,10 @@
 // No ports that are never used
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
-import * as parser from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier, nodeToSourceRange } from "../util";
+import { isIdentifier } from "../util";
 
 export const unusedPort = createDiagnosticsFactory();
 
@@ -12,12 +12,12 @@ export const no_unused_ports: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_unused_ports", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<parser.component>(parser.ASTKinds.component, (node, context) => {
+        factoryContext.registerRule<ast.ComponentDefinition>(ast.SyntaxKind.ComponentDefinition, (node, context) => {
             if (!node.body) return [];
 
-            const seenPorts: Record<string, [parser.identifier, number]> = {};
+            const seenPorts: Record<string, [ast.Identifier, number]> = {};
             for (const port of node.ports) {
-                seenPorts[port.port.name.text] = [port.port.name, 0];
+                seenPorts[port.name.text] = [port.name, 0];
             }
 
             // Count references to the ports in body
@@ -36,7 +36,7 @@ export const no_unused_ports: RuleFactory = factoryContext => {
                             config.severity,
                             `This port is never used, consider removing it.`,
                             context.source,
-                            nodeToSourceRange(identifier)
+                            identifier.position
                         )
                     );
                 }

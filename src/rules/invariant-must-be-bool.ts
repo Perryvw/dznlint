@@ -12,7 +12,7 @@ export const invariant_must_be_bool: RuleFactory = factoryContext => {
     const config = getRuleConfig("invariant_must_be_bool", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<ast.InvariantStatement>("invariant", (node, context) => {
+        factoryContext.registerRule<ast.InvariantStatement>(ast.SyntaxKind.InvariantStatement, (node, context) => {
             const expressionType = context.typeChecker.typeOfNode(node.expression);
             if (expressionType.kind !== TypeKind.Bool) {
                 return [
