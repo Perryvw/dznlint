@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-import * as parser from "../grammar/parser";
+import * as ast from "../grammar/ast";
 
 import { Diagnostic } from "../diagnostic";
 import { parseDznSource } from "../parse";
@@ -60,7 +60,7 @@ export class Program {
         }
     }
 
-    public getFilePath(file: parser.file): string | undefined {
+    public getFilePath(file: ast.File): string | undefined {
         for (const [path, sourceFile] of this.parsedFiles) {
             if (sourceFile.ast === file) return path;
         }
@@ -80,7 +80,7 @@ export interface InputSource {
 
 export class SourceFile {
     public parseDiagnostics: Diagnostic[];
-    public ast?: parser.file;
+    public ast?: ast.File;
 
     public constructor(
         public source: InputSource,

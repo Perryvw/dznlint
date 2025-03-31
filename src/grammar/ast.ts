@@ -32,6 +32,7 @@ export enum SyntaxKind {
     // Expressions
     BinaryExpression,
     BindingCompoundName,
+    BooleanLiteral,
     CallExpression,
     CompoundName,
     DollarLiteral,
@@ -48,7 +49,9 @@ export enum SyntaxKind {
     OnParameter,
     OnTrigger,
     OnTriggerParameters,
-    TypeReference
+    TypeReference,
+
+    ERROR
 }
 
 // TODO: Duplicate definition with diagnostic.ts, unify
@@ -77,7 +80,7 @@ export interface File extends AstNode<SyntaxKind.File> {
     statements: RootStatement[];
 }
 
-export type RootStatement = Namespace | ExternDefinition | TypeDefinition | ImportStatement
+export type RootStatement = Namespace | ExternDeclaration | TypeDefinition | ImportStatement
     | InterfaceDefinition | ComponentDefinition | FunctionDefinition | Statement;
 
 export type Statement = DeclarativeStatement | ImperativeStatement;
@@ -90,12 +93,12 @@ export interface Compound extends AstNode<SyntaxKind.Compound> {
 // Declarations
 
 export interface ImportStatement extends AstNode<SyntaxKind.ImportStatement> {
-    file: string;
+    fileName: string;
 }
 
-export type TypeDefinition = EnumDefinition | IntDefinition | ExternDefinition;
+export type TypeDefinition = EnumDefinition | IntDefinition | ExternDeclaration;
 
-export interface ExternDefinition extends AstNode<SyntaxKind.ExternDeclaration> {
+export interface ExternDeclaration extends AstNode<SyntaxKind.ExternDeclaration> {
     name: Identifier;
     value: DollarsLiteral;
 }
@@ -122,7 +125,7 @@ export interface Namespace extends AstNode<SyntaxKind.Namespace> {
 export interface InterfaceDefinition extends AstNode<SyntaxKind.InterfaceDefinition> {
     name: Identifier;
     body: Array<TypeDefinition | Event>;
-    behavior?: Compound;
+    behavior?: Behavior;
 }
 
 export type EventDirection = Keyword<"in"> | Keyword<"out">;
@@ -271,7 +274,7 @@ export interface VariableDefinition extends AstNode<SyntaxKind.VariableDefinitio
 
 export type Expression = UnaryExpression | BinaryExpression;
 export type UnaryExpression = ParenthesizedExpression | CallExpression | DollarsLiteral 
-    | Name | NumericLiteral | UnaryOperatorExpression | Keyword<"illegal"> | Keyword<"otherwise">;
+    | Name | BooleanLiteral | NumericLiteral | UnaryOperatorExpression | Keyword<"illegal"> | Keyword<"otherwise">;
 
 type BinaryOperator = Keyword<"&&"> | Keyword<"||"> | Keyword<"=="> | Keyword<"!="> | Keyword<"<=">
     | Keyword<"<"> | Keyword<">="> | Keyword<">"> | Keyword<"+"> | Keyword<"-"> | Keyword<"=>">;
@@ -306,6 +309,10 @@ export interface CallExpression extends AstNode<SyntaxKind.CallExpression> {
 export interface CompoundName extends AstNode<SyntaxKind.CompoundName> {
     compound?: CompoundName | Identifier;
     name: Identifier;
+}
+
+export interface BooleanLiteral extends AstNode<SyntaxKind.BooleanLiteral> {
+    value: boolean;
 }
 
 export interface NumericLiteral extends AstNode<SyntaxKind.NumericLiteral> {

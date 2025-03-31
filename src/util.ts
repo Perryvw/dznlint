@@ -171,3 +171,7 @@ export function nameToString(name: ast.Name): string {
         }
     }
 }
+
+export function assertNever(x: never, message: string): void {
+    console.log("never", message, x);
+}

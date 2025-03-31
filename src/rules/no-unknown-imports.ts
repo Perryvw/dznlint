@@ -13,10 +13,10 @@ export const no_unknown_imports: RuleFactory = factoryContext => {
     if (config.isEnabled) {
         factoryContext.registerRule<ast.ImportStatement>(ast.SyntaxKind.ImportStatement, (node, context) => {
             if (
-                context.program.host.resolveImport(node.file, context.source.fileName ?? "?", context.program) ===
+                context.program.host.resolveImport(node.fileName, context.source.fileName ?? "?", context.program) ===
                 undefined
             ) {
-                let message = `Could not find file ${node.file} imported from ${context.source.fileName ?? "?"}`;
+                let message = `Could not find file ${node.fileName} imported from ${context.source.fileName ?? "?"}`;
                 if (context.program.host.includePaths?.length > 0) {
                     message += ` or any of the include paths: ${context.program.host.includePaths.join(", ")}`;
                 } else {

@@ -1,6 +1,6 @@
 import * as util from "util";
 
-import * as parser from "../grammar/parser";
+import * as ast from "../grammar/ast";
 import { ASTNode } from "../linting-rule";
 import {
     findFirstParent,
@@ -15,6 +15,9 @@ import {
     isTypeReference,
     isInterfaceDefinition,
     isCallExpression,
+    isAsterisk,
+    isKeyword,
+    assertNever,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -22,12 +25,17 @@ import { Program } from "./program";
 export class SemanticSymbol {
     public constructor(
         public declaration: ASTNode,
-        public name?: parser.compound_name
+        public name?: ast.Name
     ) {}
 
     static ErrorSymbol(): SemanticSymbol {
-        return new SemanticSymbol({ kind: parser.ASTKinds.$EOF });
+        return new SemanticSymbol({ kind: ast.SyntaxKind.ERROR, position: EMPTY_POSITION });
     }
+}
+
+const EMPTY_POSITION: ast.SourceRange = {
+    from: {index: 0, column:0, line:1},
+    to: {index: 0, column:0, line:1 }
 }
 
 export enum TypeKind {
@@ -64,24 +72,24 @@ const BOOL_TYPE = {
 
 const BOOL_SYMBOL = new SemanticSymbol(null!);
 
-const TRUE_DECLARATION: ASTNode = { kind: parser.ASTKinds.TRUE };
-const FALSE_DECLARATION: ASTNode = { kind: parser.ASTKinds.FALSE };
+const TRUE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION };
+const FALSE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION };
 
 export class TypeChecker {
     public constructor(private program: Program) {}
 
     public typeOfNode(node: ASTNode, typeReference = false): Type {
         if (
-            node.kind === parser.ASTKinds.binary_expression ||
-            node.kind === parser.ASTKinds.unary_operator_expression
+            node.kind === ast.SyntaxKind.BinaryExpression ||
+            node.kind === ast.SyntaxKind.UnaryOperatorExpression
         ) {
             // Okay so this is definitely not true, but then again, we don't have to worry about everything else for now
             return BOOL_TYPE;
         } else if (isCallExpression(node)) {
             const functionSymbol = this.symbolOfNode(node.expression);
             if (!functionSymbol) return ERROR_TYPE;
-            const functionDefinition = functionSymbol.declaration as parser.function_definition;
-            return this.typeOfNode(functionDefinition.return_type);
+            const functionDefinition = functionSymbol.declaration as ast.FunctionDefinition;
+            return this.typeOfNode(functionDefinition.returnType);
         }
         const symbol = this.symbolOfNode(node, typeReference);
         if (!symbol) return ERROR_TYPE;
@@ -104,14 +112,14 @@ export class TypeChecker {
         if (this.symbols.has(node)) return this.symbols.get(node);
         if (isTypeReference(node)) {
             typeReference = true;
-            node = node.type_name;
+            node = node.typeName;
         }
 
         // First check if this is a built-in type
         if (
             node.parent &&
-            node.parent.kind !== parser.ASTKinds.binding_expression_$0 &&
-            node.parent.kind !== parser.ASTKinds.compound_name_$0 &&
+            node.parent.kind !== ast.SyntaxKind.BindingCompoundName &&
+            node.parent.kind !== ast.SyntaxKind.CompoundName &&
             isIdentifier(node)
         ) {
             const builtInType = this.builtInSymbols.get(node.text);
@@ -139,7 +147,7 @@ export class TypeChecker {
                 scope = findFirstParent(scope, isScopedBlock);
             }
             return undefined;
-        } else if (isCompoundName(node) && node.compound !== null) {
+        } else if (isCompoundName(node) && node.compound !== undefined) {
             const ownerType = this.typeOfNode(node.compound, typeReference);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
             const ownerMembers = this.getMembersOfType(ownerType);
@@ -148,28 +156,28 @@ export class TypeChecker {
             const ownerType = this.typeOfNode(node.compound);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
             const ownerMembers = this.getMembersOfType(ownerType);
-            if (node.name.kind === parser.ASTKinds.asterisk_binding) {
+            if (isAsterisk(node.name)) {
                 // TODO: What to return here?
                 return SemanticSymbol.ErrorSymbol();
             } else {
                 return ownerMembers.get(node.name.text);
             }
         } else if (
-            node.kind === parser.ASTKinds.port ||
-            node.kind === parser.ASTKinds.event ||
-            node.kind === parser.ASTKinds.extern_definition ||
-            node.kind === parser.ASTKinds.enum_definition ||
-            node.kind === parser.ASTKinds.namespace ||
-            node.kind === parser.ASTKinds.instance ||
-            node.kind === parser.ASTKinds.variable_definition ||
-            node.kind === parser.ASTKinds.asterisk_binding
+            node.kind === ast.SyntaxKind.Port ||
+            node.kind === ast.SyntaxKind.Event ||
+            node.kind === ast.SyntaxKind.ExternDeclaration ||
+            node.kind === ast.SyntaxKind.EnumDefinition ||
+            node.kind === ast.SyntaxKind.Namespace ||
+            node.kind === ast.SyntaxKind.Instance ||
+            node.kind === ast.SyntaxKind.VariableDefinition ||
+            isAsterisk(node)
         ) {
             return this.getOrCreateSymbol(node);
-        } else if (node.kind === parser.ASTKinds.on_trigger) {
-            const onTrigger = node as parser.on_trigger;
+        } else if (node.kind === ast.SyntaxKind.OnTrigger) {
+            const onTrigger = node as ast.OnTrigger;
             return this.symbolOfNode(onTrigger.name);
         } else {
-            throw `I don't know how to find the symbol for node type ${parser.ASTKinds[node.kind]} ${util.inspect(
+            throw `I don't know how to find the symbol for node type ${ast.SyntaxKind[node.kind]} ${util.inspect(
                 node
             )}`;
         }
@@ -177,12 +185,12 @@ export class TypeChecker {
 
     private isTypeSymbol(symbol: SemanticSymbol) {
         return (
-            symbol.declaration.kind === parser.ASTKinds.component ||
-            symbol.declaration.kind === parser.ASTKinds.enum_definition ||
-            symbol.declaration.kind === parser.ASTKinds.extern_definition ||
-            symbol.declaration.kind === parser.ASTKinds.interface_definition ||
-            symbol.declaration.kind === parser.ASTKinds.int ||
-            symbol.declaration.kind === parser.ASTKinds.namespace
+            symbol.declaration.kind === ast.SyntaxKind.ComponentDefinition ||
+            symbol.declaration.kind === ast.SyntaxKind.EnumDefinition ||
+            symbol.declaration.kind === ast.SyntaxKind.ExternDeclaration ||
+            symbol.declaration.kind === ast.SyntaxKind.InterfaceDefinition ||
+            symbol.declaration.kind === ast.SyntaxKind.IntDefinition ||
+            symbol.declaration.kind === ast.SyntaxKind.Namespace
         );
     }
 
@@ -216,88 +224,88 @@ export class TypeChecker {
 
         const declaration = symbol.declaration;
 
-        if (declaration.kind === parser.ASTKinds.extern_definition) {
-            const definition = declaration as parser.extern_definition;
+        if (declaration.kind === ast.SyntaxKind.ExternDeclaration) {
+            const definition = declaration as ast.ExternDeclaration;
             return { kind: TypeKind.External, declaration: definition, name: definition.name.text };
-        } else if (declaration.kind === parser.ASTKinds.instance) {
-            const instance = declaration as parser.instance;
+        } else if (declaration.kind === ast.SyntaxKind.Instance) {
+            const instance = declaration as ast.Instance;
             const typeSymbol = this.symbolOfNode(instance.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
-        } else if (symbol.declaration.kind === parser.ASTKinds.variable_definition) {
-            const definition = declaration as parser.variable_definition;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.VariableDefinition) {
+            const definition = declaration as ast.VariableDefinition;
             const typeSymbol = this.symbolOfNode(definition.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
-        } else if (declaration.kind === parser.ASTKinds.function_parameter) {
-            const definition = declaration as parser.function_parameter;
+        } else if (declaration.kind === ast.SyntaxKind.FunctionParameter) {
+            const definition = declaration as ast.FunctionParameter;
             const typeSymbol = this.symbolOfNode(definition.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
-        } else if (declaration.kind === parser.ASTKinds.enum_definition) {
-            const definition = declaration as parser.enum_definition;
+        } else if (declaration.kind === ast.SyntaxKind.EnumDefinition) {
+            const definition = declaration as ast.EnumDefinition;
             return { kind: TypeKind.Enum, declaration: definition, name: definition.name.text };
-        } else if (symbol.declaration.kind === parser.ASTKinds.port) {
-            const definition = declaration as parser.port;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.Port) {
+            const definition = declaration as ast.Port;
             const typeSymbol = this.symbolOfNode(definition.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
-        } else if (symbol.declaration.kind === parser.ASTKinds.event) {
-            const definition = declaration as parser.event;
-            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.event_name.text };
-        } else if (symbol.declaration.kind === parser.ASTKinds.component) {
-            const definition = declaration as parser.component;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.Event) {
+            const definition = declaration as ast.Event;
+            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.eventName.text };
+        } else if (symbol.declaration.kind === ast.SyntaxKind.ComponentDefinition) {
+            const definition = declaration as ast.ComponentDefinition;
             return { kind: TypeKind.Component, name: definition.name.text, declaration: definition };
-        } else if (symbol.declaration.kind === parser.ASTKinds.interface_definition) {
-            const definition = declaration as parser.interface_definition;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.InterfaceDefinition) {
+            const definition = declaration as ast.InterfaceDefinition;
             return { kind: TypeKind.Interface, name: definition.name.text, declaration: definition };
-        } else if (symbol.declaration.kind === parser.ASTKinds.namespace) {
-            const definition = declaration as parser.namespace;
-            if (definition.name.kind === parser.ASTKinds.identifier) {
+        } else if (symbol.declaration.kind === ast.SyntaxKind.Namespace) {
+            const definition = declaration as ast.Namespace;
+            if (definition.name.kind === ast.SyntaxKind.Identifier) {
                 return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.text };
             } else {
                 return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.name.text };
             }
-        } else if (symbol.declaration.kind === parser.ASTKinds.function_definition) {
-            const definition = declaration as parser.function_definition;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.FunctionDefinition) {
+            const definition = declaration as ast.FunctionDefinition;
             return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
-        } else if (symbol.declaration.kind === parser.ASTKinds.member_identifier) {
-            if (!symbol.declaration.parent) return ERROR_TYPE;
-            const parentType = this.typeOfNode(symbol.declaration.parent);
-            if (parentType === ERROR_TYPE) return ERROR_TYPE;
-            if (parentType.kind === TypeKind.Enum) return BOOL_TYPE;
-            return ERROR_TYPE;
+        // } else if (symbol.declaration.kind === ast.SyntaxKind.member_identifier) {
+        //     if (!symbol.declaration.parent) return ERROR_TYPE;
+        //     const parentType = this.typeOfNode(symbol.declaration.parent);
+        //     if (parentType === ERROR_TYPE) return ERROR_TYPE;
+        //     if (parentType.kind === TypeKind.Enum) return BOOL_TYPE;
+        //     return ERROR_TYPE;
         } else if (
-            symbol.declaration.kind === parser.ASTKinds.TRUE ||
-            symbol.declaration.kind === parser.ASTKinds.FALSE
+            symbol.declaration.kind === ast.SyntaxKind.BooleanLiteral
         ) {
             return BOOL_TYPE;
-        } else if (symbol.declaration.kind === parser.ASTKinds.int) {
-            const definition = declaration as parser.int;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.IntDefinition) {
+            const definition = declaration as ast.IntDefinition;
             return { kind: TypeKind.IntegerRange, declaration: symbol.declaration, name: definition.name.text };
-        } else if (symbol.declaration.kind === parser.ASTKinds.on_parameter) {
-            const definition = symbol.declaration as parser.on_parameter;
-            const parentDeclaration = symbol.declaration.parent as parser.on_trigger;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.OnParameter) {
+            const definition = symbol.declaration as ast.OnParameter;
+            const parentDeclaration = symbol.declaration.parent as ast.OnTrigger;
             const parentSymbol = this.symbolOfNode(parentDeclaration);
             if (!parentSymbol) return ERROR_TYPE;
 
-            const triggerParams = parentDeclaration.parameters?.parameters
-                ? headTailToList(parentDeclaration.parameters.parameters)
-                : [];
+            const triggerParams = parentDeclaration.parameterList?.parameters ?? [];
             const paramIndex = triggerParams.indexOf(definition);
 
-            const event = parentSymbol.declaration as parser.event;
-            const formal = event.event_params ? headTailToList(event.event_params)[paramIndex] : undefined;
+            const event = parentSymbol.declaration as ast.Event;
+            const formal = event.parameters[paramIndex];
             if (!formal) return ERROR_TYPE;
 
             return this.typeOfNode(formal.type);
-        } else if (symbol.declaration.kind === parser.ASTKinds.asterisk_binding) {
+        } else if (isAsterisk(symbol.declaration)) {
             return { kind: TypeKind.PortCollection, declaration: symbol.declaration, name: "*" };
-        } else if (symbol.declaration.kind === parser.ASTKinds.$EOF) {
+        } else if (symbol.declaration.kind === ast.SyntaxKind.ParenthesizedExpression) {
+            const parenthesizedExpression = symbol.declaration as ast.ParenthesizedExpression;
+            return this.typeOfNode(parenthesizedExpression.expression);
+        } else if (symbol.declaration.kind === ast.SyntaxKind.ERROR) {
             return ERROR_TYPE;
         } else {
             throw `I don't know how to find type for a symbol of kind ${
-                parser.ASTKinds[symbol.declaration.kind]
+                ast.SyntaxKind[symbol.declaration.kind]
             } ${util.inspect(symbol.declaration)}`;
         }
     });
@@ -308,7 +316,7 @@ export class TypeChecker {
         const result = new Map<string, SemanticSymbol>();
 
         if (type.kind === TypeKind.Enum) {
-            for (const d of headTailToList((type.declaration as parser.enum_definition).fields)) {
+            for (const d of (type.declaration as ast.EnumDefinition).members) {
                 result.set(d.text, this.getOrCreateSymbol(d));
             }
             return result;
@@ -326,10 +334,10 @@ export class TypeChecker {
 
                 // Also add variables delcared in the behavior as members for 2.18 shared state
                 if (type.declaration.behavior) {
-                    for (const { statement } of type.declaration.behavior.block.statements) {
+                    for (const statement of type.declaration.behavior.statements) {
                         if (
-                            statement.kind === parser.ASTKinds.variable_definition ||
-                            statement.kind === parser.ASTKinds.enum_definition
+                            statement.kind === ast.SyntaxKind.VariableDefinition ||
+                            statement.kind === ast.SyntaxKind.EnumDefinition
                         ) {
                             const symbol = this.symbolOfNode(statement);
                             if (symbol) result.set(statement.name.text, symbol);
@@ -339,7 +347,7 @@ export class TypeChecker {
             }
         } else {
             throw `I don't know how to find members for a type of kind ${
-                type.declaration && parser.ASTKinds[type.declaration.kind]
+                type.declaration && ast.SyntaxKind[type.declaration.kind]
             } ${util.inspect(type)}`;
         }
 
@@ -359,24 +367,24 @@ export class TypeChecker {
     private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ASTNode> => {
         const result = new Map<string, ASTNode>();
 
-        if (scope.kind === parser.ASTKinds.system) {
-            for (const { instance_or_binding } of scope.instances_and_bindings) {
-                if (instance_or_binding.kind === parser.ASTKinds.instance) {
+        if (scope.kind === ast.SyntaxKind.System) {
+            for (const instance_or_binding of scope.instancesAndBindings) {
+                if (instance_or_binding.kind === ast.SyntaxKind.Instance) {
                     result.set(instance_or_binding.name.text, instance_or_binding);
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.namespace) {
-            for (const { statement } of scope.root.statements) {
+        } else if (scope.kind === ast.SyntaxKind.Namespace) {
+            for (const statement of scope.statements) {
                 if (
-                    statement.kind === parser.ASTKinds.enum_definition ||
-                    statement.kind === parser.ASTKinds.component ||
-                    statement.kind === parser.ASTKinds.interface_definition ||
-                    statement.kind === parser.ASTKinds.extern_definition ||
-                    statement.kind === parser.ASTKinds.int ||
-                    statement.kind === parser.ASTKinds.function_definition
+                    statement.kind === ast.SyntaxKind.EnumDefinition ||
+                    statement.kind === ast.SyntaxKind.ComponentDefinition ||
+                    statement.kind === ast.SyntaxKind.InterfaceDefinition ||
+                    statement.kind === ast.SyntaxKind.ExternDeclaration ||
+                    statement.kind === ast.SyntaxKind.IntDefinition ||
+                    statement.kind === ast.SyntaxKind.FunctionDefinition
                 ) {
                     result.set(statement.name.text, statement);
-                } else if (statement.kind === parser.ASTKinds.namespace) {
+                } else if (statement.kind === ast.SyntaxKind.Namespace) {
                     const name = nameToString(statement.name);
                     const currentValue = result.get(name);
                     if (currentValue !== undefined && isNamespace(currentValue)) {
@@ -386,51 +394,49 @@ export class TypeChecker {
                     }
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.interface_definition) {
-            for (const { type_or_event } of scope.body) {
+        } else if (scope.kind === ast.SyntaxKind.InterfaceDefinition) {
+            for (const type_or_event of scope.body) {
                 const name =
-                    type_or_event.kind === parser.ASTKinds.event ? type_or_event.event_name : type_or_event.name;
+                    type_or_event.kind === ast.SyntaxKind.Event ? type_or_event.eventName : type_or_event.name;
                 result.set(nameToString(name), type_or_event);
             }
-        } else if (scope.kind === parser.ASTKinds.component) {
-            for (const { port } of scope.ports) {
+        } else if (scope.kind === ast.SyntaxKind.ComponentDefinition) {
+            for (const port of scope.ports) {
                 result.set(port.name.text, port);
             }
-        } else if (scope.kind === parser.ASTKinds.behavior) {
-            for (const { statement } of scope.block.statements) {
+        } else if (scope.kind === ast.SyntaxKind.Behavior) {
+            for (const statement of scope.statements) {
                 if (
-                    statement.kind === parser.ASTKinds.enum_definition ||
-                    statement.kind === parser.ASTKinds.function_definition ||
-                    statement.kind === parser.ASTKinds.variable_definition ||
-                    statement.kind === parser.ASTKinds.int
+                    statement.kind === ast.SyntaxKind.EnumDefinition ||
+                    statement.kind === ast.SyntaxKind.FunctionDefinition ||
+                    statement.kind === ast.SyntaxKind.VariableDefinition ||
+                    statement.kind === ast.SyntaxKind.IntDefinition
                 ) {
                     result.set(statement.name.text, statement);
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.compound) {
-            for (const { statement } of scope.statements) {
-                if (statement.kind === parser.ASTKinds.variable_definition) {
+        } else if (scope.kind === ast.SyntaxKind.Compound) {
+            for (const statement of scope.statements) {
+                if (statement.kind === ast.SyntaxKind.VariableDefinition) {
                     result.set(statement.name.text, statement);
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.function_definition) {
-            if (scope.parameters.parameters) {
-                for (const parameter of headTailToList(scope.parameters.parameters)) {
+        } else if (scope.kind === ast.SyntaxKind.FunctionDefinition) {
+                for (const parameter of scope.parameters) {
                     result.set(parameter.name.text, parameter);
                 }
-            }
-        } else if (scope.kind === parser.ASTKinds.file) {
-            for (const { statement } of scope.statements) {
+        } else if (scope.kind === ast.SyntaxKind.File) {
+            for (const statement of scope.statements) {
                 if (
-                    statement.kind === parser.ASTKinds.enum_definition ||
-                    statement.kind === parser.ASTKinds.component ||
-                    statement.kind === parser.ASTKinds.interface_definition ||
-                    statement.kind === parser.ASTKinds.extern_definition ||
-                    statement.kind === parser.ASTKinds.int ||
-                    statement.kind === parser.ASTKinds.function_definition
+                    statement.kind === ast.SyntaxKind.EnumDefinition ||
+                    statement.kind === ast.SyntaxKind.ComponentDefinition ||
+                    statement.kind === ast.SyntaxKind.InterfaceDefinition ||
+                    statement.kind === ast.SyntaxKind.ExternDeclaration ||
+                    statement.kind === ast.SyntaxKind.IntDefinition ||
+                    statement.kind === ast.SyntaxKind.FunctionDefinition
                 ) {
                     result.set(statement.name.text, statement);
-                } else if (statement.kind === parser.ASTKinds.namespace) {
+                } else if (statement.kind === ast.SyntaxKind.Namespace) {
                     const name = nameToString(statement.name);
                     const currentValue = result.get(name);
                     if (currentValue !== undefined && isNamespace(currentValue)) {
@@ -438,15 +444,15 @@ export class TypeChecker {
                     } else {
                         result.set(name, statement);
                     }
-                } else if (statement.kind === parser.ASTKinds.import_statement) {
+                } else if (statement.kind === ast.SyntaxKind.ImportStatement) {
                     const currentFile = this.program.getFilePath(scope);
                     if (!currentFile) continue;
                     const resolvedFile = this.program.host.resolveImport(
-                        statement.file_name,
+                        statement.fileName,
                         currentFile,
                         this.program
                     );
-                    const sourceFile = this.program.getSourceFile(resolvedFile ?? statement.file_name);
+                    const sourceFile = this.program.getSourceFile(resolvedFile ?? statement.fileName);
                     if (!sourceFile?.ast) continue;
 
                     for (const [name, node] of this.findVariablesDeclaredInScope(sourceFile.ast)) {
@@ -463,32 +469,28 @@ export class TypeChecker {
                     }
                 }
             }
-        } else if (scope.kind === parser.ASTKinds.on_body) {
-            const on = scope.parent as parser.on;
-            for (const trigger of headTailToList(on.on_trigger_list)) {
-                if (trigger.parameters?.parameters) {
-                    for (const parameter of headTailToList(trigger.parameters.parameters)) {
+        } else if (scope.kind === ast.SyntaxKind.OnStatement) {
+            const on = scope as ast.OnStatement;
+            for (const trigger of on.triggers) {
+                if (trigger.parameterList?.parameters) {
+                    for (const parameter of trigger.parameterList.parameters) {
                         result.set(parameter.name.text, parameter);
                     }
                 }
             }
         } else {
-            throw `I don't know how to find variables in scope of type ${parser.ASTKinds[scope.kind]} ${util.inspect(
-                scope
-            )}`;
+            assertNever(scope, "Should be able to handle all possible kinds");
         }
 
         return result;
     });
 
-    private mergeNamespaces(ns1: parser.namespace, ns2: parser.namespace): parser.namespace {
+    private mergeNamespaces(ns1: ast.Namespace, ns2: ast.Namespace): ast.Namespace {
         return {
-            kind: parser.ASTKinds.namespace,
+            kind: ast.SyntaxKind.Namespace,
             name: ns1.name,
-            root: {
-                kind: parser.ASTKinds.namespace_root,
-                statements: [...ns1.root.statements, ...ns2.root.statements],
-            },
+            statements: [...ns1.statements, ...ns2.statements],
+            position: ns1.position
         };
     }
 }
