@@ -14,7 +14,11 @@ export const no_shadowing: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_shadowing", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        const createDiagnostics = (newVariable: ast.Identifier, originalDefinition: ast.Identifier, source: InputSource) => [
+        const createDiagnostics = (
+            newVariable: ast.Identifier,
+            originalDefinition: ast.Identifier,
+            source: InputSource
+        ) => [
             // Create error diagnostic at re-definition node
             shadowingVariablesNotAllowed(
                 config.severity,

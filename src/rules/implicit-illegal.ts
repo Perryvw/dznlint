@@ -14,10 +14,7 @@ export const implicit_illegal: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
-            if (
-                node.body.kind === ast.SyntaxKind.ExpressionStatement &&
-                isIllegalKeyword(node.body.expression)
-            ) {
+            if (node.body.kind === ast.SyntaxKind.ExpressionStatement && isIllegalKeyword(node.body.expression)) {
                 return [
                     implicitIllegal(
                         config.severity,

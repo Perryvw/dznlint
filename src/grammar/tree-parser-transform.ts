@@ -2,7 +2,7 @@ import { assertNever } from "../util";
 import * as ast from "./ast";
 import * as parser from "./tree-sitter-types";
 
-type ChildTypes<T> = T extends { children: Array<infer S> } ? S : never; 
+type ChildTypes<T> = T extends { children: Array<infer S> } ? S : never;
 
 function transformStatement(node: ChildTypes<parser.root_Node>): ast.Statement {
     switch (node.type) {
@@ -31,17 +31,16 @@ function transformComponent(component: parser.component_Node): ast.ComponentDefi
     return {
         kind: ast.SyntaxKind.ComponentDefinition,
         position: nodePosition(component),
-    }
+    };
 }
 
 function transformName(node: parser.name_Node): ast.Identifier {
     return {
         kind: ast.SyntaxKind.Identifier,
         position: nodePosition(node),
-        text: node.text
+        text: node.text,
     };
 }
-
 
 function nodePosition(node: parser.AllNodes): ast.SourceRange {
     return {
@@ -54,6 +53,6 @@ function nodePosition(node: parser.AllNodes): ast.SourceRange {
             index: node.endIndex,
             line: node.endPosition.row,
             column: node.endPosition.column,
-        }
-    }
+        },
+    };
 }

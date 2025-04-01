@@ -46,9 +46,7 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
                                 config.severity,
                                 errorMessage,
                                 context.source,
-                                trigger.parameterList
-                                    ? trigger.parameterList.position
-                                    : trigger.name.position
+                                trigger.parameterList ? trigger.parameterList.position : trigger.name.position
                             )
                         );
                     }

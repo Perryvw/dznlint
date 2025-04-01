@@ -15,7 +15,8 @@ export const no_recursive_system: RuleFactory = factoryContext => {
         factoryContext.registerRule<ast.System>(ast.SyntaxKind.System, (node, context) => {
             const diagnostics = [];
 
-            const component = context.scopeStack.find(s => s.root.kind === ast.SyntaxKind.ComponentDefinition)!.root as ast.ComponentDefinition;
+            const component = context.scopeStack.find(s => s.root.kind === ast.SyntaxKind.ComponentDefinition)!
+                .root as ast.ComponentDefinition;
             const componentName = component.name.text;
 
             // Check if the type of any of the instances of the system is the same system

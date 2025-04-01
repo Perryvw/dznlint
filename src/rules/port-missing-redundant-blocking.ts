@@ -20,9 +20,7 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
 
             const diagnostics: Diagnostic[] = [];
 
-            const hasBlockingRequiresPorts = node.ports.some(
-                p => p.direction.text === "requires" && isPortBlocking(p)
-            );
+            const hasBlockingRequiresPorts = node.ports.some(p => p.direction.text === "requires" && isPortBlocking(p));
 
             // If requires ports are present, all provided ports should be blocking
             if (hasBlockingRequiresPorts) {
@@ -55,7 +53,11 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
                     if (subNode.blocking || isBlockingCompound(subNode.body)) {
                         // Mark all ports as needing blocking
                         for (const trigger of subNode.triggers) {
-                            if (!isIdentifier(trigger.name) && trigger.name.compound && isIdentifier(trigger.name.compound)) {
+                            if (
+                                !isIdentifier(trigger.name) &&
+                                trigger.name.compound &&
+                                isIdentifier(trigger.name.compound)
+                            ) {
                                 ports.get(trigger.name.compound.text)?.blockingOns.push(trigger.name);
                             }
                         }

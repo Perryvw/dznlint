@@ -6,7 +6,15 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { SemanticSymbol } from "../semantics/type-checker";
-import { isAsterisk, isIdentifier, isInjected, isPort, nodeToSourceRange, systemBindings, systemInstances } from "../util";
+import {
+    isAsterisk,
+    isIdentifier,
+    isInjected,
+    isPort,
+    nodeToSourceRange,
+    systemBindings,
+    systemInstances,
+} from "../util";
 
 export const unconnectedPort = createDiagnosticsFactory();
 

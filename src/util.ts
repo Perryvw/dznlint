@@ -20,8 +20,8 @@ export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
 export function fromToSourceRange(from: ast.SourceRange, to: ast.SourceRange): ast.SourceRange {
     return {
         from: from.from,
-        to: to.to
-    }
+        to: to.to,
+    };
 }
 
 export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
@@ -68,7 +68,10 @@ export function isAsterisk(node: ast.AnyAstNode): node is ast.Keyword<"*"> {
 }
 
 export function isIllegalKeyword(node: ast.AnyAstNode): node is ast.Keyword<"illegal"> {
-    return (isKeyword(node) && node.text === "illegal") || (isExpressionStatement(node) && isIllegalKeyword(node.expression));
+    return (
+        (isKeyword(node) && node.text === "illegal") ||
+        (isExpressionStatement(node) && isIllegalKeyword(node.expression))
+    );
 }
 
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
@@ -139,13 +142,11 @@ export function isOnStatement(node: ast.AnyAstNode): node is ast.OnStatement {
 }
 
 export function systemInstances(system: ast.System): ast.Instance[] {
-    return system.instancesAndBindings
-        .filter(e => e.kind === ast.SyntaxKind.Instance);
+    return system.instancesAndBindings.filter(e => e.kind === ast.SyntaxKind.Instance);
 }
 
 export function systemBindings(system: ast.System): ast.Binding[] {
-    return system.instancesAndBindings
-        .filter(e => e.kind === ast.SyntaxKind.Binding);
+    return system.instancesAndBindings.filter(e => e.kind === ast.SyntaxKind.Binding);
 }
 
 export function findFirstParent<T extends ast.AnyAstNode>(

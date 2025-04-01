@@ -11,12 +11,7 @@ export const naming_convention: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         const convention = config.config;
-        const fail = (
-            identifier: ast.Identifier,
-            type: string,
-            convention: string,
-            source: InputSource
-        ) =>
+        const fail = (identifier: ast.Identifier, type: string, convention: string, source: InputSource) =>
             nameDoesNotMatchConvention(
                 config.severity,
                 `${type} ${identifier.text} does not match naming convention: ${convention}.`,

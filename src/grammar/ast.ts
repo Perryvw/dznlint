@@ -51,7 +51,7 @@ export enum SyntaxKind {
     OnTriggerParameters,
     TypeReference,
 
-    ERROR
+    ERROR,
 }
 
 // TODO: Duplicate definition with diagnostic.ts, unify
@@ -80,8 +80,15 @@ export interface File extends AstNode<SyntaxKind.File> {
     statements: RootStatement[];
 }
 
-export type RootStatement = Namespace | ExternDeclaration | TypeDefinition | ImportStatement
-    | InterfaceDefinition | ComponentDefinition | FunctionDefinition | Statement;
+export type RootStatement =
+    | Namespace
+    | ExternDeclaration
+    | TypeDefinition
+    | ImportStatement
+    | InterfaceDefinition
+    | ComponentDefinition
+    | FunctionDefinition
+    | Statement;
 
 export type Statement = DeclarativeStatement | ImperativeStatement;
 
@@ -114,8 +121,7 @@ export interface IntDefinition extends AstNode<SyntaxKind.IntDefinition> {
     to: number;
 }
 
-type NamespaceStatement = TypeDefinition | Namespace | InterfaceDefinition | ComponentDefinition
-    | FunctionDefinition;
+type NamespaceStatement = TypeDefinition | Namespace | InterfaceDefinition | ComponentDefinition | FunctionDefinition;
 
 export interface Namespace extends AstNode<SyntaxKind.Namespace> {
     name: Name;
@@ -175,7 +181,13 @@ export interface Port extends AstNode<SyntaxKind.Port> {
     name: Identifier;
 }
 
-type BehaviorStatement = Port | FunctionDefinition | InvariantStatement | VariableDefinition | DeclarativeStatement | TypeDefinition;
+type BehaviorStatement =
+    | Port
+    | FunctionDefinition
+    | InvariantStatement
+    | VariableDefinition
+    | DeclarativeStatement
+    | TypeDefinition;
 
 export interface Behavior extends AstNode<SyntaxKind.Behavior> {
     name?: Identifier;
@@ -233,10 +245,16 @@ export interface InvariantStatement extends AstNode<SyntaxKind.InvariantStatemen
 
 // Statements
 
-export type ImperativeStatement = IfStatement | ReturnStatement | VariableDefinition 
-    | AssignmentStatement | DeferStatement | ExpressionStatement | Compound;
+export type ImperativeStatement =
+    | IfStatement
+    | ReturnStatement
+    | VariableDefinition
+    | AssignmentStatement
+    | DeferStatement
+    | ExpressionStatement
+    | Compound;
 
-export interface AssignmentStatement extends AstNode<SyntaxKind.AssignmentStatement>{
+export interface AssignmentStatement extends AstNode<SyntaxKind.AssignmentStatement> {
     left: Identifier;
     right: Expression;
 }
@@ -273,11 +291,29 @@ export interface VariableDefinition extends AstNode<SyntaxKind.VariableDefinitio
 // Expressions
 
 export type Expression = UnaryExpression | BinaryExpression;
-export type UnaryExpression = ParenthesizedExpression | CallExpression | DollarsLiteral 
-    | Name | BooleanLiteral | NumericLiteral | UnaryOperatorExpression | Keyword<"illegal"> | Keyword<"otherwise">;
+export type UnaryExpression =
+    | ParenthesizedExpression
+    | CallExpression
+    | DollarsLiteral
+    | Name
+    | BooleanLiteral
+    | NumericLiteral
+    | UnaryOperatorExpression
+    | Keyword<"illegal">
+    | Keyword<"otherwise">;
 
-type BinaryOperator = Keyword<"&&"> | Keyword<"||"> | Keyword<"=="> | Keyword<"!="> | Keyword<"<=">
-    | Keyword<"<"> | Keyword<">="> | Keyword<">"> | Keyword<"+"> | Keyword<"-"> | Keyword<"=>">;
+type BinaryOperator =
+    | Keyword<"&&">
+    | Keyword<"||">
+    | Keyword<"==">
+    | Keyword<"!=">
+    | Keyword<"<=">
+    | Keyword<"<">
+    | Keyword<">=">
+    | Keyword<">">
+    | Keyword<"+">
+    | Keyword<"-">
+    | Keyword<"=>">;
 
 export interface BinaryExpression extends AstNode<SyntaxKind.BinaryExpression> {
     left: UnaryExpression;
@@ -332,4 +368,4 @@ export type Name = Identifier | CompoundName;
 
 export interface TypeReference extends AstNode<SyntaxKind.TypeReference> {
     typeName: Name;
-} 
+}

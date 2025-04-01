@@ -12,7 +12,11 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_duplicate_parameters", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        const createDiagnostics = (newVariable: ast.Identifier, originalDefinition: ast.Identifier, source: InputSource) => [
+        const createDiagnostics = (
+            newVariable: ast.Identifier,
+            originalDefinition: ast.Identifier,
+            source: InputSource
+        ) => [
             // Create error diagnostic at re-definition node
             duplicateParameter(
                 config.severity,
@@ -36,9 +40,7 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
 
             for (const param of node.parameters) {
                 if (seenNames.has(param.name.text)) {
-                    diagnostics.push(
-                        ...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source)
-                    );
+                    diagnostics.push(...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source));
                 }
 
                 seenNames.set(param.name.text, param.name);

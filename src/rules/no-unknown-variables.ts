@@ -117,65 +117,51 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return diagnostics;
         });
 
-        factoryContext.registerRule<ast.FunctionDefinition>(
-            ast.SyntaxKind.FunctionDefinition,
-            (node, context) => {
-                const diagnostics = [];
+        factoryContext.registerRule<ast.FunctionDefinition>(ast.SyntaxKind.FunctionDefinition, (node, context) => {
+            const diagnostics = [];
 
-                if (context.typeChecker.symbolOfNode(node.returnType) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.returnType.typeName, "type", context));
-                }
-
-                for (const parameter of node.parameters) {
-                    if (context.typeChecker.symbolOfNode(parameter.type) === undefined) {
-                        diagnostics.push(
-                            createUnknownCompoundNameDiagnostic(parameter.type.typeName, "type", context)
-                        );
-                    }
-                }
-                return diagnostics;
+            if (context.typeChecker.symbolOfNode(node.returnType) === undefined) {
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.returnType.typeName, "type", context));
             }
-        );
 
-        factoryContext.registerRule<ast.CallExpression>(
-            ast.SyntaxKind.CallExpression,
-            (node, context) => {
-                const diagnostics = [];
-
-                if (context.typeChecker.symbolOfNode(node.expression) === undefined) {
-                    diagnostics.push(...checkExpressionNames(node.expression, "function", context));
+            for (const parameter of node.parameters) {
+                if (context.typeChecker.symbolOfNode(parameter.type) === undefined) {
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(parameter.type.typeName, "type", context));
                 }
-
-                for (const argument of node.arguments.arguments) {
-                    diagnostics.push(...checkExpressionNames(argument, "variable", context));
-                }
-                return diagnostics;
             }
-        );
+            return diagnostics;
+        });
 
-        factoryContext.registerRule<ast.VariableDefinition>(
-            ast.SyntaxKind.VariableDefinition,
-            (node, context) => {
-                const diagnostics = [];
+        factoryContext.registerRule<ast.CallExpression>(ast.SyntaxKind.CallExpression, (node, context) => {
+            const diagnostics = [];
 
-                if (context.typeChecker.symbolOfNode(node.type) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.typeName, "type", context));
-                }
-
-                if (node.initializer) {
-                    diagnostics.push(...checkExpressionNames(node.initializer, "variable", context));
-                }
-
-                return diagnostics;
+            if (context.typeChecker.symbolOfNode(node.expression) === undefined) {
+                diagnostics.push(...checkExpressionNames(node.expression, "function", context));
             }
-        );
 
-        factoryContext.registerRule<ast.ExpressionStatement>(
-            ast.SyntaxKind.ExpressionStatement,
-            (node, context) => {
-                return checkExpressionNames(node.expression, "name", context);
+            for (const argument of node.arguments.arguments) {
+                diagnostics.push(...checkExpressionNames(argument, "variable", context));
             }
-        );
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<ast.VariableDefinition>(ast.SyntaxKind.VariableDefinition, (node, context) => {
+            const diagnostics = [];
+
+            if (context.typeChecker.symbolOfNode(node.type) === undefined) {
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.typeName, "type", context));
+            }
+
+            if (node.initializer) {
+                diagnostics.push(...checkExpressionNames(node.initializer, "variable", context));
+            }
+
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<ast.ExpressionStatement>(ast.SyntaxKind.ExpressionStatement, (node, context) => {
+            return checkExpressionNames(node.expression, "name", context);
+        });
 
         factoryContext.registerRule<ast.ComponentDefinition>(ast.SyntaxKind.ComponentDefinition, (node, context) => {
             const diagnostics = [];
@@ -196,39 +182,27 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return node.condition ? checkExpressionNames(node.condition, "variable", context) : [];
         });
 
-        factoryContext.registerRule<ast.AssignmentStatement>(
-            ast.SyntaxKind.AssignmentStatement,
-            (node, context) => {
-                return [
-                    ...checkExpressionNames(node.left, "variable", context),
-                    ...checkExpressionNames(node.right, "variable", context),
-                ];
-            }
-        );
+        factoryContext.registerRule<ast.AssignmentStatement>(ast.SyntaxKind.AssignmentStatement, (node, context) => {
+            return [
+                ...checkExpressionNames(node.left, "variable", context),
+                ...checkExpressionNames(node.right, "variable", context),
+            ];
+        });
 
-        factoryContext.registerRule<ast.IfStatement>(
-            ast.SyntaxKind.IfStatement,
-            (node, context) => {
-                // Check condition
-                const diagnostics = checkExpressionNames(node.condition, "if condition", context);
-                // Body and else handled in the other rules
-                return diagnostics;
-            }
-        );
+        factoryContext.registerRule<ast.IfStatement>(ast.SyntaxKind.IfStatement, (node, context) => {
+            // Check condition
+            const diagnostics = checkExpressionNames(node.condition, "if condition", context);
+            // Body and else handled in the other rules
+            return diagnostics;
+        });
 
-        factoryContext.registerRule<ast.ReturnStatement>(
-            ast.SyntaxKind.ReturnStatement,
-            (node, context) => {
-                return node.returnValue ? checkExpressionNames(node.returnValue, "variable", context) : [];
-            }
-        );
+        factoryContext.registerRule<ast.ReturnStatement>(ast.SyntaxKind.ReturnStatement, (node, context) => {
+            return node.returnValue ? checkExpressionNames(node.returnValue, "variable", context) : [];
+        });
 
-        factoryContext.registerRule<ast.InvariantStatement>(
-            ast.SyntaxKind.InvariantStatement,
-            (node, context) => {
-                return checkExpressionNames(node.expression, "name", context);
-            }
-        );
+        factoryContext.registerRule<ast.InvariantStatement>(ast.SyntaxKind.InvariantStatement, (node, context) => {
+            return checkExpressionNames(node.expression, "name", context);
+        });
 
         const createUnknownCompoundNameDiagnostic = (
             compoundName: ast.CompoundName | ast.BindingExpression,
@@ -320,9 +294,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
         const stringifyTrigger = (trigger: ast.OnTrigger): string => {
             let params = "";
             if (trigger.parameterList) {
-                params = trigger.parameterList.parameters
-                    .map(p => p.name.text)
-                    .join(", ");
+                params = trigger.parameterList.parameters.map(p => p.name.text).join(", ");
             }
             return `${nameToString(trigger.name)}(${params})`;
         };

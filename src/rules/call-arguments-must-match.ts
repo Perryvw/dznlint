@@ -37,12 +37,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                                 .join(", ");
                     }
                     diagnostics.push(
-                        incorrectArgumentCount(
-                            config.severity,
-                            errorMessage,
-                            context.source,
-                            node.arguments.position
-                        )
+                        incorrectArgumentCount(config.severity, errorMessage, context.source, node.arguments.position)
                     );
                 }
             } else if (
@@ -64,12 +59,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                                 .join(", ");
                     }
                     diagnostics.push(
-                        incorrectArgumentCount(
-                            config.severity,
-                            errorMessage,
-                            context.source,
-                            node.arguments.position
-                        )
+                        incorrectArgumentCount(config.severity, errorMessage, context.source, node.arguments.position)
                     );
                 }
             }

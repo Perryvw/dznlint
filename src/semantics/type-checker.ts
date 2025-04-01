@@ -4,7 +4,6 @@ import * as ast from "../grammar/ast";
 import { ASTNode } from "../linting-rule";
 import {
     findFirstParent,
-    headTailToList,
     isCompoundBindingExpression,
     isCompoundName,
     isScopedBlock as isScopedBlock,
@@ -16,7 +15,6 @@ import {
     isInterfaceDefinition,
     isCallExpression,
     isAsterisk,
-    isKeyword,
     assertNever,
 } from "../util";
 import { memoize } from "./memoize";
@@ -34,9 +32,9 @@ export class SemanticSymbol {
 }
 
 const EMPTY_POSITION: ast.SourceRange = {
-    from: {index: 0, column:0, line:1},
-    to: {index: 0, column:0, line:1 }
-}
+    from: { index: 0, column: 0, line: 1 },
+    to: { index: 0, column: 0, line: 1 },
+};
 
 export enum TypeKind {
     Invalid,
@@ -79,10 +77,7 @@ export class TypeChecker {
     public constructor(private program: Program) {}
 
     public typeOfNode(node: ASTNode, typeReference = false): Type {
-        if (
-            node.kind === ast.SyntaxKind.BinaryExpression ||
-            node.kind === ast.SyntaxKind.UnaryOperatorExpression
-        ) {
+        if (node.kind === ast.SyntaxKind.BinaryExpression || node.kind === ast.SyntaxKind.UnaryOperatorExpression) {
             // Okay so this is definitely not true, but then again, we don't have to worry about everything else for now
             return BOOL_TYPE;
         } else if (isCallExpression(node)) {
@@ -269,15 +264,13 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === ast.SyntaxKind.FunctionDefinition) {
             const definition = declaration as ast.FunctionDefinition;
             return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
-        // } else if (symbol.declaration.kind === ast.SyntaxKind.member_identifier) {
-        //     if (!symbol.declaration.parent) return ERROR_TYPE;
-        //     const parentType = this.typeOfNode(symbol.declaration.parent);
-        //     if (parentType === ERROR_TYPE) return ERROR_TYPE;
-        //     if (parentType.kind === TypeKind.Enum) return BOOL_TYPE;
-        //     return ERROR_TYPE;
-        } else if (
-            symbol.declaration.kind === ast.SyntaxKind.BooleanLiteral
-        ) {
+            // } else if (symbol.declaration.kind === ast.SyntaxKind.member_identifier) {
+            //     if (!symbol.declaration.parent) return ERROR_TYPE;
+            //     const parentType = this.typeOfNode(symbol.declaration.parent);
+            //     if (parentType === ERROR_TYPE) return ERROR_TYPE;
+            //     if (parentType.kind === TypeKind.Enum) return BOOL_TYPE;
+            //     return ERROR_TYPE;
+        } else if (symbol.declaration.kind === ast.SyntaxKind.BooleanLiteral) {
             return BOOL_TYPE;
         } else if (symbol.declaration.kind === ast.SyntaxKind.IntDefinition) {
             const definition = declaration as ast.IntDefinition;
@@ -396,8 +389,7 @@ export class TypeChecker {
             }
         } else if (scope.kind === ast.SyntaxKind.InterfaceDefinition) {
             for (const type_or_event of scope.body) {
-                const name =
-                    type_or_event.kind === ast.SyntaxKind.Event ? type_or_event.eventName : type_or_event.name;
+                const name = type_or_event.kind === ast.SyntaxKind.Event ? type_or_event.eventName : type_or_event.name;
                 result.set(nameToString(name), type_or_event);
             }
         } else if (scope.kind === ast.SyntaxKind.ComponentDefinition) {
@@ -422,9 +414,9 @@ export class TypeChecker {
                 }
             }
         } else if (scope.kind === ast.SyntaxKind.FunctionDefinition) {
-                for (const parameter of scope.parameters) {
-                    result.set(parameter.name.text, parameter);
-                }
+            for (const parameter of scope.parameters) {
+                result.set(parameter.name.text, parameter);
+            }
         } else if (scope.kind === ast.SyntaxKind.File) {
             for (const statement of scope.statements) {
                 if (
@@ -447,11 +439,7 @@ export class TypeChecker {
                 } else if (statement.kind === ast.SyntaxKind.ImportStatement) {
                     const currentFile = this.program.getFilePath(scope);
                     if (!currentFile) continue;
-                    const resolvedFile = this.program.host.resolveImport(
-                        statement.fileName,
-                        currentFile,
-                        this.program
-                    );
+                    const resolvedFile = this.program.host.resolveImport(statement.fileName, currentFile, this.program);
                     const sourceFile = this.program.getSourceFile(resolvedFile ?? statement.fileName);
                     if (!sourceFile?.ast) continue;
 
@@ -490,7 +478,7 @@ export class TypeChecker {
             kind: ast.SyntaxKind.Namespace,
             name: ns1.name,
             statements: [...ns1.statements, ...ns2.statements],
-            position: ns1.position
+            position: ns1.position,
         };
     }
 }

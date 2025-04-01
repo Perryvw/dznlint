@@ -15,7 +15,6 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         factoryContext.registerRule<ast.FunctionDefinition>(ast.SyntaxKind.FunctionDefinition, (node, context) => {
-
             const parameterIdentifiers = node.parameters.map(p => p.name);
             return findUnusedParameters(parameterIdentifiers, node.body, context, config.severity);
         });
