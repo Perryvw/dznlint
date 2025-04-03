@@ -1,4 +1,4 @@
-import * as parser from "./grammar/parser";
+import * as ast from "./grammar/ast";
 
 import { createDiagnosticsFactory, DiagnosticSeverity } from "./diagnostic";
 import { Diagnostic } from "./diagnostic";
@@ -6,7 +6,7 @@ import { InputSource } from "./semantics/program";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
-export function parseDznSource(source: InputSource): { ast?: parser.file; diagnostics: Diagnostic[] } {
+export function parseDznSource(source: InputSource): { ast?: ast.File; diagnostics: Diagnostic[] } {
     const p = new parser.Parser(source.fileContent);
     const { ast, errs } = p.parse();
 

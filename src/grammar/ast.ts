@@ -121,7 +121,12 @@ export interface IntDefinition extends AstNode<SyntaxKind.IntDefinition> {
     to: number;
 }
 
-type NamespaceStatement = TypeDefinition | Namespace | InterfaceDefinition | ComponentDefinition | FunctionDefinition;
+export type NamespaceStatement =
+    | TypeDefinition
+    | Namespace
+    | InterfaceDefinition
+    | ComponentDefinition
+    | FunctionDefinition;
 
 export interface Namespace extends AstNode<SyntaxKind.Namespace> {
     name: Name;
@@ -150,7 +155,7 @@ export interface Event extends AstNode<SyntaxKind.Event> {
 export interface ComponentDefinition extends AstNode<SyntaxKind.ComponentDefinition> {
     name: Identifier;
     ports: Port[];
-    body: Behavior | System;
+    body?: Behavior | System;
 }
 
 export interface System extends AstNode<SyntaxKind.System> {
@@ -181,7 +186,7 @@ export interface Port extends AstNode<SyntaxKind.Port> {
     name: Identifier;
 }
 
-type BehaviorStatement =
+export type BehaviorStatement =
     | Port
     | FunctionDefinition
     | InvariantStatement
@@ -234,12 +239,11 @@ export interface OnStatement extends AstNode<SyntaxKind.OnStatement> {
 
 export interface GuardStatement extends AstNode<SyntaxKind.GuardStatement> {
     blocking?: Keyword<"blocking">;
-    condition?: Keyword<"otherwise"> | Expression;
+    condition: Keyword<"otherwise"> | Expression;
     statement: Statement;
 }
 
 export interface InvariantStatement extends AstNode<SyntaxKind.InvariantStatement> {
-    invariant: Keyword<"invariant">;
     expression: Expression;
 }
 
