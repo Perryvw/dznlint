@@ -18,7 +18,10 @@ test("has default severity unless specified otherwise", async () => {
 });
 
 test.each(["error", "warning", "hint"])("diagnostic severity can be configured (%p)", async severity => {
-    const diagnostics = await lintString(codeWithDiagnostic, { ...config, parameter_direction: severity as ConfigSeverity });
+    const diagnostics = await lintString(codeWithDiagnostic, {
+        ...config,
+        parameter_direction: severity as ConfigSeverity,
+    });
     expect(diagnostics).toHaveLength(1);
     expect(DiagnosticSeverity[diagnostics[0].severity].toLowerCase()).toEqual(severity);
 });
