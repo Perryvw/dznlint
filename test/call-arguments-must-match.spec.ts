@@ -1,8 +1,8 @@
 import { incorrectArgumentCount } from "../src/rules/call-arguments-must-match";
 import { testdznlint } from "./util";
 
-test("function call argument count must match function parameters", () => {
-    testdznlint({
+test("function call argument count must match function parameters", async () => {
+    await testdznlint({
         diagnostic: incorrectArgumentCount.code,
         pass: `
             extern ExtType $$;
@@ -29,8 +29,8 @@ test("function call argument count must match function parameters", () => {
     });
 });
 
-test("too many arguments is also an error", () => {
-    testdznlint({
+test("too many arguments is also an error", async () => {
+    await testdznlint({
         diagnostic: incorrectArgumentCount.code,
         fail: `
             component C {
@@ -45,8 +45,8 @@ test("too many arguments is also an error", () => {
     });
 });
 
-test("function call argument count must match when calling an event", () => {
-    testdznlint({
+test("function call argument count must match when calling an event", async () => {
+    await testdznlint({
         diagnostic: incorrectArgumentCount.code,
         pass: `
             extern ExtType $$;

@@ -2,17 +2,23 @@ import { assertNever } from "../util";
 import * as ast from "./ast";
 import * as parser from "./tree-sitter-types";
 
-type ChildTypes<T> = T extends { children: Array<infer S> } ? S : never;
+type ElementOfArray<T extends unknown[]> = T extends Array<infer S> ? S : never;
+type ChildrenTypes<
+    T extends { childrenForFieldName: (kind: any) => unknown },
+    name extends string,
+> = T["childrenForFieldName"] extends { (kind: name): infer R } ? (R extends Array<infer S> ? S : never) : never;
 
 export function transformRoot(root: parser.root_Node): ast.File {
     return {
         kind: ast.SyntaxKind.File,
         position: nodePosition(root),
-        statements: root.children.map(transformRootStatement) as ast.Statement[],
+        statements: root.namedChildren
+            .filter(c => c.type !== "comment" && c.type !== "ERROR")
+            .map(transformRootStatement) as ast.Statement[],
     };
 }
 
-function transformRootStatement(node: ChildTypes<parser.root_Node>): ast.RootStatement {
+function transformRootStatement(node: ElementOfArray<parser.root_Node["namedChildren"]>): ast.RootStatement {
     switch (node.type) {
         case "component":
             return transformComponent(node);
@@ -33,20 +39,19 @@ function transformRootStatement(node: ChildTypes<parser.root_Node>): ast.RootSta
         case "namespace":
             return transformNamespace(node);
         default:
-            throw assertNever(node, "transform should handle all options");
+            throw assertNever(node, "unknown root statement kind");
     }
 }
 
 function transformComponent(component: parser.component_Node): ast.ComponentDefinition {
     const body = component.childForFieldName("body");
-    const transformedBody = body && transformComponentBody(body.child(0));
 
     return {
         kind: ast.SyntaxKind.ComponentDefinition,
         position: nodePosition(component),
-        name: transformName(component.childForFieldName("name")),
+        name: transformIdentifier(component.childForFieldName("name")),
         ports: component.childrenForFieldName("port")!.map(transformPort),
-        body: transformedBody,
+        body: body && transformComponentBody(body.firstNamedChild),
     };
 }
 
@@ -55,16 +60,48 @@ function transformComponentBody(node: parser.behavior_Node | parser.system_Node)
         return transformBehavior(node);
     } else {
         function transformBindingExpression(bindingExpression: parser.end_point_Node): ast.BindingExpression {
+            const name = bindingExpression.childForFieldName("name");
             const asterisk = bindingExpression.childForFieldName("asterisk");
-            if (asterisk) {
+
+            if (name) {
+                const compoundName = transformName(name);
+
+                function toBindingCompound(
+                    name: ast.Identifier | ast.CompoundName
+                ): ast.Identifier | ast.BindingCompoundName {
+                    if (name.kind === ast.SyntaxKind.Identifier) return name;
+
+                    return {
+                        kind: ast.SyntaxKind.BindingCompoundName,
+                        position: name.position,
+                        compound: toBindingCompound(name.compound!),
+                        name: name.name,
+                    };
+                }
+
+                if (asterisk) {
+                    return {
+                        kind: ast.SyntaxKind.BindingCompoundName,
+                        position: nodePosition(name),
+                        compound: toBindingCompound(compoundName),
+                        name: {
+                            kind: ast.SyntaxKind.Keyword,
+                            position: nodePosition(asterisk),
+                            text: "*",
+                        },
+                    };
+                } else {
+                    return toBindingCompound(compoundName);
+                }
+            } else if (asterisk) {
                 return {
                     kind: ast.SyntaxKind.Keyword,
                     position: nodePosition(asterisk),
                     text: "*",
                 };
+            } else {
+                throw "invalid binding expression";
             }
-
-            return;
         }
 
         function transformBinding(binding: parser.binding_Node): ast.Binding {
@@ -88,7 +125,9 @@ function transformComponentBody(node: parser.behavior_Node | parser.system_Node)
         return {
             kind: ast.SyntaxKind.System,
             position: nodePosition(node),
-            instancesAndBindings: node.childForFieldName("body").children.map(c => {
+            instancesAndBindings: (
+                node.childForFieldName("body").childrenForFieldName("instance_or_binding") ?? []
+            ).map(c => {
                 if (c.type === "binding") {
                     return transformBinding(c);
                 } else {
@@ -100,22 +139,43 @@ function transformComponentBody(node: parser.behavior_Node | parser.system_Node)
 }
 
 function transformPort(port: parser.port_Node): ast.Port {
+    function transformPortQualifier(qualifier: parser.port_qualifier_Node): ElementOfArray<ast.Port["qualifiers"]> {
+        switch (qualifier.text) {
+            case "blocking":
+            case "external":
+            case "injected":
+                return {
+                    kind: ast.SyntaxKind.Keyword,
+                    position: nodePosition(qualifier),
+                    text: qualifier.text,
+                };
+            default:
+                throw `unknown qualifier type '${qualifier.text}'`;
+        }
+    }
+
     return {
         kind: ast.SyntaxKind.Port,
         position: nodePosition(port),
         direction: transformDirection(port.childForFieldName("direction")),
-        qualifiers: port.childForFieldName("direction"),
+        qualifiers:
+            port.childForFieldName("qualifiers")?.childrenForFieldName("qualifier").map(transformPortQualifier) ?? [],
         type: transformTypeReference(port.childForFieldName("type")),
         name: transformIdentifier(port.childForFieldName("name")),
     };
 }
 
 function transformExtern(node: parser.extern_Node): ast.ExternDeclaration {
+    const value = node.childForFieldName("value");
     return {
         kind: ast.SyntaxKind.ExternDeclaration,
         position: nodePosition(node),
-        name: transformName(node.childForFieldName("name")),
-        value: transformDollars(node.childForFieldName("value")),
+        name: transformIdentifier(node.childForFieldName("name")),
+        value: {
+            kind: ast.SyntaxKind.DollarLiteral,
+            position: nodePosition(value),
+            text: value.text,
+        },
     };
 }
 
@@ -137,13 +197,37 @@ function transformImportStatement(node: parser.import_Node): ast.ImportStatement
 }
 
 function transformFunction(node: parser.function_Node): ast.FunctionDefinition {
+    function transformFunctionParameters(formals: parser.formals_Node): ast.FunctionParameter[] {
+        return (
+            formals.childrenForFieldName("formal")?.map(formal => {
+                const direction = formal.childForFieldName("direction");
+                return {
+                    kind: ast.SyntaxKind.FunctionParameter,
+                    position: nodePosition(formal),
+                    direction: direction && transformDirection<ast.ParameterDirection>(direction),
+                    type: transformTypeReference(formal.childForFieldName("type")),
+                    name: transformIdentifier(formal.childForFieldName("name")),
+                };
+            }) ?? []
+        );
+    }
+
+    const compound = node.childForFieldName("compound");
+    const expressionBody = node.childForFieldName("expression");
+
+    const body =
+        (compound && transformCompound(compound)) ??
+        (expressionBody && transformExpression(expressionBody.childForFieldName("expression")));
+
+    if (body === undefined) throw "unexpected missing body";
+
     return {
         kind: ast.SyntaxKind.FunctionDefinition,
         position: nodePosition(node),
         returnType: transformTypeReference(node.childForFieldName("return_type")),
         name: transformIdentifier(node.childForFieldName("name")),
-        parameters: undefined,
-        body: undefined,
+        parameters: transformFunctionParameters(node.childForFieldName("formals")),
+        body,
     };
 }
 
@@ -152,11 +236,13 @@ function transformNamespace(node: parser.namespace_Node): ast.Namespace {
         kind: ast.SyntaxKind.Namespace,
         position: nodePosition(node),
         name: transformName(node.childForFieldName("name")),
-        statements: node.children.map(transformNamespaceStatement),
+        statements: (node.childrenForFieldName("body_statement") ?? []).map(transformNamespaceStatement),
     };
 }
 
-function transformNamespaceStatement(node: ChildTypes<parser.namespace_Node>): ast.NamespaceStatement {
+type NamespaceStatements = ChildrenTypes<parser.namespace_Node, "body_statement">;
+
+function transformNamespaceStatement(node: NamespaceStatements): ast.NamespaceStatement {
     switch (node.type) {
         case "function":
             return transformFunction(node);
@@ -173,7 +259,7 @@ function transformNamespaceStatement(node: ChildTypes<parser.namespace_Node>): a
         case "namespace":
             return transformNamespace(node);
         default:
-            throw assertNever(node, "transform should handle all options");
+            throw assertNever(node, "unknown namespace statement kind");
     }
 }
 
@@ -181,7 +267,7 @@ function transformEnumDefinition(node: parser.enum_Node): ast.EnumDefinition {
     return {
         kind: ast.SyntaxKind.EnumDefinition,
         position: nodePosition(node),
-        name: transformName(node.childForFieldName("name")),
+        name: transformIdentifier(node.childForFieldName("name")),
         members: node
             .childForFieldName("fields")
             .childrenForFieldName("name")
@@ -199,7 +285,7 @@ function transformIntDefinition(node: parser.int_Node): ast.IntDefinition {
     return {
         kind: ast.SyntaxKind.IntDefinition,
         position: nodePosition(node),
-        name: transformName(node.childForFieldName("name")),
+        name: transformIdentifier(node.childForFieldName("name")),
         from: Number(node.childForFieldName("from").text),
         to: Number(node.childForFieldName("to").text),
     };
@@ -212,8 +298,8 @@ function transformInterfaceDefinition(node: parser.interface_Node): ast.Interfac
     return {
         kind: ast.SyntaxKind.InterfaceDefinition,
         position: nodePosition(node),
-        name: transformName(node.childForFieldName("name")),
-        body: body.children.map(c => {
+        name: transformIdentifier(node.childForFieldName("name")),
+        body: (body.childrenForFieldName("interface_statement") ?? []).map(c => {
             switch (c.type) {
                 case "enum":
                     return transformEnumDefinition(c);
@@ -224,7 +310,7 @@ function transformInterfaceDefinition(node: parser.interface_Node): ast.Interfac
                 case "int":
                     return transformIntDefinition(c);
                 default:
-                    throw assertNever(c, "transform should handle all options");
+                    throw assertNever(c, "unknown interface body member");
             }
         }),
         behavior: behavior && transformBehavior(behavior),
@@ -273,12 +359,14 @@ function transformBehavior(node: parser.behavior_Node): ast.Behavior {
     return {
         kind: ast.SyntaxKind.Behavior,
         position: nodePosition(node),
-        name: name && transformName(name),
-        statements: body.children.map(transformBehaviorStatement),
+        name: name && transformIdentifier(name),
+        statements: (body.childrenForFieldName("statement") ?? []).map(transformBehaviorStatement),
     };
 }
 
-function transformBehaviorStatement(node: ChildTypes<parser.behavior_body_Node>): ast.BehaviorStatement {
+type BehaviorStatements = ChildrenTypes<parser.behavior_body_Node, "statement">;
+
+function transformBehaviorStatement(node: BehaviorStatements): ast.BehaviorStatement {
     switch (node.type) {
         case "function":
             return transformFunction(node);
@@ -289,7 +377,7 @@ function transformBehaviorStatement(node: ChildTypes<parser.behavior_body_Node>)
         case "int":
             return transformIntDefinition(node);
         case "blocking":
-            return undefined;
+            return transformBlocking(node) as ast.BehaviorStatement;
         case "compound":
             return transformCompound(node);
         case "guard":
@@ -301,13 +389,23 @@ function transformBehaviorStatement(node: ChildTypes<parser.behavior_body_Node>)
         case "variable":
             return transformVariableDefinition(node);
         default:
-            throw assertNever(node, "transform should handle all options");
+            throw assertNever(node, "unknown behavior statement kind");
     }
 }
 
-function transformCompound(node: parser.compound_Node): ast.Compound {
-    //const blocking = node.childForFieldName("blocking");
+function transformBlocking(node: parser.blocking_Node): ast.Statement {
+    const blockingKeyword = transformKeyword(node.firstChild!, "blocking");
+    const statement = transformCompoundStatement(node.childForFieldName("statement"));
+    switch (statement.kind) {
+        case ast.SyntaxKind.Compound:
+            statement.blocking = blockingKeyword;
+        case ast.SyntaxKind.OnStatement:
+            statement.blocking = blockingKeyword;
+    }
+    return statement;
+}
 
+function transformCompound(node: parser.compound_Node): ast.Compound {
     return {
         kind: ast.SyntaxKind.Compound,
         position: nodePosition(node),
@@ -316,29 +414,14 @@ function transformCompound(node: parser.compound_Node): ast.Compound {
     };
 }
 
-type CompoundStatements =
-    | parser.UnnamedNode<";">
-    | parser.action_Node
-    | parser.assign_Node
-    | parser.blocking_Node
-    | parser.call_Node
-    | parser.compound_Node
-    | parser.defer_Node
-    | parser.guard_Node
-    | parser.if_statement_Node
-    | parser.illegal_Node
-    | parser.interface_action_Node
-    | parser.invariant_Node
-    | parser.on_Node
-    | parser.reply_Node
-    | parser.return_Node
-    | parser.skip_statement_Node
-    | parser.variable_Node;
+type CompoundStatements = ChildrenTypes<parser.compound_Node, "statement">;
 
 function transformCompoundStatement(node: CompoundStatements): ast.Statement {
     switch (node.type) {
+        case "action_or_call_statement":
+            return wrapExpressionStatement(node, transformActionOrCall(node.childForFieldName("action_or_call")));
         case "blocking":
-            return undefined;
+            return transformBlocking(node);
         case "compound":
             return transformCompound(node);
         case "guard":
@@ -349,29 +432,41 @@ function transformCompoundStatement(node: CompoundStatements): ast.Statement {
             return transformOnStatement(node);
         case "variable":
             return transformVariableDefinition(node);
-        case "action":
-            return undefined;
         case "assign":
             return transformAssignmentStatement(node);
-        case "call":
-            return undefined;
         case "defer":
             return transformDeferStatement(node);
         case "if_statement":
             return transformIfStatement(node);
         case "illegal":
             return wrapExpressionStatement(node, transformKeyword(node, "illegal"));
-        case "interface_action":
-            return undefined;
         case "reply":
-            return undefined;
+            return wrapExpressionStatement(node, transformReply(node));
         case "return":
             return transformReturnStatement(node);
         case "skip_statement":
-        case ";":
-            throw "unexpected symbol";
+            return undefined;
         default:
-            throw assertNever(node, "transform should handle all options");
+            throw assertNever(node, "unknown statement kind");
+    }
+}
+
+function transformActionOrCall(
+    node: parser.action_Node | parser.call_Node | parser.interface_action_Node
+): ast.CallExpression | ast.Name {
+    switch (node.type) {
+        case "action":
+            return transformCallExpression(node);
+        case "call":
+            return transformCallExpression(node);
+        case "interface_action":
+            return {
+                kind: ast.SyntaxKind.Identifier,
+                position: nodePosition(node),
+                text: node.text,
+            };
+        default:
+            throw assertNever(node, "unknown action or calll kind");
     }
 }
 
@@ -381,7 +476,7 @@ function transformGuardStatement(node: parser.guard_Node): ast.GuardStatement {
         position: nodePosition(node),
         blocking: undefined,
         condition: transformExpression(node.childForFieldName("condition")),
-        statement: node.childrenForFieldName("body"),
+        statement: transformCompoundStatement(node.childForFieldName("body")),
     };
 }
 
@@ -394,24 +489,58 @@ function transformInvariantStatement(node: parser.invariant_Node): ast.Invariant
 }
 
 function transformOnStatement(node: parser.on_Node): ast.OnStatement {
+    function transformTriggerFormal(node: parser.trigger_formal_Node): ast.OnParameter {
+        const assignName = node.childForFieldName("assign_name");
+        return {
+            kind: ast.SyntaxKind.OnParameter,
+            position: nodePosition(node),
+            name: transformIdentifier(node.childForFieldName("name")),
+            assignment: assignName && transformIdentifier(assignName),
+        };
+    }
+
     function transformTrigger(triggerParent: parser.trigger_Node): ast.OnTrigger {
-        const trigger = triggerParent.child(0);
+        const trigger = triggerParent.firstNamedChild;
         switch (trigger.type) {
             case "event_name":
+                return {
+                    kind: ast.SyntaxKind.OnTrigger,
+                    position: nodePosition(trigger),
+                    name: createIdentifier(trigger, trigger.text),
+                };
             case "port_event":
+                const parameterList = trigger.childForFieldName("formals");
+                const formals = parameterList.childrenForFieldName("trigger_formal") ?? [];
+                return {
+                    kind: ast.SyntaxKind.OnTrigger,
+                    position: nodePosition(trigger),
+                    name: {
+                        kind: ast.SyntaxKind.CompoundName,
+                        position: nodePosition(trigger),
+                        compound: transformIdentifier(trigger.childForFieldName("port")),
+                        name: transformIdentifier(trigger.childForFieldName("name")),
+                    },
+                    parameterList: {
+                        kind: ast.SyntaxKind.OnTriggerParameters,
+                        position: nodePosition(parameterList),
+                        parameters: formals.map(transformTriggerFormal),
+                    },
+                };
             case "inevitable":
+                return transformKeyword(trigger, "inevitable");
             case "optional":
+                return transformKeyword(trigger, "optional");
             default:
-                throw assertNever(trigger, "transform should handle all options");
+                throw assertNever(trigger, "unknown trigger kind");
         }
     }
 
     return {
         kind: ast.SyntaxKind.OnStatement,
         position: nodePosition(node),
-        blocking: never,
+        blocking: undefined,
         triggers: node.childForFieldName("triggers").childrenForFieldName("trigger").map(transformTrigger),
-        body: transformStatement(node.childForFieldName("statement")),
+        body: transformCompoundStatement(node.childForFieldName("body")),
     };
 }
 
@@ -451,17 +580,18 @@ function transformDeferStatement(node: parser.defer_Node): ast.DeferStatement {
         kind: ast.SyntaxKind.DeferStatement,
         position: nodePosition(node),
         arguments: deferArgs && transformDeferArguments(deferArgs),
-        statement: transformStatement(node.childForFieldName("statement")),
+        statement: transformCompoundStatement(node.childForFieldName("statement")) as ast.ImperativeStatement,
     };
 }
 
 function transformIfStatement(node: parser.if_statement_Node): ast.IfStatement {
+    const elseStatement = node.childForFieldName("else_statement");
     return {
         kind: ast.SyntaxKind.IfStatement,
         position: nodePosition(node),
         condition: transformExpression(node.childForFieldName("expression")),
-        statement: transformStatement(node.childForFieldName("statement")),
-        else: never,
+        statement: transformCompoundStatement(node.childForFieldName("statement")) as ast.ImperativeStatement,
+        else: elseStatement && (transformCompoundStatement(elseStatement) as ast.ImperativeStatement),
     };
 }
 
@@ -488,36 +618,173 @@ type ExpressionsTypes =
 function transformExpression(node: ExpressionsTypes): ast.Expression {
     switch (node.type) {
         case "action":
+            return transformCallExpression(node);
         case "binary_expression":
+            return transformBinaryExpression(node);
         case "call":
+            return transformCallExpression(node);
         case "compound_name":
-            return undefined;
+            return transformName(node);
         case "dollars":
             return transformDollars(node);
         case "group":
+            return transformParenthesizedExpression(node);
         case "literal":
+            return transformLiteral(node);
         case "otherwise":
             return transformKeyword(node, "otherwise");
         case "unary_expression":
-            return undefined;
+            return transformUnaryExpression(node);
         default:
-            throw assertNever(node, "transform should handle all options");
+            throw assertNever(node, "unknown expression kind");
     }
 }
 
-function transformKeyword<T extends string>(node: parser.AllNodes, name: T): ast.Keyword<T> {
+function transformCallExpression(node: parser.action_Node | parser.call_Node): ast.CallExpression {
+    let name: ast.Name = transformIdentifier(node.childForFieldName("name"));
+
+    if (node.type === "action") {
+        const port = transformIdentifier(node.childForFieldName("port_name"));
+        name = {
+            kind: ast.SyntaxKind.CompoundName,
+            position: combinePositions(port.position, name.position),
+            compound: port,
+            name,
+        };
+    }
+
+    return {
+        kind: ast.SyntaxKind.CallExpression,
+        position: nodePosition(node),
+        expression: name,
+        arguments: transformArguments(node.childForFieldName("arguments")),
+    };
+}
+
+type BinaryOperator = parser.binary_expression_Node["childForFieldName"] extends {
+    (kind: "operator"): infer R;
+    (kind: "right"): any;
+}
+    ? R
+    : never;
+
+function transformBinaryExpression(node: parser.binary_expression_Node): ast.BinaryExpression {
+    function transformBinaryOperator(operator: BinaryOperator): ast.BinaryOperator {
+        switch (operator.type) {
+            case "!=":
+            case "==":
+            case "&&":
+            case "||":
+            case "+":
+            case "-":
+            case "<":
+            case "<=":
+            case ">":
+            case ">=":
+            case "=>":
+                return {
+                    kind: ast.SyntaxKind.Keyword,
+                    position: nodePosition(operator),
+                    text: operator.text as ast.BinaryOperator["text"],
+                };
+            default:
+                throw assertNever(operator, `Unknown binary operator`);
+        }
+    }
+
+    return {
+        kind: ast.SyntaxKind.BinaryExpression,
+        position: nodePosition(node),
+        left: transformExpression(node.childForFieldName("left")),
+        operator: transformBinaryOperator(node.childForFieldName("operator")),
+        right: transformExpression(node.childForFieldName("right")),
+    };
+}
+
+type UnaryOperator = parser.unary_expression_Node["childForFieldName"] extends { (kind: "operator"): infer R }
+    ? R
+    : never;
+
+function transformUnaryExpression(node: parser.unary_expression_Node): ast.UnaryOperatorExpression {
+    function transformUnaryOperator(operator: UnaryOperator): ast.UnaryOperator {
+        switch (operator.type) {
+            case "-":
+            case "!":
+                return {
+                    kind: ast.SyntaxKind.Keyword,
+                    position: nodePosition(operator),
+                    text: operator.text as ast.UnaryOperator["text"],
+                };
+            default:
+                throw assertNever(operator, `Unknown binary operator`);
+        }
+    }
+
+    return {
+        kind: ast.SyntaxKind.UnaryOperatorExpression,
+        position: nodePosition(node),
+        operator: transformUnaryOperator(node.childForFieldName("operator")),
+        expression: transformExpression(node.childForFieldName("expression")),
+    };
+}
+
+function transformArguments(node: parser.arguments_Node): ast.CallArguments {
+    return {
+        kind: ast.SyntaxKind.CallArguments,
+        position: nodePosition(node),
+        arguments: node.childrenForFieldName("expression")?.map(transformExpression) ?? [],
+    };
+}
+
+function transformLiteral(node: parser.literal_Node): ast.BooleanLiteral | ast.NumericLiteral {
+    if (node.text === "true" || node.text === "false") {
+        return {
+            kind: ast.SyntaxKind.BooleanLiteral,
+            position: nodePosition(node),
+            value: node.text === "true",
+        };
+    } else {
+        return {
+            kind: ast.SyntaxKind.NumericLiteral,
+            position: nodePosition(node),
+            value: Number(node.text),
+        };
+    }
+}
+
+function transformParenthesizedExpression(node: parser.group_Node): ast.ParenthesizedExpression {
+    return {
+        kind: ast.SyntaxKind.ParenthesizedExpression,
+        position: nodePosition(node),
+        expression: transformExpression(node.childForFieldName("expression")),
+    };
+}
+
+function transformReply(node: parser.reply_Node): ast.Reply {
+    const port = node.childForFieldName("port");
+    return {
+        kind: ast.SyntaxKind.Reply,
+        position: nodePosition(node),
+        port: port && transformIdentifier(port),
+        value: transformExpression(node.childForFieldName("expression")),
+    };
+}
+
+function transformKeyword<T extends string>(node: parser.AllNodes | parser.SyntaxNode, name: T): ast.Keyword<T> {
     return {
         kind: ast.SyntaxKind.Keyword,
         position: nodePosition(node),
-        text: name
+        text: name,
     };
 }
 
 function transformIdentifier(
     node:
-        | parser.name_Node
         | parser.event_name_Node
+        | parser.identifier_Node
+        | parser.name_Node
         | parser.port_name_Node
+        | parser.scoped_name_Node
         | parser.type_name_Node
         | parser.var_name_Node
 ): ast.Identifier {
@@ -528,12 +795,36 @@ function transformIdentifier(
     };
 }
 
-function transformName(node: parser.compound_name_Node | parser.name_Node | parser.scoped_name_Node | parser.type_name_Node | parser.var_Node): ast.Identifier {
-    return {
-        kind: ast.SyntaxKind.Identifier,
-        position: nodePosition(node),
-        text: node.text,
-    };
+function transformName(
+    node: parser.compound_name_Node | parser.name_Node | parser.scoped_name_Node | parser.type_name_Node
+): ast.Name {
+    if (node.type === "compound_name") {
+        const global = node.childForFieldName("global");
+        const parts = node.childrenForFieldName("part").filter(p => p.type === "identifier");
+
+        let firstIdentifier = transformIdentifier(parts[0]);
+        let name: ast.Name = global
+            ? {
+                  kind: ast.SyntaxKind.CompoundName,
+                  position: combinePositions(nodePosition(global), firstIdentifier.position),
+                  compound: undefined, // global
+                  name: firstIdentifier,
+              }
+            : firstIdentifier;
+
+        for (let i = 1; i < parts.length; i++) {
+            name = {
+                kind: ast.SyntaxKind.CompoundName,
+                position: combinePositions(name.position, nodePosition(parts[i])),
+                compound: name,
+                name: transformIdentifier(parts[i]),
+            } satisfies ast.CompoundName;
+        }
+
+        return name;
+    } else {
+        return transformIdentifier(node);
+    }
 }
 
 function transformTypeReference(node: parser.compound_name_Node | parser.type_name_Node): ast.TypeReference {
@@ -552,7 +843,15 @@ function wrapExpressionStatement(node: parser.AllNodes, expression: ast.Expressi
     };
 }
 
-function nodePosition(node: parser.AllNodes): ast.SourceRange {
+function createIdentifier(node: parser.AllNodes, text: string): ast.Identifier {
+    return {
+        kind: ast.SyntaxKind.Identifier,
+        position: nodePosition(node),
+        text,
+    };
+}
+
+function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.SourceRange {
     return {
         from: {
             index: node.startIndex,
@@ -564,5 +863,12 @@ function nodePosition(node: parser.AllNodes): ast.SourceRange {
             line: node.endPosition.row,
             column: node.endPosition.column,
         },
+    };
+}
+
+function combinePositions(p1: ast.SourceRange, p2: ast.SourceRange): ast.SourceRange {
+    return {
+        from: p1.from,
+        to: p2.to,
     };
 }

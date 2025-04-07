@@ -1,8 +1,8 @@
 import { neverFiredEvent } from "../src/rules/never-fired-event";
 import { testdznlint } from "./util";
 
-test("never sent interface event", () => {
-    testdznlint({
+test("never sent interface event", async () => {
+    await testdznlint({
         diagnostic: neverFiredEvent.code,
         pass: `
             interface IA {
@@ -21,8 +21,8 @@ test("never sent interface event", () => {
     });
 });
 
-test("never sent interface event with parameter", () => {
-    testdznlint({
+test("never sent interface event with parameter", async () => {
+    await testdznlint({
         diagnostic: neverFiredEvent.code,
         pass: `
             interface IA {
@@ -41,8 +41,8 @@ test("never sent interface event with parameter", () => {
     });
 });
 
-test("never sent events are allowed when no behavior is specified", () => {
-    testdznlint({
+test("never sent events are allowed when no behavior is specified", async () => {
+    await testdznlint({
         diagnostic: neverFiredEvent.code,
         pass: `
             interface IA {
@@ -57,8 +57,8 @@ test("never sent events are allowed when no behavior is specified", () => {
     });
 });
 
-test("events in functions are considered 'seen'", () => {
-    testdznlint({
+test("events in functions are considered 'seen'", async () => {
+    await testdznlint({
         diagnostic: neverFiredEvent.code,
         pass: `
             interface IA {

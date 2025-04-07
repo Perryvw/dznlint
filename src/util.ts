@@ -74,6 +74,14 @@ export function isIllegalKeyword(node: ast.AnyAstNode): node is ast.Keyword<"ill
     );
 }
 
+export function isOptionalKeyword(node: ast.AnyAstNode): node is ast.Keyword<"optional"> {
+    return isKeyword(node) && node.text === "optional";
+}
+
+export function isInevitableKeyword(node: ast.AnyAstNode): node is ast.Keyword<"inevitable"> {
+    return isKeyword(node) && node.text === "inevitable";
+}
+
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;
 }
@@ -126,6 +134,7 @@ export type ScopedBlock = ast.AnyAstNode &
 export function isScopedBlock(node: ast.AnyAstNode): node is ScopedBlock {
     return (
         node.kind === ast.SyntaxKind.Identifier ||
+        node.kind === ast.SyntaxKind.Behavior ||
         node.kind === ast.SyntaxKind.ComponentDefinition ||
         node.kind === ast.SyntaxKind.Compound ||
         node.kind === ast.SyntaxKind.FunctionDefinition ||
@@ -147,6 +156,15 @@ export function systemInstances(system: ast.System): ast.Instance[] {
 
 export function systemBindings(system: ast.System): ast.Binding[] {
     return system.instancesAndBindings.filter(e => e.kind === ast.SyntaxKind.Binding);
+}
+
+export function isChildOf(child: ast.AnyAstNode, parent: ast.AnyAstNode): boolean {
+    let p = child.parent;
+    while (p) {
+        if (p === parent) return true;
+        p = p.parent;
+    }
+    return false;
 }
 
 export function findFirstParent<T extends ast.AnyAstNode>(
@@ -174,5 +192,6 @@ export function nameToString(name: ast.Name): string {
 }
 
 export function assertNever(x: never, message: string): void {
-    console.log("never", message, x);
+    console.log("assertNever fail", message, x);
+    throw message;
 }

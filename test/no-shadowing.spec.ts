@@ -1,8 +1,8 @@
 import { shadowingVariablesNotAllowed } from "../src/rules/no-shadowing";
 import { testdznlint } from "./util";
 
-test.each(["component", "interface"])("port parameter in %s shadowing variable", componentOrInterface => {
-    testdznlint({
+test.each(["component", "interface"])("port parameter in %s shadowing variable", async componentOrInterface => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `${componentOrInterface} A {
             behavior {
@@ -19,8 +19,8 @@ test.each(["component", "interface"])("port parameter in %s shadowing variable",
     });
 });
 
-test.each(["component", "interface"])("variable in %s shadowing port parameter", componentOrInterface => {
-    testdznlint({
+test.each(["component", "interface"])("variable in %s shadowing port parameter", async componentOrInterface => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `${componentOrInterface} A {
             behavior {
@@ -39,8 +39,8 @@ test.each(["component", "interface"])("variable in %s shadowing port parameter",
     });
 });
 
-test("variable shadowing other variable", () => {
-    testdznlint({
+test("variable shadowing other variable", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {
@@ -61,8 +61,8 @@ test("variable shadowing other variable", () => {
     });
 });
 
-test("shadowing allows parameters with same name in different on statements", () => {
-    testdznlint({
+test("shadowing allows parameters with same name in different on statements", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {
@@ -75,8 +75,8 @@ test("shadowing allows parameters with same name in different on statements", ()
     });
 });
 
-test("shadowing allows parameters with same name in different functions", () => {
-    testdznlint({
+test("shadowing allows parameters with same name in different functions", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {
@@ -89,8 +89,8 @@ test("shadowing allows parameters with same name in different functions", () => 
     });
 });
 
-test("shadowing does not have issue with return statements", () => {
-    testdznlint({
+test("shadowing does not have issue with return statements", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {
@@ -102,8 +102,8 @@ test("shadowing does not have issue with return statements", () => {
     });
 });
 
-test("function name shadowing variable", () => {
-    testdznlint({
+test("function name shadowing variable", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {
@@ -120,8 +120,8 @@ test("function name shadowing variable", () => {
     });
 });
 
-test("function parameter shadowing variable", () => {
-    testdznlint({
+test("function parameter shadowing variable", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {
@@ -138,8 +138,8 @@ test("function parameter shadowing variable", () => {
     });
 });
 
-test("variable shadowing function parameter", () => {
-    testdznlint({
+test("variable shadowing function parameter", async () => {
+    await testdznlint({
         diagnostic: shadowingVariablesNotAllowed.code,
         pass: `component A {
             behavior {

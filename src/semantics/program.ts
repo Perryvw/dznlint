@@ -3,9 +3,10 @@ import * as fs from "fs";
 import * as ast from "../grammar/ast";
 
 import { Diagnostic } from "../diagnostic";
-import { parseDznSource } from "../parse";
+import { initParser, parseDznSource } from "../parse";
 import { normalizePath, resolveImport } from "../resolve-imports";
 import { setParentVisitor, visitFile } from "../visitor";
+import Parser = require("web-tree-sitter");
 
 export interface LinterHost {
     includePaths: string[];
@@ -30,8 +31,16 @@ const defaultLinterHost: LinterHost = {
 export class Program {
     public host: LinterHost;
 
-    constructor(host?: Partial<LinterHost>) {
+    private constructor(
+        public parser: Parser,
+        host?: Partial<LinterHost>
+    ) {
         this.host = { ...defaultLinterHost, ...host };
+    }
+
+    public static async Init(host?: Partial<LinterHost>): Promise<Program> {
+        const parser = await initParser();
+        return new Program(parser, host);
     }
 
     private parsedFiles = new Map<string, SourceFile>();
@@ -86,7 +95,7 @@ export class SourceFile {
         public source: InputSource,
         program: Program
     ) {
-        const { ast, diagnostics } = parseDznSource(source);
+        const { ast, diagnostics } = parseDznSource(source, program.parser);
         this.parseDiagnostics = diagnostics;
         if (ast) {
             visitFile(ast, source, setParentVisitor, program);

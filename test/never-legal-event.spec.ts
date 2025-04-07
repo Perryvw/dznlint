@@ -1,8 +1,8 @@
 import { neverLegalEvent } from "../src/rules/never-legal-event";
 import { testdznlint } from "./util";
 
-test("never legal interface event", () => {
-    testdznlint({
+test("never legal interface event", async () => {
+    await testdznlint({
         diagnostic: neverLegalEvent.code,
         pass: `
             interface IA {
@@ -24,8 +24,8 @@ test("never legal interface event", () => {
     });
 });
 
-test("never legal events are allowed when no behavior is specified", () => {
-    testdznlint({
+test("never legal events are allowed when no behavior is specified", async () => {
+    await testdznlint({
         diagnostic: neverLegalEvent.code,
         pass: `
             interface IA {

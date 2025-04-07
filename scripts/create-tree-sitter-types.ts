@@ -34,7 +34,7 @@ for (const node of nodeTypes.filter(n => n.named)) {
     result.push(
         `export interface ${nameOfTypeNode(
             node
-        )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstChild"> {`
+        )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"> {`
     );
     result.push(`    type: "${node.type}";`);
 
@@ -49,12 +49,10 @@ for (const node of nodeTypes.filter(n => n.named)) {
     if (node.children) {
         if (node.children.multiple) {
             const namedTypes = node.children.types.map(nameOfTypeNode);
-            result.push(`    child(i: number): ${namedTypes.join(" | ")} | undefined;`);
-            result.push(`    children: Array<${namedTypes.join(" | ")}>;`);
+            result.push(`    namedChildren: Array<${namedTypes.join(" | ")}>;`);
         } else {
-            result.push(`    child(i: 0): ${fieldType(node.children)};`);
-            result.push(`    firstChild: ${fieldType(node.children)};`);
-            result.push(`    children: [(${fieldType(node.children)})];`);
+            result.push(`    firstNamedChild: ${fieldType(node.children)};`);
+            result.push(`    namedChildren: [(${fieldType(node.children)})];`);
         }
     }
 
@@ -75,11 +73,12 @@ function nameOfTypeNode(type: NodeType): string {
 function fieldType(field: Field): string {
     const namedTypes = field.types.map(nameOfTypeNode);
     const mainType = namedTypes.join(" | ");
+    const fieldOptional = field.required ? "" : " | undefined";
     if (field.multiple) {
         const multipleReturnType = `Array<${mainType}>`;
-        return field.required ? multipleReturnType : `${multipleReturnType} | undefined`;
+        return field.required ? multipleReturnType : `${multipleReturnType}${fieldOptional}`;
     } else {
-        return field.required ? mainType : `${mainType} | undefined`;
+        return field.required ? mainType : `${mainType}${fieldOptional}`;
     }
 }
 

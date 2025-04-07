@@ -142,6 +142,7 @@ interface fields_Node extends BaseNode {
         | UnnamedNode<"{", 16>
         | name_Node
         | UnnamedNode<",", 17>
+        | member_name_Node
         | UnnamedNode<",", 18>
         | UnnamedNode<"}", 19>
         | comment_Node
@@ -517,27 +518,18 @@ interface function_Node extends BaseNode {
         | name_Node
         | formals_Node
         | compound_Node
-        | UnnamedNode<"=", 100>
-        | unary_expression_Node
-        | group_Node
-        | dollars_Node
-        | literal_Node
-        | compound_name_Node
-        | call_Node
-        | action_Node
-        | binary_expression_Node
-        | UnnamedNode<";", 101>
+        | function_body_one_line_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
     >;
 }
-interface _function_body_one_line_Node extends BaseNode {
-    type: "_function_body_one_line";
-    _id: 102;
+interface function_body_one_line_Node extends BaseNode {
+    type: "function_body_one_line";
+    _id: 100;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"=", 103>
+        | UnnamedNode<"=", 101>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -546,7 +538,7 @@ interface _function_body_one_line_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<";", 104>
+        | UnnamedNode<";", 102>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -554,7 +546,7 @@ interface _function_body_one_line_Node extends BaseNode {
 }
 interface _declarative_statement_Node extends BaseNode {
     type: "_declarative_statement";
-    _id: 105;
+    _id: 103;
     isNamed: true;
     walk(): TypedCursor<
         | on_Node
@@ -569,10 +561,10 @@ interface _declarative_statement_Node extends BaseNode {
 }
 interface invariant_Node extends BaseNode {
     type: "invariant";
-    _id: 106;
+    _id: 104;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"invariant", 107>
+        | UnnamedNode<"invariant", 105>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -581,7 +573,7 @@ interface invariant_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<";", 108>
+        | UnnamedNode<";", 106>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -589,12 +581,12 @@ interface invariant_Node extends BaseNode {
 }
 interface on_Node extends BaseNode {
     type: "on";
-    _id: 109;
+    _id: 107;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"on", 110>
+        | UnnamedNode<"on", 108>
         | triggers_Node
-        | UnnamedNode<":", 111>
+        | UnnamedNode<":", 109>
         | on_Node
         | blocking_Node
         | guard_Node
@@ -609,11 +601,7 @@ interface on_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 112>
-        | interface_action_Node
-        | UnnamedNode<";", 113>
+        | action_or_call_statement_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -621,13 +609,13 @@ interface on_Node extends BaseNode {
 }
 interface triggers_Node extends BaseNode {
     type: "triggers";
-    _id: 114;
+    _id: 110;
     isNamed: true;
-    walk(): TypedCursor<trigger_Node | UnnamedNode<",", 115> | comment_Node | whiteline_Node | ERROR_Node>;
+    walk(): TypedCursor<trigger_Node | UnnamedNode<",", 111> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface trigger_Node extends BaseNode {
     type: "trigger";
-    _id: 116;
+    _id: 112;
     isNamed: true;
     walk(): TypedCursor<
         port_event_Node | optional_Node | inevitable_Node | event_name_Node | comment_Node | whiteline_Node | ERROR_Node
@@ -635,11 +623,11 @@ interface trigger_Node extends BaseNode {
 }
 interface port_event_Node extends BaseNode {
     type: "port_event";
-    _id: 117;
+    _id: 113;
     isNamed: true;
     walk(): TypedCursor<
         | port_name_Node
-        | UnnamedNode<".", 118>
+        | UnnamedNode<".", 114>
         | name_Node
         | trigger_formals_Node
         | comment_Node
@@ -649,23 +637,23 @@ interface port_event_Node extends BaseNode {
 }
 interface optional_Node extends BaseNode {
     type: "optional";
-    _id: 119;
+    _id: 115;
     isNamed: true;
 }
 interface inevitable_Node extends BaseNode {
     type: "inevitable";
-    _id: 120;
+    _id: 116;
     isNamed: true;
 }
 interface trigger_formals_Node extends BaseNode {
     type: "trigger_formals";
-    _id: 121;
+    _id: 117;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"(", 122>
+        | UnnamedNode<"(", 118>
         | trigger_formal_Node
-        | UnnamedNode<",", 123>
-        | UnnamedNode<")", 124>
+        | UnnamedNode<",", 119>
+        | UnnamedNode<")", 120>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -673,16 +661,16 @@ interface trigger_formals_Node extends BaseNode {
 }
 interface trigger_formal_Node extends BaseNode {
     type: "trigger_formal";
-    _id: 125;
+    _id: 121;
     isNamed: true;
-    walk(): TypedCursor<var_Node | UnnamedNode<"<-", 126> | comment_Node | whiteline_Node | ERROR_Node>;
+    walk(): TypedCursor<name_Node | UnnamedNode<"<-", 122> | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface guard_Node extends BaseNode {
     type: "guard";
-    _id: 127;
+    _id: 123;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"[", 128>
+        | UnnamedNode<"[", 124>
         | otherwise_Node
         | unary_expression_Node
         | group_Node
@@ -692,7 +680,7 @@ interface guard_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<"]", 129>
+        | UnnamedNode<"]", 125>
         | on_Node
         | blocking_Node
         | guard_Node
@@ -707,11 +695,7 @@ interface guard_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 130>
-        | interface_action_Node
-        | UnnamedNode<";", 131>
+        | action_or_call_statement_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -719,7 +703,7 @@ interface guard_Node extends BaseNode {
 }
 interface _otherwise_or_expression_Node extends BaseNode {
     type: "_otherwise_or_expression";
-    _id: 132;
+    _id: 126;
     isNamed: true;
     walk(): TypedCursor<
         | otherwise_Node
@@ -738,15 +722,15 @@ interface _otherwise_or_expression_Node extends BaseNode {
 }
 interface otherwise_Node extends BaseNode {
     type: "otherwise";
-    _id: 133;
+    _id: 127;
     isNamed: true;
 }
 interface compound_Node extends BaseNode {
     type: "compound";
-    _id: 134;
+    _id: 128;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"{", 135>
+        | UnnamedNode<"{", 129>
         | on_Node
         | blocking_Node
         | guard_Node
@@ -761,12 +745,8 @@ interface compound_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 136>
-        | interface_action_Node
-        | UnnamedNode<";", 137>
-        | UnnamedNode<"}", 138>
+        | action_or_call_statement_Node
+        | UnnamedNode<"}", 130>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -774,12 +754,12 @@ interface compound_Node extends BaseNode {
 }
 interface variable_Node extends BaseNode {
     type: "variable";
-    _id: 139;
+    _id: 131;
     isNamed: true;
     walk(): TypedCursor<
         | type_name_Node
         | var_name_Node
-        | UnnamedNode<"=", 140>
+        | UnnamedNode<"=", 132>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -788,7 +768,7 @@ interface variable_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<";", 141>
+        | UnnamedNode<";", 133>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -796,17 +776,17 @@ interface variable_Node extends BaseNode {
 }
 interface event_name_Node extends BaseNode {
     type: "event_name";
-    _id: 142;
+    _id: 134;
     isNamed: true;
 }
 interface var_name_Node extends BaseNode {
     type: "var_name";
-    _id: 143;
+    _id: 135;
     isNamed: true;
 }
 interface _statement_Node extends BaseNode {
     type: "_statement";
-    _id: 144;
+    _id: 136;
     isNamed: true;
     walk(): TypedCursor<
         | on_Node
@@ -822,11 +802,7 @@ interface _statement_Node extends BaseNode {
         | skip_statement_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 145>
-        | interface_action_Node
-        | UnnamedNode<";", 146>
+        | action_or_call_statement_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -834,7 +810,7 @@ interface _statement_Node extends BaseNode {
 }
 interface _imperative_statement_Node extends BaseNode {
     type: "_imperative_statement";
-    _id: 147;
+    _id: 137;
     isNamed: true;
     walk(): TypedCursor<
         | variable_Node
@@ -846,11 +822,7 @@ interface _imperative_statement_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 148>
-        | interface_action_Node
-        | UnnamedNode<";", 149>
+        | action_or_call_statement_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -858,10 +830,10 @@ interface _imperative_statement_Node extends BaseNode {
 }
 interface defer_Node extends BaseNode {
     type: "defer";
-    _id: 150;
+    _id: 138;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"defer", 151>
+        | UnnamedNode<"defer", 139>
         | arguments_Node
         | variable_Node
         | assign_Node
@@ -872,11 +844,7 @@ interface defer_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 152>
-        | interface_action_Node
-        | UnnamedNode<";", 153>
+        | action_or_call_statement_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -884,35 +852,43 @@ interface defer_Node extends BaseNode {
 }
 interface interface_action_Node extends BaseNode {
     type: "interface_action";
-    _id: 154;
+    _id: 140;
     isNamed: true;
 }
-interface _action_or_call_Node extends BaseNode {
-    type: "_action_or_call";
-    _id: 155;
+interface action_or_call_statement_Node extends BaseNode {
+    type: "action_or_call_statement";
+    _id: 141;
     isNamed: true;
-    walk(): TypedCursor<action_Node | call_Node | UnnamedNode<";", 156> | comment_Node | whiteline_Node | ERROR_Node>;
+    walk(): TypedCursor<
+        | action_Node
+        | call_Node
+        | interface_action_Node
+        | UnnamedNode<";", 142>
+        | comment_Node
+        | whiteline_Node
+        | ERROR_Node
+    >;
 }
 interface action_Node extends BaseNode {
     type: "action";
-    _id: 157;
+    _id: 143;
     isNamed: true;
     walk(): TypedCursor<
-        port_name_Node | UnnamedNode<".", 158> | name_Node | arguments_Node | comment_Node | whiteline_Node | ERROR_Node
+        port_name_Node | UnnamedNode<".", 144> | name_Node | arguments_Node | comment_Node | whiteline_Node | ERROR_Node
     >;
 }
 interface call_Node extends BaseNode {
     type: "call";
-    _id: 159;
+    _id: 145;
     isNamed: true;
     walk(): TypedCursor<name_Node | arguments_Node | comment_Node | whiteline_Node | ERROR_Node>;
 }
 interface arguments_Node extends BaseNode {
     type: "arguments";
-    _id: 160;
+    _id: 146;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"(", 161>
+        | UnnamedNode<"(", 147>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -921,8 +897,8 @@ interface arguments_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<",", 162>
-        | UnnamedNode<")", 163>
+        | UnnamedNode<",", 148>
+        | UnnamedNode<")", 149>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -930,15 +906,15 @@ interface arguments_Node extends BaseNode {
 }
 interface skip_statement_Node extends BaseNode {
     type: "skip_statement";
-    _id: 164;
+    _id: 150;
     isNamed: true;
 }
 interface blocking_Node extends BaseNode {
     type: "blocking";
-    _id: 165;
+    _id: 151;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"blocking", 166>
+        | UnnamedNode<"blocking", 152>
         | on_Node
         | blocking_Node
         | guard_Node
@@ -953,11 +929,7 @@ interface blocking_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 167>
-        | interface_action_Node
-        | UnnamedNode<";", 168>
+        | action_or_call_statement_Node
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -965,19 +937,19 @@ interface blocking_Node extends BaseNode {
 }
 interface illegal_Node extends BaseNode {
     type: "illegal";
-    _id: 169;
+    _id: 153;
     isNamed: true;
     walk(): TypedCursor<
-        UnnamedNode<"illegal", 170> | UnnamedNode<";", 171> | comment_Node | whiteline_Node | ERROR_Node
+        UnnamedNode<"illegal", 154> | UnnamedNode<";", 155> | comment_Node | whiteline_Node | ERROR_Node
     >;
 }
 interface assign_Node extends BaseNode {
     type: "assign";
-    _id: 172;
+    _id: 156;
     isNamed: true;
     walk(): TypedCursor<
-        | var_Node
-        | UnnamedNode<"=", 173>
+        | name_Node
+        | UnnamedNode<"=", 157>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -986,7 +958,7 @@ interface assign_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<";", 174>
+        | UnnamedNode<";", 158>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -994,11 +966,11 @@ interface assign_Node extends BaseNode {
 }
 interface if_statement_Node extends BaseNode {
     type: "if_statement";
-    _id: 175;
+    _id: 159;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"if", 176>
-        | UnnamedNode<"(", 177>
+        | UnnamedNode<"if", 160>
+        | UnnamedNode<"(", 161>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -1007,7 +979,7 @@ interface if_statement_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<")", 178>
+        | UnnamedNode<")", 162>
         | variable_Node
         | assign_Node
         | if_statement_Node
@@ -1017,26 +989,8 @@ interface if_statement_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 179>
-        | interface_action_Node
-        | UnnamedNode<";", 180>
-        | UnnamedNode<"else", 181>
-        | variable_Node
-        | assign_Node
-        | if_statement_Node
-        | illegal_Node
-        | return_Node
-        | skip_statement_Node
-        | compound_Node
-        | reply_Node
-        | defer_Node
-        | action_Node
-        | call_Node
-        | UnnamedNode<";", 182>
-        | interface_action_Node
-        | UnnamedNode<";", 183>
+        | action_or_call_statement_Node
+        | UnnamedNode<"else", 163>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1044,13 +998,13 @@ interface if_statement_Node extends BaseNode {
 }
 interface reply_Node extends BaseNode {
     type: "reply";
-    _id: 184;
+    _id: 164;
     isNamed: true;
     walk(): TypedCursor<
         | port_name_Node
-        | UnnamedNode<".", 185>
-        | UnnamedNode<"reply", 186>
-        | UnnamedNode<"(", 187>
+        | UnnamedNode<".", 165>
+        | UnnamedNode<"reply", 166>
+        | UnnamedNode<"(", 167>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -1059,8 +1013,8 @@ interface reply_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<")", 188>
-        | UnnamedNode<";", 189>
+        | UnnamedNode<")", 168>
+        | UnnamedNode<";", 169>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1068,10 +1022,10 @@ interface reply_Node extends BaseNode {
 }
 interface return_Node extends BaseNode {
     type: "return";
-    _id: 190;
+    _id: 170;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"return", 191>
+        | UnnamedNode<"return", 171>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -1080,7 +1034,7 @@ interface return_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<";", 192>
+        | UnnamedNode<";", 172>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1088,7 +1042,7 @@ interface return_Node extends BaseNode {
 }
 interface _expression_Node extends BaseNode {
     type: "_expression";
-    _id: 193;
+    _id: 173;
     isNamed: true;
     walk(): TypedCursor<
         | unary_expression_Node
@@ -1106,10 +1060,10 @@ interface _expression_Node extends BaseNode {
 }
 interface group_Node extends BaseNode {
     type: "group";
-    _id: 194;
+    _id: 174;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"(", 195>
+        | UnnamedNode<"(", 175>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -1118,7 +1072,7 @@ interface group_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<")", 196>
+        | UnnamedNode<")", 176>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1126,18 +1080,18 @@ interface group_Node extends BaseNode {
 }
 interface literal_Node extends BaseNode {
     type: "literal";
-    _id: 197;
+    _id: 177;
     isNamed: true;
     walk(): TypedCursor<
-        number_Node | UnnamedNode<"true", 198> | UnnamedNode<"false", 199> | comment_Node | whiteline_Node | ERROR_Node
+        number_Node | UnnamedNode<"true", 178> | UnnamedNode<"false", 179> | comment_Node | whiteline_Node | ERROR_Node
     >;
 }
 interface unary_expression_Node extends BaseNode {
     type: "unary_expression";
-    _id: 200;
+    _id: 180;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"!", 201>
+        | UnnamedNode<"!", 181>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -1146,7 +1100,7 @@ interface unary_expression_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<"-", 202>
+        | UnnamedNode<"-", 182>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1154,7 +1108,7 @@ interface unary_expression_Node extends BaseNode {
 }
 interface binary_expression_Node extends BaseNode {
     type: "binary_expression";
-    _id: 203;
+    _id: 183;
     isNamed: true;
     walk(): TypedCursor<
         | unary_expression_Node
@@ -1165,17 +1119,17 @@ interface binary_expression_Node extends BaseNode {
         | call_Node
         | action_Node
         | binary_expression_Node
-        | UnnamedNode<"||", 204>
-        | UnnamedNode<"&&", 205>
-        | UnnamedNode<"<", 206>
-        | UnnamedNode<"<=", 207>
-        | UnnamedNode<"==", 208>
-        | UnnamedNode<"!=", 209>
-        | UnnamedNode<">=", 210>
-        | UnnamedNode<">", 211>
-        | UnnamedNode<"+", 212>
-        | UnnamedNode<"-", 213>
-        | UnnamedNode<"=>", 214>
+        | UnnamedNode<"||", 184>
+        | UnnamedNode<"&&", 185>
+        | UnnamedNode<"<", 186>
+        | UnnamedNode<"<=", 187>
+        | UnnamedNode<"==", 188>
+        | UnnamedNode<"!=", 189>
+        | UnnamedNode<">=", 190>
+        | UnnamedNode<">", 191>
+        | UnnamedNode<"+", 192>
+        | UnnamedNode<"-", 193>
+        | UnnamedNode<"=>", 194>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1183,56 +1137,56 @@ interface binary_expression_Node extends BaseNode {
 }
 interface compound_name_Node extends BaseNode {
     type: "compound_name";
-    _id: 215;
+    _id: 195;
     isNamed: true;
     walk(): TypedCursor<
-        global_Node | Pattern | UnnamedNode<".", 216> | Pattern | comment_Node | whiteline_Node | ERROR_Node
+        global_Node | Pattern | UnnamedNode<".", 196> | Pattern | comment_Node | whiteline_Node | ERROR_Node
     >;
 }
 interface global_Node extends BaseNode {
     type: "global";
-    _id: 217;
+    _id: 197;
     isNamed: true;
 }
 interface name_Node extends BaseNode {
     type: "name";
-    _id: 218;
+    _id: 198;
     isNamed: true;
 }
-interface var_Node extends BaseNode {
-    type: "var";
-    _id: 219;
+interface member_name_Node extends BaseNode {
+    type: "member_name";
+    _id: 199;
     isNamed: true;
 }
 interface port_name_Node extends BaseNode {
     type: "port_name";
-    _id: 220;
+    _id: 200;
     isNamed: true;
 }
 interface scoped_name_Node extends BaseNode {
     type: "scoped_name";
-    _id: 221;
+    _id: 201;
     isNamed: true;
 }
 interface _identifier_Node extends BaseNode {
     type: "_identifier";
-    _id: 222;
+    _id: 202;
     isNamed: true;
 }
 interface number_Node extends BaseNode {
     type: "number";
-    _id: 223;
+    _id: 203;
     isNamed: true;
 }
 interface comment_Node extends BaseNode {
     type: "comment";
-    _id: 224;
+    _id: 204;
     isNamed: true;
     walk(): TypedCursor<
-        | UnnamedNode<"//", 225>
+        | UnnamedNode<"//", 205>
         | Pattern
-        | UnnamedNode<"/*", 226>
-        | UnnamedNode<"/", 227>
+        | UnnamedNode<"/*", 206>
+        | UnnamedNode<"/", 207>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1263,6 +1217,7 @@ export type AllNodes =
     | UnnamedNode<"{", 16>
     | name_Node
     | UnnamedNode<",", 17>
+    | member_name_Node
     | UnnamedNode<",", 18>
     | UnnamedNode<"}", 19>
     | UnnamedNode<"subint", 21>
@@ -1279,13 +1234,24 @@ export type AllNodes =
     | UnnamedNode<"namespace", 34>
     | compound_name_Node
     | UnnamedNode<"{", 35>
+    | enum_Node
+    | int_Node
+    | extern_Node
+    | namespace_Node
+    | interface_Node
+    | component_Node
+    | function_Node
     | UnnamedNode<"}", 36>
     | UnnamedNode<"interface", 39>
     | interface_body_Node
     | UnnamedNode<"{", 41>
+    | enum_Node
+    | int_Node
+    | extern_Node
     | event_Node
     | behavior_Node
     | UnnamedNode<"}", 42>
+    | event_Node
     | direction_Node
     | type_name_Node
     | event_name_Node
@@ -1305,6 +1271,8 @@ export type AllNodes =
     | instance_Node
     | binding_Node
     | UnnamedNode<"}", 58>
+    | instance_Node
+    | binding_Node
     | UnnamedNode<";", 61>
     | end_point_Node
     | UnnamedNode<"<=>", 63>
@@ -1337,15 +1305,26 @@ export type AllNodes =
     | UnnamedNode<"behaviour", 94>
     | behavior_body_Node
     | UnnamedNode<"{", 96>
+    | function_Node
     | variable_Node
     | on_Node
     | blocking_Node
     | guard_Node
     | invariant_Node
     | compound_Node
+    | enum_Node
+    | int_Node
+    | extern_Node
     | UnnamedNode<"}", 97>
+    | variable_Node
+    | on_Node
+    | blocking_Node
+    | guard_Node
+    | invariant_Node
     | compound_Node
-    | UnnamedNode<"=", 100>
+    | compound_Node
+    | function_body_one_line_Node
+    | UnnamedNode<"=", 101>
     | unary_expression_Node
     | group_Node
     | dollars_Node
@@ -1354,22 +1333,12 @@ export type AllNodes =
     | call_Node
     | action_Node
     | binary_expression_Node
-    | UnnamedNode<";", 101>
-    | UnnamedNode<"=", 103>
-    | unary_expression_Node
-    | group_Node
-    | dollars_Node
-    | literal_Node
-    | compound_name_Node
-    | call_Node
-    | action_Node
-    | binary_expression_Node
-    | UnnamedNode<";", 104>
-    | UnnamedNode<"invariant", 107>
-    | UnnamedNode<";", 108>
-    | UnnamedNode<"on", 110>
+    | UnnamedNode<";", 102>
+    | UnnamedNode<"invariant", 105>
+    | UnnamedNode<";", 106>
+    | UnnamedNode<"on", 108>
     | triggers_Node
-    | UnnamedNode<":", 111>
+    | UnnamedNode<":", 109>
     | on_Node
     | blocking_Node
     | guard_Node
@@ -1384,69 +1353,26 @@ export type AllNodes =
     | compound_Node
     | reply_Node
     | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 112>
-    | interface_action_Node
-    | UnnamedNode<";", 113>
+    | action_or_call_statement_Node
     | trigger_Node
-    | UnnamedNode<",", 115>
+    | UnnamedNode<",", 111>
     | port_event_Node
     | optional_Node
     | inevitable_Node
-    | UnnamedNode<".", 118>
+    | UnnamedNode<".", 114>
     | trigger_formals_Node
-    | UnnamedNode<"(", 122>
+    | UnnamedNode<"(", 118>
     | trigger_formal_Node
-    | UnnamedNode<",", 123>
-    | UnnamedNode<")", 124>
-    | var_Node
-    | UnnamedNode<"<-", 126>
-    | UnnamedNode<"[", 128>
+    | UnnamedNode<",", 119>
+    | UnnamedNode<")", 120>
+    | UnnamedNode<"<-", 122>
+    | UnnamedNode<"[", 124>
     | otherwise_Node
-    | UnnamedNode<"]", 129>
-    | on_Node
-    | blocking_Node
-    | guard_Node
-    | invariant_Node
-    | compound_Node
-    | variable_Node
-    | assign_Node
-    | if_statement_Node
-    | illegal_Node
-    | return_Node
-    | skip_statement_Node
-    | compound_Node
-    | reply_Node
-    | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 130>
-    | interface_action_Node
-    | UnnamedNode<";", 131>
-    | UnnamedNode<"{", 135>
-    | on_Node
-    | blocking_Node
-    | guard_Node
-    | invariant_Node
-    | compound_Node
-    | variable_Node
-    | assign_Node
-    | if_statement_Node
-    | illegal_Node
-    | return_Node
-    | skip_statement_Node
-    | compound_Node
-    | reply_Node
-    | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 136>
-    | interface_action_Node
-    | UnnamedNode<";", 137>
-    | UnnamedNode<"}", 138>
-    | UnnamedNode<"=", 140>
-    | UnnamedNode<";", 141>
+    | UnnamedNode<"]", 125>
+    | UnnamedNode<"{", 129>
+    | UnnamedNode<"}", 130>
+    | UnnamedNode<"=", 132>
+    | UnnamedNode<";", 133>
     | assign_Node
     | if_statement_Node
     | illegal_Node
@@ -1454,14 +1380,8 @@ export type AllNodes =
     | skip_statement_Node
     | reply_Node
     | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 145>
-    | interface_action_Node
-    | UnnamedNode<";", 146>
-    | UnnamedNode<";", 148>
-    | UnnamedNode<";", 149>
-    | UnnamedNode<"defer", 151>
+    | action_or_call_statement_Node
+    | UnnamedNode<"defer", 139>
     | arguments_Node
     | variable_Node
     | assign_Node
@@ -1472,107 +1392,61 @@ export type AllNodes =
     | compound_Node
     | reply_Node
     | defer_Node
+    | action_or_call_statement_Node
     | action_Node
     | call_Node
-    | UnnamedNode<";", 152>
     | interface_action_Node
-    | UnnamedNode<";", 153>
-    | UnnamedNode<";", 156>
-    | UnnamedNode<".", 158>
+    | UnnamedNode<";", 142>
+    | UnnamedNode<".", 144>
+    | UnnamedNode<"(", 147>
+    | UnnamedNode<",", 148>
+    | UnnamedNode<")", 149>
+    | UnnamedNode<"blocking", 152>
+    | UnnamedNode<"illegal", 154>
+    | UnnamedNode<";", 155>
+    | UnnamedNode<"=", 157>
+    | UnnamedNode<";", 158>
+    | UnnamedNode<"if", 160>
     | UnnamedNode<"(", 161>
-    | UnnamedNode<",", 162>
-    | UnnamedNode<")", 163>
-    | UnnamedNode<"blocking", 166>
-    | on_Node
-    | blocking_Node
-    | guard_Node
-    | invariant_Node
-    | compound_Node
-    | variable_Node
-    | assign_Node
-    | if_statement_Node
-    | illegal_Node
-    | return_Node
-    | skip_statement_Node
-    | compound_Node
-    | reply_Node
-    | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 167>
-    | interface_action_Node
-    | UnnamedNode<";", 168>
-    | UnnamedNode<"illegal", 170>
-    | UnnamedNode<";", 171>
-    | UnnamedNode<"=", 173>
-    | UnnamedNode<";", 174>
-    | UnnamedNode<"if", 176>
-    | UnnamedNode<"(", 177>
-    | UnnamedNode<")", 178>
-    | variable_Node
-    | assign_Node
-    | if_statement_Node
-    | illegal_Node
-    | return_Node
-    | skip_statement_Node
-    | compound_Node
-    | reply_Node
-    | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 179>
-    | interface_action_Node
-    | UnnamedNode<";", 180>
-    | UnnamedNode<"else", 181>
-    | variable_Node
-    | assign_Node
-    | if_statement_Node
-    | illegal_Node
-    | return_Node
-    | skip_statement_Node
-    | compound_Node
-    | reply_Node
-    | defer_Node
-    | action_Node
-    | call_Node
-    | UnnamedNode<";", 182>
-    | interface_action_Node
-    | UnnamedNode<";", 183>
-    | UnnamedNode<".", 185>
-    | UnnamedNode<"reply", 186>
-    | UnnamedNode<"(", 187>
-    | UnnamedNode<")", 188>
-    | UnnamedNode<";", 189>
-    | UnnamedNode<"return", 191>
-    | UnnamedNode<";", 192>
+    | UnnamedNode<")", 162>
+    | UnnamedNode<"else", 163>
+    | UnnamedNode<".", 165>
+    | UnnamedNode<"reply", 166>
+    | UnnamedNode<"(", 167>
+    | UnnamedNode<")", 168>
+    | UnnamedNode<";", 169>
+    | UnnamedNode<"return", 171>
+    | UnnamedNode<";", 172>
     | unary_expression_Node
     | group_Node
     | literal_Node
+    | call_Node
+    | action_Node
     | binary_expression_Node
-    | UnnamedNode<"(", 195>
-    | UnnamedNode<")", 196>
-    | UnnamedNode<"true", 198>
-    | UnnamedNode<"false", 199>
-    | UnnamedNode<"!", 201>
-    | UnnamedNode<"-", 202>
-    | UnnamedNode<"||", 204>
-    | UnnamedNode<"&&", 205>
-    | UnnamedNode<"<", 206>
-    | UnnamedNode<"<=", 207>
-    | UnnamedNode<"==", 208>
-    | UnnamedNode<"!=", 209>
-    | UnnamedNode<">=", 210>
-    | UnnamedNode<">", 211>
-    | UnnamedNode<"+", 212>
-    | UnnamedNode<"-", 213>
-    | UnnamedNode<"=>", 214>
+    | UnnamedNode<"(", 175>
+    | UnnamedNode<")", 176>
+    | UnnamedNode<"true", 178>
+    | UnnamedNode<"false", 179>
+    | UnnamedNode<"!", 181>
+    | UnnamedNode<"-", 182>
+    | UnnamedNode<"||", 184>
+    | UnnamedNode<"&&", 185>
+    | UnnamedNode<"<", 186>
+    | UnnamedNode<"<=", 187>
+    | UnnamedNode<"==", 188>
+    | UnnamedNode<"!=", 189>
+    | UnnamedNode<">=", 190>
+    | UnnamedNode<">", 191>
+    | UnnamedNode<"+", 192>
+    | UnnamedNode<"-", 193>
+    | UnnamedNode<"=>", 194>
     | global_Node
     | Pattern
-    | UnnamedNode<".", 216>
+    | UnnamedNode<".", 196>
     | Pattern
-    | UnnamedNode<"//", 225>
-    | UnnamedNode<"/*", 226>
-    | UnnamedNode<"/", 227>
+    | UnnamedNode<"//", 205>
+    | UnnamedNode<"/*", 206>
+    | UnnamedNode<"/", 207>
     | Pattern
     | whiteline_Node
     | ERROR_Node;

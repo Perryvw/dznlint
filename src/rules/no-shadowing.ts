@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { headTailToList, nodeToSourceRange } from "../util";
+import { headTailToList, isKeyword, nodeToSourceRange } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const shadowingVariablesNotAllowed = createDiagnosticsFactory();
@@ -39,7 +39,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
             const diagnostics = [];
 
             for (const trigger of node.triggers) {
-                if (trigger.parameterList) {
+                if (!isKeyword(trigger) && trigger.parameterList) {
                     for (const param of trigger.parameterList.parameters) {
                         const previousDefinition = findDeclarationInUpperScope(param.name.text, context);
                         if (previousDefinition) {

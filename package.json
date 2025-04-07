@@ -15,7 +15,7 @@
     },
     "scripts": {
         "build:parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts",
-        "build:tree-sitter-types": "tsx scripts/create-tree-sitter-types-formatter.ts && npm run fix:prettier",
+        "build:tree-sitter-types": "tsx scripts/create-tree-sitter-types.ts && tsx scripts/create-tree-sitter-types-formatter.ts && npm run fix:prettier",
         "build": "npm run build:parser && tsc",
         "postbuild": "node -e \"require('fs').cpSync('src/grammar/tree-sitter-dezyne.wasm', 'dist/grammar/tree-sitter-dezyne.wasm');\"",
         "lint": "eslint .",

@@ -4,7 +4,15 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { headTailToList, isAsterisk, isIdentifier, isIllegalKeyword, nameToString, nodeToSourceRange } from "../util";
+import {
+    headTailToList,
+    isAsterisk,
+    isIdentifier,
+    isIllegalKeyword,
+    isKeyword,
+    nameToString,
+    nodeToSourceRange,
+} from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();
@@ -59,7 +67,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             for (const trigger of node.triggers) {
-                if (context.typeChecker.symbolOfNode(trigger.name) === undefined) {
+                if (!isKeyword(trigger) && context.typeChecker.symbolOfNode(trigger.name) === undefined) {
                     diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "port or event", context));
                 }
             }
@@ -69,7 +77,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             // First get all parameters not escaped with _ that are not shared by all triggers
             const occurrences: Record<string, ast.OnTrigger[]> = {};
             for (const trigger of node.triggers) {
-                if (trigger.parameterList) {
+                if (!isKeyword(trigger) && trigger.parameterList) {
                     for (const param of trigger.parameterList.parameters) {
                         if (param.name.text.startsWith("_")) continue;
 
@@ -292,6 +300,10 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
         };
 
         const stringifyTrigger = (trigger: ast.OnTrigger): string => {
+            if (isKeyword(trigger)) {
+                return trigger.text;
+            }
+
             let params = "";
             if (trigger.parameterList) {
                 params = trigger.parameterList.parameters.map(p => p.name.text).join(", ");

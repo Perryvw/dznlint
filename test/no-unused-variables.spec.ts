@@ -1,8 +1,8 @@
 import { unusedVariable } from "../src/rules/no-unused-variables";
 import { testdznlint } from "./util";
 
-test("unused variable in event trigger", () => {
-    testdznlint({
+test("unused variable in event trigger", async () => {
+    await testdznlint({
         diagnostic: unusedVariable.code,
         pass: `component A {
             behavior {
@@ -22,8 +22,8 @@ test("unused variable in event trigger", () => {
     });
 });
 
-test("unused variable in function", () => {
-    testdznlint({
+test("unused variable in function", async () => {
+    await testdznlint({
         diagnostic: unusedVariable.code,
         pass: `component A {
             behavior {
@@ -43,8 +43,8 @@ test("unused variable in function", () => {
     });
 });
 
-test("unused variable in defer", () => {
-    testdznlint({
+test("unused variable in defer", async () => {
+    await testdznlint({
         diagnostic: unusedVariable.code,
         pass: `component A {
             behavior {
@@ -68,8 +68,8 @@ test("unused variable in defer", () => {
     });
 });
 
-test("illegal is not unused variable", () => {
-    testdznlint({
+test("illegal is not unused variable", async () => {
+    await testdznlint({
         diagnostic: unusedVariable.code,
         pass: `component A {
             behavior {
@@ -84,8 +84,8 @@ test("illegal is not unused variable", () => {
     });
 });
 
-test("unused variable can be ignored with underscore", () => {
-    testdznlint({
+test("unused variable can be ignored with underscore", async () => {
+    await testdznlint({
         diagnostic: unusedVariable.code,
         pass: `component A {
             behavior {

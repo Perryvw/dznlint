@@ -1,5 +1,4 @@
-import { TreeCursor } from "web-tree-sitter";
-import { TreeSitterNode } from "../parse";
+import { TreeCursor, SyntaxNode } from "web-tree-sitter";
 import type * as Grammar from "../grammar/tree-sitter-types-formatter";
 
 // Extend comment node with extra property
@@ -22,7 +21,7 @@ export class WhitespaceSensitiveCursor<
     }
 
     private syntheticNode: Grammar.WalkerNodes<TNode> | undefined;
-    private _currentNode: TreeSitterNode = undefined!;
+    private _currentNode: SyntaxNode = undefined!;
 
     public get currentNode() {
         return this.syntheticNode ?? (this._currentNode as Grammar.WalkerNodes<TNode>);

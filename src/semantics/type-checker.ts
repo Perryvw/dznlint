@@ -16,6 +16,8 @@ import {
     isCallExpression,
     isAsterisk,
     assertNever,
+    isKeyword,
+    isChildOf,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -72,6 +74,8 @@ const BOOL_SYMBOL = new SemanticSymbol(null!);
 
 const TRUE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION };
 const FALSE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION };
+const TRUE_SYMBOL = new SemanticSymbol(TRUE_DECLARATION);
+const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
 
 export class TypeChecker {
     public constructor(private program: Program) {}
@@ -96,14 +100,12 @@ export class TypeChecker {
     private builtInSymbols = new Map<string, SemanticSymbol>([
         ["void", new SemanticSymbol(null!)],
         ["bool", BOOL_SYMBOL],
-        ["true", new SemanticSymbol(TRUE_DECLARATION)],
-        ["false", new SemanticSymbol(FALSE_DECLARATION)],
         ["reply", new SemanticSymbol(null!)],
         ["optional", new SemanticSymbol(null!)],
         ["inevitable", new SemanticSymbol(null!)],
     ]);
 
-    public symbolOfNode(node: ASTNode, typeReference = false): SemanticSymbol | undefined {
+    public symbolOfNode(node: ast.AnyAstNode, typeReference = false): SemanticSymbol | undefined {
         if (this.symbols.has(node)) return this.symbols.get(node);
         if (isTypeReference(node)) {
             typeReference = true;
@@ -133,6 +135,12 @@ export class TypeChecker {
             let scope = findFirstParent(node, isScopedBlock);
             const scopeNamespaces = [];
             while (scope) {
+                // To avoid resolving variables in on expressions to the parameters in the on triggers,
+                // check if node is part of the body of the on statement, if not, move on to the next scope
+                if (scope.kind === ast.SyntaxKind.OnStatement && !isChildOf(node, scope.body)) {
+                    scope = findFirstParent(scope, isScopedBlock);
+                    continue;
+                }
                 const symbol = this.findVariableInScope(node.text, scope, scopeNamespaces);
                 if (symbol && (!typeReference || this.isTypeSymbol(symbol))) return symbol;
 
@@ -157,6 +165,9 @@ export class TypeChecker {
             } else {
                 return ownerMembers.get(node.name.text);
             }
+        } else if (node.kind === ast.SyntaxKind.BooleanLiteral) {
+            const bool = node as ast.BooleanLiteral;
+            return bool.value ? TRUE_SYMBOL : FALSE_SYMBOL;
         } else if (
             node.kind === ast.SyntaxKind.Port ||
             node.kind === ast.SyntaxKind.Event ||
@@ -170,6 +181,7 @@ export class TypeChecker {
             return this.getOrCreateSymbol(node);
         } else if (node.kind === ast.SyntaxKind.OnTrigger) {
             const onTrigger = node as ast.OnTrigger;
+            if (isKeyword(onTrigger)) return SemanticSymbol.ErrorSymbol(); // Optional and inevitable don't have symbols
             return this.symbolOfNode(onTrigger.name);
         } else {
             throw `I don't know how to find the symbol for node type ${ast.SyntaxKind[node.kind]} ${util.inspect(
@@ -264,12 +276,6 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === ast.SyntaxKind.FunctionDefinition) {
             const definition = declaration as ast.FunctionDefinition;
             return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
-            // } else if (symbol.declaration.kind === ast.SyntaxKind.member_identifier) {
-            //     if (!symbol.declaration.parent) return ERROR_TYPE;
-            //     const parentType = this.typeOfNode(symbol.declaration.parent);
-            //     if (parentType === ERROR_TYPE) return ERROR_TYPE;
-            //     if (parentType.kind === TypeKind.Enum) return BOOL_TYPE;
-            //     return ERROR_TYPE;
         } else if (symbol.declaration.kind === ast.SyntaxKind.BooleanLiteral) {
             return BOOL_TYPE;
         } else if (symbol.declaration.kind === ast.SyntaxKind.IntDefinition) {
@@ -278,6 +284,7 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === ast.SyntaxKind.OnParameter) {
             const definition = symbol.declaration as ast.OnParameter;
             const parentDeclaration = symbol.declaration.parent as ast.OnTrigger;
+            if (isKeyword(parentDeclaration)) return ERROR_TYPE; // optional or inevitable don't have a type
             const parentSymbol = this.symbolOfNode(parentDeclaration);
             if (!parentSymbol) return ERROR_TYPE;
 
@@ -460,7 +467,7 @@ export class TypeChecker {
         } else if (scope.kind === ast.SyntaxKind.OnStatement) {
             const on = scope as ast.OnStatement;
             for (const trigger of on.triggers) {
-                if (trigger.parameterList?.parameters) {
+                if (!isKeyword(trigger) && trigger.parameterList?.parameters) {
                     for (const parameter of trigger.parameterList.parameters) {
                         result.set(parameter.name.text, parameter);
                     }

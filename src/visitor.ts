@@ -2,7 +2,7 @@ import * as ast from "./grammar/ast";
 import { ASTNode } from "./linting-rule";
 import { InputSource, Program } from "./semantics/program";
 import { TypeChecker } from "./semantics/type-checker";
-import { headTailToList } from "./util";
+import { headTailToList, isKeyword } from "./util";
 
 const stopVisiting = () => {};
 
@@ -261,6 +261,8 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         }
     },
     [ast.SyntaxKind.OnTrigger]: (node: ast.OnTrigger, context: VisitorContext, cb: VisitorCallback) => {
+        if (isKeyword(node)) return;
+
         context.visit(node.name, cb);
 
         if (node.parameterList?.parameters) {
@@ -280,6 +282,12 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.currentScope().variable_declarations[node.name.text] = node.name;
         context.visit(node.type, cb);
         context.visit(node.name, cb);
+    },
+    [ast.SyntaxKind.Reply]: (node: ast.Reply, context: VisitorContext, cb: VisitorCallback) => {
+        if (node.port) {
+            context.visit(node.port, cb);
+        }
+        context.visit(node.value, cb);
     },
     [ast.SyntaxKind.ReturnStatement]: (node: ast.ReturnStatement, context: VisitorContext, cb: VisitorCallback) => {
         if (node.returnValue) {
@@ -477,6 +485,7 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
         }
     },
     [ast.SyntaxKind.OnTrigger]: (node: ast.OnTrigger) => {
+        if (isKeyword(node)) return;
         setParent(node.name, node);
 
         if (node.parameterList?.parameters) {
@@ -491,6 +500,12 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
     [ast.SyntaxKind.Port]: (node: ast.Port) => {
         setParent(node.name, node);
         setParent(node.type, node);
+    },
+    [ast.SyntaxKind.Reply]: (node: ast.Reply) => {
+        if (node.port) {
+            setParent(node.port, node);
+        }
+        setParent(node.value, node);
     },
     [ast.SyntaxKind.ReturnStatement]: (node: ast.ReturnStatement) => {
         if (node.returnValue) {

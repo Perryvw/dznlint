@@ -5,6 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
+import { isKeyword } from "../util";
 
 export const duplicateParameter = createDiagnosticsFactory();
 
@@ -52,11 +53,11 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
         factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
             const diagnostics = [];
 
-            for (const on of node.triggers) {
+            for (const trigger of node.triggers) {
                 const seenNames = new Map<string, ast.Identifier>();
 
-                if (on.parameterList) {
-                    for (const param of on.parameterList.parameters) {
+                if (!isKeyword(trigger) && trigger.parameterList) {
+                    for (const param of trigger.parameterList.parameters) {
                         if (seenNames.has(param.name.text)) {
                             diagnostics.push(
                                 ...createDiagnostics(param.name, seenNames.get(param.name.text)!, context.source)

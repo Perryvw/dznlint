@@ -1,8 +1,8 @@
 import { expectedParameterDirection } from "../src/rules/parameter-direction";
 import { testdznlint } from "./util";
 
-test("missing parameter direction in behavior function", () => {
-    testdznlint({
+test("missing parameter direction in behavior function", async () => {
+    await testdznlint({
         diagnostic: expectedParameterDirection.code,
         pass: `
         component A {
@@ -19,8 +19,8 @@ test("missing parameter direction in behavior function", () => {
     });
 });
 
-test("missing parameter direction in event", () => {
-    testdznlint({
+test("missing parameter direction in event", async () => {
+    await testdznlint({
         diagnostic: expectedParameterDirection.code,
         pass: `
         interface I {

@@ -2,8 +2,8 @@ import { unknownVariable } from "../src/rules/no-unknown-variables";
 import { testdznlint } from "./util";
 
 describe("in systems", () => {
-    test("no instance of unknown type", () => {
-        testdznlint({
+    test("no instance of unknown type", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component B {}
@@ -22,8 +22,8 @@ describe("in systems", () => {
         });
     });
 
-    test("no undefined instance bindings", () => {
-        testdznlint({
+    test("no undefined instance bindings", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {}
@@ -50,8 +50,8 @@ describe("in systems", () => {
         });
     });
 
-    test("no undefined port bindings", () => {
-        testdznlint({
+    test("no undefined port bindings", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {}
@@ -78,8 +78,8 @@ describe("in systems", () => {
         });
     });
 
-    test("no undefined port on instance bindings", () => {
-        testdznlint({
+    test("no undefined port on instance bindings", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {}
@@ -111,8 +111,8 @@ describe("in systems", () => {
 });
 
 describe("in interfaces", () => {
-    test.each(["in", "out"])("no unknown %s event types", eventDirection => {
-        testdznlint({
+    test.each(["in", "out"])("no unknown %s event types", async eventDirection => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             extern Bla $$;
@@ -136,8 +136,8 @@ describe("in interfaces", () => {
         });
     });
 
-    test.each(["in", "out"])("no unknown %s events", eventDirection => {
-        testdznlint({
+    test.each(["in", "out"])("no unknown %s events", async eventDirection => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             extern Bla $$;
@@ -158,8 +158,8 @@ describe("in interfaces", () => {
         });
     });
 
-    test("no unknown event variable types", () => {
-        testdznlint({
+    test("no unknown event variable types", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             extern Bla $$;
@@ -174,8 +174,8 @@ describe("in interfaces", () => {
     });
 
     // https://github.com/Perryvw/dznlint/issues/17
-    test("identifier expression (#17)", () => {
-        testdznlint({
+    test("identifier expression (#17)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
             interface I {
@@ -191,8 +191,8 @@ describe("in interfaces", () => {
 });
 
 describe("in components", () => {
-    test("no ports for unknown interfaces", () => {
-        testdznlint({
+    test("no ports for unknown interfaces", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I { in void e(); }
@@ -211,8 +211,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown ports", () => {
-        testdznlint({
+    test("no unknown ports", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I { in void e(); }
@@ -234,8 +234,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown events on known ports", () => {
-        testdznlint({
+    test("no unknown events on known ports", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I { in void e(); }
@@ -260,8 +260,8 @@ describe("in components", () => {
         });
     });
 
-    test("no functions with unknown types", () => {
-        testdznlint({
+    test("no functions with unknown types", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -278,8 +278,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown function calls", () => {
-        testdznlint({
+    test("no unknown function calls", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -303,8 +303,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown parameter types", () => {
-        testdznlint({
+    test("no unknown parameter types", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -323,8 +323,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown call arguments", () => {
-        testdznlint({
+    test("no unknown call arguments", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -345,8 +345,8 @@ describe("in components", () => {
         });
     });
 
-    test.each(["true", "false"])("literal bool arguments are known", boolLiteral => {
-        testdznlint({
+    test.each(["true", "false"])("literal bool arguments are known", async boolLiteral => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -359,8 +359,8 @@ describe("in components", () => {
         });
     });
 
-    test.each(["optional", "inevitable"])("optional inevitable are known", keyword => {
-        testdznlint({
+    test.each(["optional", "inevitable"])("optional inevitable are known", async keyword => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -372,8 +372,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown variable declaration type", () => {
-        testdznlint({
+    test("no unknown variable declaration type", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -394,8 +394,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown enum members", () => {
-        testdznlint({
+    test("no unknown enum members", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -418,8 +418,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown reply", () => {
-        testdznlint({
+    test("no unknown reply", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I { in void foo(); }
@@ -434,8 +434,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown reply on port", () => {
-        testdznlint({
+    test("no unknown reply on port", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I { in void foo(); }
@@ -450,8 +450,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown namespaced variable declaration type", () => {
-        testdznlint({
+    test("no unknown namespaced variable declaration type", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             namespace NS {
@@ -475,8 +475,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown nested namespaced variable declaration type", () => {
-        testdznlint({
+    test("no unknown nested namespaced variable declaration type", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             namespace NS { namespace NS2 {
@@ -500,8 +500,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown compound namespaced variable declaration type", () => {
-        testdznlint({
+    test("no unknown compound namespaced variable declaration type", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             namespace NS.NS2 {
@@ -525,8 +525,8 @@ describe("in components", () => {
         });
     });
 
-    test("no uknown imported symbols", () => {
-        testdznlint({
+    test("no uknown imported symbols", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: {
                 ["main.dzn"]: `
@@ -547,8 +547,8 @@ describe("in components", () => {
         });
     });
 
-    test("no unknown variables from event arguments", () => {
-        testdznlint({
+    test("no unknown variables from event arguments", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -577,8 +577,8 @@ describe("in components", () => {
         });
     });
 
-    test("enum members in interface statement", () => {
-        testdznlint({
+    test("enum members in interface statement", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -603,8 +603,8 @@ describe("in components", () => {
         });
     });
 
-    test("enum members in interface on body", () => {
-        testdznlint({
+    test("enum members in interface on body", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -639,8 +639,8 @@ describe("in components", () => {
         });
     });
 
-    test("enum members in interface guards", () => {
-        testdznlint({
+    test("enum members in interface guards", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -669,8 +669,8 @@ describe("in components", () => {
         });
     });
 
-    test("enum members in component on body", () => {
-        testdznlint({
+    test("enum members in component on body", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I { in void foo(); }
@@ -703,8 +703,8 @@ describe("in components", () => {
         });
     });
 
-    test("enum members in component guards", () => {
-        testdznlint({
+    test("enum members in component guards", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {
@@ -735,8 +735,8 @@ describe("in components", () => {
         });
     });
 
-    test("int type variable", () => {
-        testdznlint({
+    test("int type variable", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             subint SmallInt {0..9};
@@ -749,8 +749,8 @@ describe("in components", () => {
         });
     });
 
-    test("int type variable inside behavior", () => {
-        testdznlint({
+    test("int type variable inside behavior", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `            
             component C {
@@ -762,8 +762,8 @@ describe("in components", () => {
         });
     });
 
-    test("unknown member in return statement", () => {
-        testdznlint({
+    test("unknown member in return statement", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `            
             component C {
@@ -779,8 +779,8 @@ describe("in components", () => {
         });
     });
 
-    test("unknown variable in return statement", () => {
-        testdznlint({
+    test("unknown variable in return statement", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `            
             component C {
@@ -794,8 +794,8 @@ describe("in components", () => {
     });
 
     // https://github.com/Perryvw/dznlint/issues/9
-    test("shared state variable in interface (#9)", () => {
-        testdznlint({
+    test("shared state variable in interface (#9)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -823,8 +823,8 @@ describe("in components", () => {
         });
     });
 
-    test("do not assume defer as part of variable is a defer statement", () => {
-        testdznlint({
+    test("do not assume defer as part of variable is a defer statement", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface ITimer { 
@@ -848,8 +848,8 @@ describe("in components", () => {
         });
     });
 
-    test("parameter shadowing interface name", () => {
-        testdznlint({
+    test("parameter shadowing interface name", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             interface I {
@@ -868,8 +868,8 @@ describe("in components", () => {
     });
 
     // https://github.com/Perryvw/dznlint/issues/15
-    test("identifier in if condition (#15)", () => {
-        testdznlint({
+    test("identifier in if condition (#15)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {                
@@ -894,8 +894,8 @@ describe("in components", () => {
     });
 
     // https://github.com/Perryvw/dznlint/issues/15
-    test("identifier in else-if condition (#15)", () => {
-        testdznlint({
+    test("identifier in else-if condition (#15)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {                
@@ -924,8 +924,8 @@ describe("in components", () => {
     });
 
     // https://github.com/Perryvw/dznlint/issues/25
-    test("enum use in function (#25)", () => {
-        testdznlint({
+    test("enum use in function (#25)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: `
             component C {                
@@ -957,8 +957,8 @@ describe("in components", () => {
     });
 
     //https://github.com/Perryvw/dznlint/issues/22
-    test("shared state enum in other file behavior (#22)", () => {
-        testdznlint({
+    test("shared state enum in other file behavior (#22)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             pass: {
                 ["main.dzn"]: `
@@ -990,8 +990,8 @@ describe("in components", () => {
 
 // https://github.com/Perryvw/dznlint/issues/23
 describe("used variables missing from on triggers (#23)", () => {
-    test("parameter not in all triggers (empty parameter list)", () => {
-        testdznlint({
+    test("parameter not in all triggers (empty parameter list)", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
             interface I {
@@ -1029,8 +1029,8 @@ describe("used variables missing from on triggers (#23)", () => {
         });
     });
 
-    test("parameter not in all triggers", () => {
-        testdznlint({
+    test("parameter not in all triggers", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
             interface I {
@@ -1067,8 +1067,8 @@ describe("used variables missing from on triggers (#23)", () => {
         });
     });
 
-    test("parameter named differently in some triggers", () => {
-        testdznlint({
+    test("parameter named differently in some triggers", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
             interface I {
@@ -1105,8 +1105,8 @@ describe("used variables missing from on triggers (#23)", () => {
         });
     });
 
-    test("many other triggers", () => {
-        testdznlint({
+    test("many other triggers", async () => {
+        await testdznlint({
             diagnostic: unknownVariable.code,
             fail: `
             interface I {
@@ -1130,8 +1130,8 @@ describe("used variables missing from on triggers (#23)", () => {
     });
 });
 
-test("namespace and instance with same name", () => {
-    testdznlint({
+test("namespace and instance with same name", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace myNS {
@@ -1145,8 +1145,8 @@ test("namespace and instance with same name", () => {
     });
 });
 
-test("variables in invariant", () => {
-    testdznlint({
+test("variables in invariant", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         component C {
@@ -1175,8 +1175,8 @@ test("variables in invariant", () => {
     });
 });
 
-test("invariant using predicate function", () => {
-    testdznlint({
+test("invariant using predicate function", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         component C {
@@ -1194,8 +1194,8 @@ test("invariant using predicate function", () => {
     });
 });
 
-test("call global function", () => {
-    testdznlint({
+test("call global function", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         component C {
@@ -1210,8 +1210,8 @@ test("call global function", () => {
     });
 });
 
-test("call global function in namespace", () => {
-    testdznlint({
+test("call global function in namespace", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         component C {
@@ -1228,8 +1228,8 @@ test("call global function in namespace", () => {
     });
 });
 
-test("global function with port", () => {
-    testdznlint({
+test("global function with port", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         interface I {
@@ -1256,8 +1256,8 @@ test("global function with port", () => {
     });
 });
 
-test("outside reference to enum type declared inside interface behavior", () => {
-    testdznlint({
+test("outside reference to enum type declared inside interface behavior", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         interface I {
@@ -1277,8 +1277,8 @@ test("outside reference to enum type declared inside interface behavior", () => 
     });
 });
 
-test("trying to call an action on on_trigger parameter", () => {
-    testdznlint({
+test("trying to call an action on on_trigger parameter", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         fail: `
         extern ExternType $$;
@@ -1298,8 +1298,8 @@ test("trying to call an action on on_trigger parameter", () => {
     });
 });
 
-test("trying to call an action on function parameter", () => {
-    testdznlint({
+test("trying to call an action on function parameter", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         fail: `
         extern ExternType $$;

@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { TypeKind } from "../semantics/type-checker";
-import { isEvent, nameToString } from "../util";
+import { isEvent, isKeyword, nameToString } from "../util";
 
 export const incorrectOnParameterCount = createDiagnosticsFactory();
 
@@ -17,7 +17,7 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
             const diagnostics = [];
 
             for (const trigger of node.triggers) {
-                if (trigger.parameterList === null) continue; // Don't check this on triggers without parameter specified
+                if (isKeyword(trigger) || trigger.parameterList === null) continue; // Don't check this on triggers without parameter specified
 
                 const triggerType = context.typeChecker.typeOfNode(trigger.name);
 

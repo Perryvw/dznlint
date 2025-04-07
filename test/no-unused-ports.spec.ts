@@ -1,8 +1,8 @@
 import { unusedPort } from "../src/rules/no-unused-ports";
 import { testdznlint } from "./util";
 
-test("no unused ports multiple", () => {
-    testdznlint({
+test("no unused ports multiple", async () => {
+    await testdznlint({
         diagnostic: unusedPort.code,
         pass: `
         interface I { in void event(); }
@@ -22,8 +22,8 @@ test("no unused ports multiple", () => {
     });
 });
 
-test("no unused provided ports", () => {
-    testdznlint({
+test("no unused provided ports", async () => {
+    await testdznlint({
         diagnostic: unusedPort.code,
         pass: `
         interface I { in void event(); }
@@ -47,8 +47,8 @@ test("no unused provided ports", () => {
     });
 });
 
-test("no unused required ports", () => {
-    testdznlint({
+test("no unused required ports", async () => {
+    await testdznlint({
         diagnostic: unusedPort.code,
         pass: `
         interface I { in void event(); }
@@ -74,8 +74,8 @@ test("no unused required ports", () => {
     });
 });
 
-test("no unused injected ports", () => {
-    testdznlint({
+test("no unused injected ports", async () => {
+    await testdznlint({
         diagnostic: unusedPort.code,
         pass: `
         interface I { in void event(); }

@@ -4,7 +4,7 @@ import { expectDiagnosticOfType, expectNoDiagnostics } from "./util";
 import { couldNotResolveFile } from "../src/rules/no-unknown-imports";
 import { normalizePath } from "../src/resolve-imports";
 
-test("basic import", () => {
+test("basic import", async () => {
     const files = [
         {
             fileName: "main.dzn",
@@ -24,13 +24,13 @@ test("basic import", () => {
         },
     ];
 
-    const program = new api.Program();
+    const program = await api.Program.Init();
     const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
 
     expectNoDiagnostics(api.lint(sourceFiles, {}, program));
 });
 
-test("[bug] mixed scenario import interface", () => {
+test("[bug] mixed scenario import interface", async () => {
     const files = [
         {
             fileName: "main.dzn",
@@ -53,13 +53,13 @@ test("[bug] mixed scenario import interface", () => {
         },
     ];
 
-    const program = new api.Program();
+    const program = await api.Program.Init();
     const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
 
     expectNoDiagnostics(api.lint(sourceFiles, {}, program));
 });
 
-test("basic import with include dir", () => {
+test("basic import with include dir", async () => {
     const files = [
         {
             fileName: "main.dzn",
@@ -79,13 +79,13 @@ test("basic import with include dir", () => {
         },
     ];
 
-    const program = new api.Program({ includePaths: ["mysubdir"] });
+    const program = await api.Program.Init({ includePaths: ["mysubdir"] });
     const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
 
     expectNoDiagnostics(api.lint(sourceFiles, {}, program));
 });
 
-test("resolve import from disk", () => {
+test("resolve import from disk", async () => {
     const files = [
         {
             fileName: "main.dzn",
@@ -105,7 +105,7 @@ test("resolve import from disk", () => {
         fileExists: jest.fn(() => true),
         readFile: jest.fn(() => "extern EType $$;"),
     } satisfies Partial<api.LinterHost>;
-    const program = new api.Program(mockHost);
+    const program = await api.Program.Init(mockHost);
     const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
 
     expectNoDiagnostics(api.lint(sourceFiles, { no_unknown_imports: false }, program));
@@ -118,7 +118,7 @@ test("resolve import from disk", () => {
     expect(mockHost.readFile).toHaveBeenCalledWith(resolvedAbsPath);
 });
 
-test("resolve import from disk with include dir", () => {
+test("resolve import from disk with include dir", async () => {
     const files = [
         {
             fileName: "main.dzn",
@@ -142,7 +142,7 @@ test("resolve import from disk with include dir", () => {
 
     mockHost.fileExists.mockReturnValueOnce(false).mockReturnValueOnce(true).mockReturnValueOnce(true);
 
-    const program = new api.Program(mockHost);
+    const program = await api.Program.Init(mockHost);
     const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
 
     expectNoDiagnostics(api.lint(sourceFiles, { no_unknown_imports: false }, program));
@@ -158,7 +158,7 @@ test("resolve import from disk with include dir", () => {
     expect(mockHost.readFile).toHaveBeenCalledWith(resolvedAbsPath);
 });
 
-test("failed to resolve import", () => {
+test("failed to resolve import", async () => {
     const files = [
         {
             fileName: "main.dzn",
@@ -177,7 +177,7 @@ test("failed to resolve import", () => {
         readFile: jest.fn(() => ""),
     } satisfies Partial<api.LinterHost>;
 
-    const program = new api.Program(mockHost);
+    const program = await api.Program.Init(mockHost);
     const sourceFiles = files.map(f => program.parseFile(f.fileName, f.fileContent)!);
 
     expectDiagnosticOfType(api.lint(sourceFiles, {}, program), couldNotResolveFile.code);

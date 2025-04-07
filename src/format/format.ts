@@ -1,10 +1,10 @@
 import { DEFAULT_DZNLINT_FORMAT_CONFIG } from "../config/default-config";
 import { DznLintFormatConfiguration, DznLintFormatUserConfiguration } from "../config/dznlint-configuration";
-import { treeSitterParse } from "../parse";
 import { InputSource } from "../semantics/program";
 import { Formatter } from "./formatter";
 import * as Grammar from "../grammar/tree-sitter-types-formatter";
 import { WhitespaceSensitiveCursor } from "./whitespace-sensitive-cursor";
+import { initParser, parseDznSource } from "../parse";
 
 export async function format(source: InputSource, config?: DznLintFormatUserConfiguration): Promise<string> {
     const fullConfig: DznLintFormatConfiguration = {
@@ -15,7 +15,8 @@ export async function format(source: InputSource, config?: DznLintFormatUserConf
         target_width: config?.target_width ?? DEFAULT_DZNLINT_FORMAT_CONFIG.target_width,
     };
     const formatter = new Formatter(fullConfig);
-    const tree = (await treeSitterParse(source)) as Grammar.BaseNode as Grammar.root_Node;
+    const parser = await initParser();
+    const tree = parser.parse(source.fileContent).rootNode as Grammar.BaseNode as Grammar.root_Node;
     formatRoot(new WhitespaceSensitiveCursor(tree) as Grammar.CursorPosition<Grammar.root_Node>, formatter);
     const formatted = formatter.toString();
     return formatted.endsWith("\n") ? formatted : formatted + "\n";
@@ -290,6 +291,10 @@ function formatEnum(cursor: Grammar.CursorPosition<Grammar.enum_Node>, formatter
                     switch (c2.nodeType) {
                         case "{":
                             formatter.openScopedBlock();
+                            break;
+                        case "member_name":
+                            formatter.requirePrecedingNewLine();
+                            formatter.enumMember(c2.nodeText);
                             break;
                         case "name":
                             formatter.requirePrecedingNewLine();
@@ -1391,7 +1396,7 @@ function formatTriggerFormals(cursor: Grammar.CursorPosition<Grammar.trigger_for
                 const c2 = cursor.pos();
                 do {
                     switch (c2.nodeType) {
-                        case "var":
+                        case "name":
                             formatCompoundName(c2.currentNode, formatter);
                             break;
                         case "<-":
@@ -1438,7 +1443,7 @@ function formatAssign(cursor: Grammar.CursorPosition<Grammar.assign_Node>, forma
     cursor.gotoFirstChild();
     do {
         switch (cursor.nodeType) {
-            case "var":
+            case "name":
                 formatCompoundName(cursor.currentNode, formatter);
                 break;
             case "compound_name":
@@ -2195,10 +2200,10 @@ function formatCompoundName(
     name:
         | Grammar.end_point_Node
         | Grammar.event_name_Node
+        | Grammar.name_Node
         | Grammar.type_name_Node
         | Grammar.var_name_Node
         | Grammar.compound_name_Node
-        | Grammar.var_Node
         | Grammar.interface_action_Node
         | Grammar.port_name_Node
         | Grammar.scoped_name_Node,

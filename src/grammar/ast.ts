@@ -39,6 +39,7 @@ export enum SyntaxKind {
     Identifier,
     NumericLiteral,
     ParenthesizedExpression,
+    Reply,
     UnaryOperatorExpression,
 
     // Misc
@@ -203,7 +204,7 @@ export interface FunctionDefinition extends AstNode<SyntaxKind.FunctionDefinitio
     returnType: TypeReference;
     name: Identifier;
     parameters: FunctionParameter[];
-    body: Compound | Statement;
+    body: Compound | Expression;
 }
 
 export type ParameterDirection = Keyword<"in"> | Keyword<"out">;
@@ -215,7 +216,7 @@ export interface FunctionParameter extends AstNode<SyntaxKind.FunctionParameter>
 
 // Declarative statements
 
-type DeclarativeStatement = OnStatement | GuardStatement | InvariantStatement | Compound;
+export type DeclarativeStatement = OnStatement | GuardStatement | InvariantStatement | Compound;
 
 export interface OnParameter extends AstNode<SyntaxKind.OnParameter> {
     name: Identifier;
@@ -226,7 +227,8 @@ export interface OnTriggerParameters extends AstNode<SyntaxKind.OnTriggerParamet
     parameters: OnParameter[];
 }
 
-export interface OnTrigger extends AstNode<SyntaxKind.OnTrigger> {
+export type OnTrigger = Keyword<"optional"> | Keyword<"inevitable"> | OnPortTrigger;
+export interface OnPortTrigger extends AstNode<SyntaxKind.OnTrigger> {
     name: Name;
     parameterList?: OnTriggerParameters;
 }
@@ -259,7 +261,7 @@ export type ImperativeStatement =
     | Compound;
 
 export interface AssignmentStatement extends AstNode<SyntaxKind.AssignmentStatement> {
-    left: Identifier;
+    left: Name;
     right: Expression;
 }
 
@@ -302,11 +304,12 @@ export type UnaryExpression =
     | Name
     | BooleanLiteral
     | NumericLiteral
+    | Reply
     | UnaryOperatorExpression
     | Keyword<"illegal">
     | Keyword<"otherwise">;
 
-type BinaryOperator =
+export type BinaryOperator =
     | Keyword<"&&">
     | Keyword<"||">
     | Keyword<"==">
@@ -320,7 +323,7 @@ type BinaryOperator =
     | Keyword<"=>">;
 
 export interface BinaryExpression extends AstNode<SyntaxKind.BinaryExpression> {
-    left: UnaryExpression;
+    left: Expression;
     operator: BinaryOperator;
     right: Expression;
 }
@@ -359,7 +362,12 @@ export interface NumericLiteral extends AstNode<SyntaxKind.NumericLiteral> {
     value: number;
 }
 
-type UnaryOperator = Keyword<"!">;
+export interface Reply extends AstNode<SyntaxKind.Reply> {
+    port?: Identifier;
+    value: Expression;
+}
+
+export type UnaryOperator = Keyword<"!"> | Keyword<"-">;
 
 export interface UnaryOperatorExpression extends AstNode<SyntaxKind.UnaryOperatorExpression> {
     operator: UnaryOperator;

@@ -1,8 +1,8 @@
 import { portMissingBlocking, portRedundantBlocking } from "../src/rules/port-missing-redundant-blocking";
 import { testdznlint } from "./util";
 
-test("is disabled by default", () => {
-    testdznlint({
+test("is disabled by default", async () => {
+    await testdznlint({
         diagnostic: portMissingBlocking.code,
         pass: `
             component C {
@@ -15,8 +15,8 @@ test("is disabled by default", () => {
     });
 });
 
-test("blocking port required when blocking keyword is used", () => {
-    testdznlint({
+test("blocking port required when blocking keyword is used", async () => {
+    await testdznlint({
         diagnostic: portMissingBlocking.code,
         pass: `
             component C {
@@ -38,8 +38,8 @@ test("blocking port required when blocking keyword is used", () => {
     });
 });
 
-test("blocking port required when blocking keyword is used in statement", () => {
-    testdznlint({
+test("blocking port required when blocking keyword is used in statement", async () => {
+    await testdznlint({
         diagnostic: portMissingBlocking.code,
         pass: `
             component C {
@@ -61,8 +61,8 @@ test("blocking port required when blocking keyword is used in statement", () => 
     });
 });
 
-test("blocking port is redundant when no blocking keyword is used", () => {
-    testdznlint({
+test("blocking port is redundant when no blocking keyword is used", async () => {
+    await testdznlint({
         diagnostic: portRedundantBlocking.code,
         pass: `
             component C {
@@ -84,8 +84,8 @@ test("blocking port is redundant when no blocking keyword is used", () => {
     });
 });
 
-test("also considers blocking statements", () => {
-    testdznlint({
+test("also considers blocking statements", async () => {
+    await testdznlint({
         diagnostic: portRedundantBlocking.code,
         pass: `
             component C {
@@ -99,8 +99,8 @@ test("also considers blocking statements", () => {
     });
 });
 
-test("should only complain about provides ports", () => {
-    testdznlint({
+test("should only complain about provides ports", async () => {
+    await testdznlint({
         diagnostic: portRedundantBlocking.code,
         pass: `
             component C {
@@ -115,8 +115,8 @@ test("should only complain about provides ports", () => {
     });
 });
 
-test("blocking missing if provided port not blocking but required port is", () => {
-    testdznlint({
+test("blocking missing if provided port not blocking but required port is", async () => {
+    await testdznlint({
         diagnostic: portMissingBlocking.code,
         fail: `
             component C {
@@ -131,8 +131,8 @@ test("blocking missing if provided port not blocking but required port is", () =
     });
 });
 
-test("no blocking rule on system components", () => {
-    testdznlint({
+test("no blocking rule on system components", async () => {
+    await testdznlint({
         diagnostic: portMissingBlocking.code,
         pass: `
             component C {

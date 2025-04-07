@@ -5,7 +5,7 @@ import { Diagnostic, DiagnosticSeverity } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTNode, RuleFactory } from "../linting-rule";
-import { isIdentifier } from "../util";
+import { isIdentifier, isKeyword } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unusedParameter = createDiagnosticsFactory();
@@ -22,7 +22,7 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
         factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
             const parameterIdentifiers = [];
             for (const trigger of node.triggers) {
-                if (trigger.parameterList) {
+                if (!isKeyword(trigger) && trigger.parameterList) {
                     for (const { name, assignment } of trigger.parameterList.parameters) {
                         // Skip parameters with <- assignment
                         if (!assignment) {

@@ -1,8 +1,8 @@
 import { invalidParameterDirection, missingPortParameterDirection } from "../src/rules/port-parameter-direction";
 import { testdznlint } from "./util";
 
-test("port parameters must be marked either provides or requires", () => {
-    testdznlint({
+test("port parameters must be marked either provides or requires", async () => {
+    await testdznlint({
         diagnostic: missingPortParameterDirection.code,
         pass: `
         interface I {}        
@@ -14,8 +14,8 @@ test("port parameters must be marked either provides or requires", () => {
     });
 });
 
-test.each(["in", "out"])("port parameters with incorrect direction (%s)", direction => {
-    testdznlint({
+test.each(["in", "out"])("port parameters with incorrect direction (%s)", async direction => {
+    await testdznlint({
         diagnostic: missingPortParameterDirection.code,
         fail: `
         interface I {}        
@@ -23,16 +23,16 @@ test.each(["in", "out"])("port parameters with incorrect direction (%s)", direct
     });
 });
 
-test.each(["provides", "requires"])("non-port bool parameter should not have %s", direction => {
-    testdznlint({
+test.each(["provides", "requires"])("non-port bool parameter should not have %s", async direction => {
+    await testdznlint({
         diagnostic: invalidParameterDirection.code,
         fail: ` 
         void f(${direction} bool i){}`,
     });
 });
 
-test.each(["provides", "requires"])("non-port external data parameter should not have %s", direction => {
-    testdznlint({
+test.each(["provides", "requires"])("non-port external data parameter should not have %s", async direction => {
+    await testdznlint({
         diagnostic: invalidParameterDirection.code,
         fail: `
         extern MyData $$;

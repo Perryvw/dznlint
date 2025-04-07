@@ -1,8 +1,8 @@
 import { implicitIllegal } from "../src/rules/implicit-illegal";
 import { testdznlint } from "./util";
 
-test("implicit illegal", () => {
-    testdznlint({
+test("implicit illegal", async () => {
+    await testdznlint({
         diagnostic: implicitIllegal.code,
         pass: `
             interface IA {

@@ -1,8 +1,8 @@
 import { unconnectedPort } from "../src/rules/no-unconnected-ports";
 import { testdznlint } from "./util";
 
-test.each(["provides", "requires"])("no unknown %s port bindings", portKind => {
-    testdznlint({
+test.each(["provides", "requires"])("no unknown %s port bindings", async portKind => {
+    await testdznlint({
         diagnostic: unconnectedPort.code,
         pass: `component A {
 
@@ -23,8 +23,8 @@ test.each(["provides", "requires"])("no unknown %s port bindings", portKind => {
     });
 });
 
-test("no unconnected port on instance", () => {
-    testdznlint({
+test("no unconnected port on instance", async () => {
+    await testdznlint({
         diagnostic: unconnectedPort.code,
         pass: `
         component A {
@@ -60,8 +60,8 @@ test("no unconnected port on instance", () => {
     });
 });
 
-test("no unconnected port on instance wildcard binding", () => {
-    testdznlint({
+test("no unconnected port on instance wildcard binding", async () => {
+    await testdznlint({
         diagnostic: unconnectedPort.code,
         pass: `
         component A {

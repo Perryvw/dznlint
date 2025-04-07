@@ -1,8 +1,8 @@
 import { recursiveSystem } from "../src/rules/no-recursive-system";
 import { testdznlint } from "./util";
 
-test("recursive system is not allowed", () => {
-    testdznlint({
+test("recursive system is not allowed", async () => {
+    await testdznlint({
         diagnostic: recursiveSystem.code,
         pass: `component A {
             system {
