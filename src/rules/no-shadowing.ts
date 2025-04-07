@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { headTailToList, isKeyword, nodeToSourceRange } from "../util";
+import { isKeyword } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const shadowingVariablesNotAllowed = createDiagnosticsFactory();

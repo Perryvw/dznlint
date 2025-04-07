@@ -698,7 +698,8 @@ export interface reply_Node
         | dollars_Node
         | group_Node
         | literal_Node
-        | unary_expression_Node;
+        | unary_expression_Node
+        | undefined;
     childForFieldName(kind: "port"): port_name_Node | undefined;
 }
 export interface return_Node

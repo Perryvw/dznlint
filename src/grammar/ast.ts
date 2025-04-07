@@ -364,7 +364,7 @@ export interface NumericLiteral extends AstNode<SyntaxKind.NumericLiteral> {
 
 export interface Reply extends AstNode<SyntaxKind.Reply> {
     port?: Identifier;
-    value: Expression;
+    value?: Expression;
 }
 
 export type UnaryOperator = Keyword<"!"> | Keyword<"-">;

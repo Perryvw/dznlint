@@ -525,7 +525,7 @@ describe("in components", () => {
         });
     });
 
-    test("no uknown imported symbols", async () => {
+    test("no unknown imported symbols", async () => {
         await testdznlint({
             diagnostic: unknownVariable.code,
             pass: {

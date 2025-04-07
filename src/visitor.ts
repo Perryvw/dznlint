@@ -284,10 +284,8 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.name, cb);
     },
     [ast.SyntaxKind.Reply]: (node: ast.Reply, context: VisitorContext, cb: VisitorCallback) => {
-        if (node.port) {
-            context.visit(node.port, cb);
-        }
-        context.visit(node.value, cb);
+        if (node.port) context.visit(node.port, cb);
+        if (node.value) context.visit(node.value, cb);
     },
     [ast.SyntaxKind.ReturnStatement]: (node: ast.ReturnStatement, context: VisitorContext, cb: VisitorCallback) => {
         if (node.returnValue) {
@@ -502,10 +500,8 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
         setParent(node.type, node);
     },
     [ast.SyntaxKind.Reply]: (node: ast.Reply) => {
-        if (node.port) {
-            setParent(node.port, node);
-        }
-        setParent(node.value, node);
+        if (node.port) setParent(node.port, node);
+        if (node.value) setParent(node.value, node);
     },
     [ast.SyntaxKind.ReturnStatement]: (node: ast.ReturnStatement) => {
         if (node.returnValue) {

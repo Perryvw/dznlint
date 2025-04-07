@@ -72,8 +72,8 @@ const BOOL_TYPE = {
 
 const BOOL_SYMBOL = new SemanticSymbol(null!);
 
-const TRUE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION };
-const FALSE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION };
+const TRUE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
+const FALSE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
 const TRUE_SYMBOL = new SemanticSymbol(TRUE_DECLARATION);
 const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
 
@@ -154,7 +154,10 @@ export class TypeChecker {
             const ownerType = this.typeOfNode(node.compound, typeReference);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
             const ownerMembers = this.getMembersOfType(ownerType);
-            return ownerMembers.get(node.name.text);
+            const memberSymbol = ownerMembers.get(node.name.text);
+            if (!memberSymbol) return undefined;
+            if (ownerType.kind === TypeKind.Enum && node.name.text !== ownerType.name) return BOOL_SYMBOL; // enum to bool coersion
+            return memberSymbol;
         } else if (isCompoundBindingExpression(node)) {
             const ownerType = this.typeOfNode(node.compound);
             if (ownerType.kind === TypeKind.Invalid) return undefined;

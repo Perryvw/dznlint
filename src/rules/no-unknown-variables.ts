@@ -5,13 +5,11 @@ import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import {
-    headTailToList,
     isAsterisk,
     isIdentifier,
     isIllegalKeyword,
     isKeyword,
     nameToString,
-    nodeToSourceRange,
 } from "../util";
 import { VisitorContext } from "../visitor";
 
@@ -206,6 +204,10 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
 
         factoryContext.registerRule<ast.ReturnStatement>(ast.SyntaxKind.ReturnStatement, (node, context) => {
             return node.returnValue ? checkExpressionNames(node.returnValue, "variable", context) : [];
+        });
+
+        factoryContext.registerRule<ast.Reply>(ast.SyntaxKind.Reply, (node, context) => {
+            return node.value ? checkExpressionNames(node.value, "variable", context) : [];
         });
 
         factoryContext.registerRule<ast.InvariantStatement>(ast.SyntaxKind.InvariantStatement, (node, context) => {

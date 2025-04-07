@@ -762,11 +762,12 @@ function transformParenthesizedExpression(node: parser.group_Node): ast.Parenthe
 
 function transformReply(node: parser.reply_Node): ast.Reply {
     const port = node.childForFieldName("port");
+    const expression = node.childForFieldName("expression");
     return {
         kind: ast.SyntaxKind.Reply,
         position: nodePosition(node),
         port: port && transformIdentifier(port),
-        value: transformExpression(node.childForFieldName("expression")),
+        value: expression && transformExpression(expression),
     };
 }
 

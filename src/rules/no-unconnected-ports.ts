@@ -11,7 +11,6 @@ import {
     isIdentifier,
     isInjected,
     isPort,
-    nodeToSourceRange,
     systemBindings,
     systemInstances,
 } from "../util";
