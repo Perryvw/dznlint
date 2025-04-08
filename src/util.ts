@@ -184,9 +184,9 @@ export function nameToString(name: ast.Name): string {
         return name.text;
     } else {
         if (name.compound) {
-            return `${nameToString(name.compound)}.${name.name}`;
+            return `${nameToString(name.compound)}.${name.name.text}`;
         } else {
-            return `.${name.name}`;
+            return `.${name.name.text}`;
         }
     }
 }

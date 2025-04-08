@@ -463,6 +463,17 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
         setParent(node.expression, node);
     },
     [ast.SyntaxKind.Namespace]: (node: ast.Namespace) => {
+        while (node.name.kind !== ast.SyntaxKind.Identifier && node.name.compound) {
+            // De-sugar
+            const newNs = {
+                kind: ast.SyntaxKind.Namespace,
+                position: node.position,
+                name: { ...node.name.name, kind: ast.SyntaxKind.Identifier },
+                statements: node.statements,
+            } satisfies ast.Namespace;
+            node.name = node.name.compound;
+            node.statements = [newNs];
+        }
         setParent(node.name, node);
         for (const statement of node.statements) {
             setParent(statement, node);

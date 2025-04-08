@@ -799,7 +799,18 @@ function transformIdentifier(
 function transformName(
     node: parser.compound_name_Node | parser.name_Node | parser.scoped_name_Node | parser.type_name_Node
 ): ast.Name {
-    if (node.type === "compound_name") {
+    if (node.type === "type_name") {
+        const name = node.childForFieldName("name");
+        if (name) {
+            return transformName(name);
+        }
+
+        return {
+            kind: ast.SyntaxKind.Identifier,
+            position: nodePosition(node),
+            text: node.text,
+        };
+    } else if (node.type === "compound_name") {
         const global = node.childForFieldName("global");
         const parts = node.childrenForFieldName("part").filter(p => p.type === "identifier");
 

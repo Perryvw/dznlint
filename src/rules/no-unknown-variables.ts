@@ -4,13 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import {
-    isAsterisk,
-    isIdentifier,
-    isIllegalKeyword,
-    isKeyword,
-    nameToString,
-} from "../util";
+import { isAsterisk, isIdentifier, isIllegalKeyword, isKeyword, nameToString } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();

@@ -809,8 +809,7 @@ export interface type_name_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "type_name";
-    firstNamedChild: compound_name_Node | undefined;
-    namedChildren: [compound_name_Node | undefined];
+    childForFieldName(kind: "name"): compound_name_Node | undefined;
 }
 export interface unary_expression_Node
     extends Omit<
