@@ -445,7 +445,7 @@ function transformCompoundStatement(node: CompoundStatements): ast.Statement {
         case "return":
             return transformReturnStatement(node);
         case "skip_statement":
-            return undefined;
+            return transformEmptyStatement(node);
         default:
             throw assertNever(node, "unknown statement kind");
     }
@@ -602,6 +602,13 @@ function transformReturnStatement(node: parser.return_Node): ast.ReturnStatement
         position: nodePosition(node),
         returnValue: returnValue && transformExpression(returnValue),
     };
+}
+
+function transformEmptyStatement(node: parser.skip_statement_Node): ast.EmptyStatement {
+    return {
+        kind: ast.SyntaxKind.EmptyStatement,
+        position: nodePosition(node)
+    }
 }
 
 type ExpressionsTypes =

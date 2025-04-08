@@ -11,6 +11,7 @@ export enum SyntaxKind {
     Compound,
     ComponentDefinition,
     DeferStatement,
+    EmptyStatement,
     EnumDefinition,
     Event,
     ExpressionStatement,
@@ -257,6 +258,7 @@ export type ImperativeStatement =
     | VariableDefinition
     | AssignmentStatement
     | DeferStatement
+    | EmptyStatement
     | ExpressionStatement
     | Compound;
 
@@ -273,6 +275,8 @@ export interface DeferStatement extends AstNode<SyntaxKind.DeferStatement> {
     arguments?: DeferArguments;
     statement: ImperativeStatement;
 }
+
+export interface EmptyStatement extends AstNode<SyntaxKind.EmptyStatement> {}
 
 export interface ExpressionStatement extends AstNode<SyntaxKind.ExpressionStatement> {
     expression: Expression;
