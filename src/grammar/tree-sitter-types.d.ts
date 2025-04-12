@@ -156,15 +156,6 @@ export interface blocking_Node
         | skip_statement_Node
         | variable_Node;
 }
-export interface body_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "body";
-    firstNamedChild: behavior_Node | system_Node;
-    namedChildren: [behavior_Node | system_Node];
-}
 export interface call_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -195,7 +186,7 @@ export interface component_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "component";
-    childForFieldName(kind: "body"): body_Node | undefined;
+    childForFieldName(kind: "body"): behavior_Node | system_Node | undefined;
     childForFieldName(kind: "name"): scoped_name_Node;
     childrenForFieldName(kind: "port"): Array<port_Node> | undefined;
 }
@@ -485,8 +476,6 @@ export interface if_statement_Node
         | return_Node
         | skip_statement_Node
         | variable_Node;
-    firstNamedChild: if_keyword_Node;
-    namedChildren: [if_keyword_Node];
 }
 export interface illegal_Node
     extends Omit<
@@ -580,8 +569,6 @@ export interface literal_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "literal";
-    firstNamedChild: number_Node | undefined;
-    namedChildren: [number_Node | undefined];
 }
 export interface name_Node
     extends Omit<
@@ -706,17 +693,21 @@ export interface root_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "root";
-    namedChildren: Array<
-        | component_Node
-        | dollars_Node
-        | enum_Node
-        | extern_Node
-        | function_Node
-        | import_Node
-        | int_Node
-        | interface_Node
-        | namespace_Node
-    >;
+    childrenForFieldName(
+        kind: "statement"
+    ):
+        | Array<
+              | component_Node
+              | dollars_Node
+              | enum_Node
+              | extern_Node
+              | function_Node
+              | import_Node
+              | int_Node
+              | interface_Node
+              | namespace_Node
+          >
+        | undefined;
 }
 export interface scoped_name_Node
     extends Omit<
@@ -755,9 +746,9 @@ export interface trigger_Node
     > {
     type: "trigger";
     childForFieldName(kind: "formals"): trigger_formals_Node | undefined;
+    childForFieldName(kind: "inevitable"): inevitable_Node | undefined;
     childForFieldName(kind: "name"): compound_name_Node | undefined;
-    firstNamedChild: inevitable_Node | optional_Node | undefined;
-    namedChildren: [inevitable_Node | optional_Node | undefined];
+    childForFieldName(kind: "optional"): optional_Node | undefined;
 }
 export interface trigger_formal_Node
     extends Omit<
@@ -908,7 +899,6 @@ export type AllNodes =
     | binary_expression_Node
     | binding_Node
     | blocking_Node
-    | body_Node
     | call_Node
     | call_statement_Node
     | comment_Node

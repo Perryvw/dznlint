@@ -42,9 +42,10 @@ export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast
             pos.to.column += 1;
 
             diagnostics.push(failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, pos));
-        }
-        for (const c of node.children) {
-            collectDiagnostics(c);
+        } else {
+            for (const c of node.children) {
+                collectDiagnostics(c);
+            }
         }
     }
     collectDiagnostics(tree.rootNode);

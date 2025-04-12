@@ -359,36 +359,12 @@ function formatComponent(cursor: Grammar.CursorPosition<Grammar.component_Node>,
             case "scoped_name":
                 formatter.name(cursor.nodeText);
                 break;
-            case "body": {
-                const c2 = cursor as unknown as Grammar.CursorPosition<typeof cursor.currentNode>;
-                cursor.gotoFirstChild();
-                do {
-                    switch (c2.nodeType) {
-                        case "behavior":
-                            formatBehavior(c2.pos(), formatter);
-                            break;
-                        case "system":
-                            formatSystem(c2.pos(), formatter);
-                            break;
-                        // generics
-                        case "comment":
-                            formatComment(c2.currentNode, formatter);
-                            break;
-                        case "ERROR":
-                            formatter.verbatim(cursor.nodeText);
-                            break;
-                        case "whiteline":
-                            formatter.whiteline();
-                            break;
-                        default:
-                            assertNever(c2);
-                            throw `cannot format component child ${cursor.nodeType}`;
-                    }
-                } while (cursor.gotoNextSibling());
-
-                cursor.gotoParent();
+            case "behavior":
+                formatBehavior(cursor.pos(), formatter);
                 break;
-            }
+            case "system":
+                formatSystem(cursor.pos(), formatter);
+                break;
             // generics
             case "comment":
                 formatComment(cursor.currentNode, formatter);

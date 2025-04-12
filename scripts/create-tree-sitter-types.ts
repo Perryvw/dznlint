@@ -46,16 +46,6 @@ for (const node of nodeTypes.filter(n => n.named)) {
         }
     }
 
-    if (node.children) {
-        if (node.children.multiple) {
-            const namedTypes = node.children.types.map(nameOfTypeNode);
-            result.push(`    namedChildren: Array<${namedTypes.join(" | ")}>;`);
-        } else {
-            result.push(`    firstNamedChild: ${fieldType(node.children)};`);
-            result.push(`    namedChildren: [(${fieldType(node.children)})];`);
-        }
-    }
-
     result.push("}");
 }
 

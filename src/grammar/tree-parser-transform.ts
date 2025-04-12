@@ -13,13 +13,13 @@ export function treeSitterTreeToAst(root: parser.root_Node): ast.File {
     return {
         kind: ast.SyntaxKind.File,
         position: nodePosition(root),
-        statements: root.namedChildren
-            .filter(c => c.type !== "comment" && c.type !== "ERROR")
-            .map(transformRootStatement) as ast.Statement[],
+        statements: root.childrenForFieldName("statement")?.map(transformRootStatement) ?? ([] as ast.Statement[]),
     };
 }
 
-function transformRootStatement(node: ElementOfArray<parser.root_Node["namedChildren"]>): ast.RootStatement {
+type RootStatements = ChildrenTypes<parser.root_Node, "statement">;
+
+function transformRootStatement(node: RootStatements): ast.RootStatement {
     switch (node.type) {
         case "component":
             return transformComponent(node);
@@ -52,7 +52,7 @@ function transformComponent(component: parser.component_Node): ast.ComponentDefi
         position: nodePosition(component),
         name: transformIdentifier(component.childForFieldName("name")),
         ports: component.childrenForFieldName("port")!.map(transformPort),
-        body: body && transformComponentBody(body.firstNamedChild),
+        body: body && transformComponentBody(body),
     };
 }
 
@@ -495,14 +495,19 @@ function transformOnStatement(node: parser.on_Node): ast.OnStatement {
                     parameters: parameterList.childrenForFieldName("trigger_formal")?.map(transformTriggerFormal) ?? [],
                 },
             };
-        } else {
-            const keyword = trigger.firstNamedChild!;
-            if (keyword?.type === "optional") {
-                return transformKeyword(keyword, "optional");
-            } else {
-                return transformKeyword(keyword, "inevitable");
-            }
         }
+
+        const optional = trigger.childForFieldName("optional");
+        if (optional) {
+            return transformKeyword(optional, "optional");
+        }
+
+        const inevitable = trigger.childForFieldName("inevitable");
+        if (inevitable) {
+            return transformKeyword(inevitable, "inevitable");
+        }
+
+        throw `unexpected kind of on trigger ${trigger}`;
     }
 
     return {

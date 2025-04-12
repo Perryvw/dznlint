@@ -292,15 +292,16 @@ interface component_Node extends BaseNode {
         | scoped_name_Node
         | UnnamedNode<"{", 51>
         | port_Node
-        | body_Node
+        | behavior_Node
+        | system_Node
         | UnnamedNode<"}", 52>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
     >;
 }
-interface body_Node extends BaseNode {
-    type: "body";
+interface _body_Node extends BaseNode {
+    type: "_body";
     _id: 53;
     isNamed: true;
     walk(): TypedCursor<behavior_Node | system_Node | comment_Node | whiteline_Node | ERROR_Node>;
@@ -1180,6 +1181,15 @@ export type AllNodes =
     | interface_Node
     | component_Node
     | function_Node
+    | import_Node
+    | dollars_Node
+    | enum_Node
+    | int_Node
+    | extern_Node
+    | namespace_Node
+    | interface_Node
+    | component_Node
+    | function_Node
     | UnnamedNode<"import", 4>
     | file_name_Node
     | UnnamedNode<";", 5>
@@ -1237,7 +1247,8 @@ export type AllNodes =
     | UnnamedNode<"component", 50>
     | UnnamedNode<"{", 51>
     | port_Node
-    | body_Node
+    | behavior_Node
+    | system_Node
     | UnnamedNode<"}", 52>
     | system_Node
     | UnnamedNode<"system", 55>

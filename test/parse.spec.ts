@@ -157,22 +157,6 @@ test("namespaced enum", async () => {
     );
 });
 
-test("invalid syntax (enum at root level)", async () => {
-    const diagnostics = await parseDiagnostics("MyEnum test = .MyEnum.a;");
-    expect(diagnostics).toHaveLength(1);
-    const diagnostic = diagnostics[0];
-    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
-    expect(formatDiagnostic(diagnostic)).toContain("MyEnum test = .MyEnum.a;");
-});
-
-test("missing syntax", async () => {
-    const diagnostics = await parseDiagnostics("import abc.dzn");
-    expect(diagnostics).toHaveLength(1);
-    const diagnostic = diagnostics[0];
-    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
-    expect(diagnostic.message).toContain("missing ;");
-});
-
 test("namespaced global", async () => {
     await expectCanParseWithoutDiagnostics(`
         component {
@@ -498,6 +482,54 @@ test("one line function syntax", async () => {
     await expectCanParseWithoutDiagnostics(`
         bool foo() = true;
     `);
+});
+
+test("invalid syntax (enum at root level)", async () => {
+    const diagnostics = await parseDiagnostics("MyEnum test = .MyEnum.a;");
+    expect(diagnostics).toHaveLength(1);
+    const diagnostic = diagnostics[0];
+    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
+    expect(formatDiagnostic(diagnostic)).toContain("MyEnum test = .MyEnum.a;");
+});
+
+test("invalid syntax inside reply", async () => {
+    const diagnostics = await parseDiagnostics(`
+        component C {
+            behavior {
+                on abc.def(): {
+                    reply(####);
+                }
+            }
+        }
+    `);
+    expect(diagnostics).toHaveLength(1);
+    const diagnostic = diagnostics[0];
+    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
+    expect(formatDiagnostic(diagnostic)).toContain("reply(####);");
+});
+
+test("invalid syntax inside binary expression", async () => {
+    const diagnostics = await parseDiagnostics(`
+        component C {
+            behavior {
+                on abc.def(): {
+                    var abc = def + ###;
+                }
+            }
+        }
+    `);
+    expect(diagnostics).toHaveLength(1);
+    const diagnostic = diagnostics[0];
+    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
+    expect(formatDiagnostic(diagnostic)).toContain("+ ###");
+});
+
+test("missing syntax", async () => {
+    const diagnostics = await parseDiagnostics("import abc.dzn");
+    expect(diagnostics).toHaveLength(1);
+    const diagnostic = diagnostics[0];
+    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
+    expect(diagnostic.message).toContain("missing ;");
 });
 
 async function parseDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []): Promise<Diagnostic[]> {
