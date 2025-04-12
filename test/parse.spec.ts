@@ -1,10 +1,11 @@
 import * as path from "path";
 import { formatDiagnostic } from "../src/diagnostic";
-import { DiagnosticCode, LinterHost, lintFiles, lintString } from "../src";
+import { Diagnostic, DiagnosticCode, LinterHost, lintFiles, lintString } from "../src";
 import { DznLintUserConfiguration } from "../src/config/dznlint-configuration";
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 import { expectNoDiagnostics } from "./util";
 import { neverLegalEvent } from "../src/rules/never-legal-event";
+import { failedToFullyParseFile } from "../src/parse";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
@@ -156,8 +157,30 @@ test("namespaced enum", async () => {
     );
 });
 
+test("invalid syntax (enum at root level)", async () => {
+    const diagnostics = await parseDiagnostics("MyEnum test = .MyEnum.a;");
+    expect(diagnostics).toHaveLength(1);
+    const diagnostic = diagnostics[0];
+    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
+    expect(formatDiagnostic(diagnostic)).toContain("MyEnum test = .MyEnum.a;");
+});
+
+test("missing syntax", async () => {
+    const diagnostics = await parseDiagnostics("import abc.dzn");
+    expect(diagnostics).toHaveLength(1);
+    const diagnostic = diagnostics[0];
+    expect(diagnostic.code).toBe(failedToFullyParseFile.code);
+    expect(diagnostic.message).toContain("missing ;");
+});
+
 test("namespaced global", async () => {
-    await expectCanParseWithoutDiagnostics("MyEnum test = .MyEnum.a;");
+    await expectCanParseWithoutDiagnostics(`
+        component {
+            behavior {
+                MyEnum test = .MyEnum.a;
+            }
+        }
+    `);
 });
 
 test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", async comparison => {
@@ -477,7 +500,7 @@ test("one line function syntax", async () => {
     `);
 });
 
-async function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
+async function parseDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []): Promise<Diagnostic[]> {
     const parseOnlyHost: LinterHost = {
         includePaths: [],
         fileExists() {
@@ -495,11 +518,13 @@ async function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: Diagno
     const ignoreCodesSet = new Set(ignoreCodes);
     const filteredDiagnostics = result.filter(d => !ignoreCodesSet.has(d.code));
 
-    for (const diagnostic of filteredDiagnostics) {
-        console.log(formatDiagnostic(diagnostic));
-    }
+    return filteredDiagnostics;
+}
 
-    if (filteredDiagnostics.length > 0) {
-        expect(filteredDiagnostics.map(formatDiagnostic).join("\n")).toBe("<no diagnostics>");
+async function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: DiagnosticCode[] = []) {
+    const diagnostics = await parseDiagnostics(dzn, ignoreCodes);
+
+    if (diagnostics.length > 0) {
+        expect(diagnostics.map(formatDiagnostic).join("\n")).toBe("<no diagnostics>");
     }
 }

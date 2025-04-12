@@ -2036,7 +2036,10 @@ function formatCallStatement(cursor: Grammar.CursorPosition<Grammar.call_stateme
     cursor.gotoParent();
 }
 
-function formatInterfaceActionStatement(cursor: Grammar.CursorPosition<Grammar.interface_action_statement_Node>, formatter: Formatter) {
+function formatInterfaceActionStatement(
+    cursor: Grammar.CursorPosition<Grammar.interface_action_statement_Node>,
+    formatter: Formatter
+) {
     cursor.gotoFirstChild();
     formatter.requirePrecedingNewLine();
     do {

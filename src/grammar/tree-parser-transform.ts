@@ -761,7 +761,12 @@ function transformIdentifier(
 }
 
 function transformName(
-    node: parser.compound_name_Node | parser.name_Node | parser.scoped_name_Node | parser.type_name_Node | parser.interface_action_Node
+    node:
+        | parser.compound_name_Node
+        | parser.name_Node
+        | parser.scoped_name_Node
+        | parser.type_name_Node
+        | parser.interface_action_Node
 ): ast.Name {
     if (node.type === "type_name") {
         const name = node.childForFieldName("name");
@@ -819,15 +824,7 @@ function wrapExpressionStatement(node: parser.AllNodes, expression: ast.Expressi
     };
 }
 
-function createIdentifier(node: parser.AllNodes, text: string): ast.Identifier {
-    return {
-        kind: ast.SyntaxKind.Identifier,
-        position: nodePosition(node),
-        text,
-    };
-}
-
-function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.SourceRange {
+export function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.SourceRange {
     return {
         from: {
             index: node.startIndex,

@@ -4,7 +4,7 @@ import * as Parser from "web-tree-sitter";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "./diagnostic";
 import { Diagnostic } from "./diagnostic";
 import { InputSource } from "./semantics/program";
-import { treeSitterTreeToAst } from "./grammar/tree-parser-transform";
+import { nodePosition, treeSitterTreeToAst } from "./grammar/tree-parser-transform";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
@@ -31,38 +31,15 @@ export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast
             }
 
             diagnostics.push(
-                failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, {
-                    from: { index: node.startIndex, line: node.startPosition.row, column: node.startPosition.column },
-                    to: { index: node.endIndex, line: node.endPosition.row, column: node.endPosition.column },
-                })
+                failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, nodePosition(node))
             );
         } else if (node.isMissing) {
-            if (node.isError) {
-                let errorMessage = `missing syntax `;
-                const cursor = node.walk();
-                cursor.gotoPreviousSibling();
-                const it = parser.getLanguage().lookaheadIterator(cursor.currentNode.parseState);
-                if (it) {
-                    for (const next of it) {
-                        errorMessage += ` - ${next}`;
-                    }
-                }
+            let errorMessage = `missing ${node.type}`;
+            const pos = nodePosition(node);
+            pos.to.index += 1;
+            pos.to.column += 1;
 
-                diagnostics.push(
-                    failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, {
-                        from: {
-                            index: node.startIndex,
-                            line: node.startPosition.row,
-                            column: node.startPosition.column,
-                        },
-                        to: {
-                            index: node.endIndex,
-                            line: node.endPosition.row,
-                            column: node.endPosition.column,
-                        },
-                    })
-                );
-            }
+            diagnostics.push(failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, pos));
         }
         for (const c of node.children) {
             collectDiagnostics(c);
