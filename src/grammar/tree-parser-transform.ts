@@ -1,9 +1,10 @@
-import { assertNever } from "../util";
+import { assertNever, combineSourceRanges } from "../util";
 import * as ast from "./ast";
 import * as parser from "./tree-sitter-types";
 
 type ElementOfArray<T extends unknown[]> = T extends Array<infer S> ? S : never;
 type ChildrenTypes<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     T extends { childrenForFieldName: (kind: any) => unknown },
     name extends string,
 > = T["childrenForFieldName"] extends { (kind: name): infer R } ? (R extends Array<infer S> ? S : never) : never;
@@ -396,11 +397,8 @@ function transformBehaviorStatement(node: BehaviorStatements): ast.BehaviorState
 function transformBlocking(node: parser.blocking_Node): ast.Statement {
     const blockingKeyword = transformKeyword(node.firstChild!, "blocking");
     const statement = transformCompoundStatement(node.childForFieldName("statement"));
-    switch (statement.kind) {
-        case ast.SyntaxKind.Compound:
-            statement.blocking = blockingKeyword;
-        case ast.SyntaxKind.OnStatement:
-            statement.blocking = blockingKeyword;
+    if (statement.kind === ast.SyntaxKind.Compound || statement.kind === ast.SyntaxKind.OnStatement) {
+        statement.blocking = blockingKeyword;
     }
     return statement;
 }
@@ -627,7 +625,7 @@ function transformCallExpression(node: parser.call_Node): ast.CallExpression {
 
 type BinaryOperator = parser.binary_expression_Node["childForFieldName"] extends {
     (kind: "operator"): infer R;
-    (kind: "right"): any;
+    (kind: "right"): unknown;
 }
     ? R
     : never;
@@ -783,11 +781,11 @@ function transformName(
         const global = node.childForFieldName("global");
         const parts = node.childrenForFieldName("part").filter(p => p.type === "identifier");
 
-        let firstIdentifier = transformIdentifier(parts[0]);
+        const firstIdentifier = transformIdentifier(parts[0]);
         let name: ast.Name = global
             ? {
                   kind: ast.SyntaxKind.CompoundName,
-                  position: combinePositions(nodePosition(global), firstIdentifier.position),
+                  position: combineSourceRanges(nodePosition(global), firstIdentifier.position),
                   compound: undefined, // global
                   name: firstIdentifier,
               }
@@ -796,7 +794,7 @@ function transformName(
         for (let i = 1; i < parts.length; i++) {
             name = {
                 kind: ast.SyntaxKind.CompoundName,
-                position: combinePositions(name.position, nodePosition(parts[i])),
+                position: combineSourceRanges(name.position, nodePosition(parts[i])),
                 compound: name,
                 name: transformIdentifier(parts[i]),
             } satisfies ast.CompoundName;
@@ -836,12 +834,5 @@ export function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.Sou
             line: node.endPosition.row,
             column: node.endPosition.column,
         },
-    };
-}
-
-function combinePositions(p1: ast.SourceRange, p2: ast.SourceRange): ast.SourceRange {
-    return {
-        from: p1.from,
-        to: p2.to,
     };
 }

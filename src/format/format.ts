@@ -4,7 +4,7 @@ import { InputSource } from "../semantics/program";
 import { Formatter } from "./formatter";
 import * as Grammar from "../grammar/tree-sitter-types-formatter";
 import { WhitespaceSensitiveCursor } from "./whitespace-sensitive-cursor";
-import { initParser, parseDznSource } from "../parse";
+import { initParser } from "../parse";
 
 export async function format(source: InputSource, config?: DznLintFormatUserConfiguration): Promise<string> {
     const fullConfig: DznLintFormatConfiguration = {

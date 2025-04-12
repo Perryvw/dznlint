@@ -14,9 +14,8 @@
         "dznlint": "dist/cli/dznlint.js"
     },
     "scripts": {
-        "build:parser": "tspeg src/grammar/dzn-grammar.peg src/grammar/parser.ts",
         "build:tree-sitter-types": "tsx scripts/create-tree-sitter-types.ts && tsx scripts/create-tree-sitter-types-formatter.ts && npm run fix:prettier",
-        "build": "npm run build:parser && tsc",
+        "build": "npm run build:tree-sitter-types && tsc",
         "postbuild": "node -e \"require('fs').cpSync('src/grammar/tree-sitter-dezyne.wasm', 'dist/grammar/tree-sitter-dezyne.wasm');\"",
         "lint": "eslint .",
         "test": "jest",
@@ -32,10 +31,9 @@
         "jest": "^29.7.0",
         "prettier": "^3.5.0",
         "ts-jest": "^29.2.5",
-        "tspeg": "^3.3.1",
         "tsx": "^4.16.2",
-        "typescript": "^5.8.2",
-        "typescript-eslint": "^8.24.0"
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.29.1"
     },
     "dependencies": {
         "web-tree-sitter": "^0.22.6"

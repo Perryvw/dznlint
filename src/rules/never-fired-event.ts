@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isCallExpression, isIdentifier, nodeToSourceRange } from "../util";
+import { isCallExpression, isIdentifier } from "../util";
 
 export const neverFiredEvent = createDiagnosticsFactory();
 

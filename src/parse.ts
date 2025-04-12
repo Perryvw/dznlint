@@ -4,13 +4,14 @@ import * as Parser from "web-tree-sitter";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "./diagnostic";
 import { Diagnostic } from "./diagnostic";
 import { InputSource } from "./semantics/program";
+import { root_Node } from "./grammar/tree-sitter-types";
 import { nodePosition, treeSitterTreeToAst } from "./grammar/tree-parser-transform";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
 export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast.File; diagnostics: Diagnostic[] } {
     const tree = parser.parse(source.fileContent);
-    const ast = treeSitterTreeToAst(tree.rootNode as any);
+    const ast = treeSitterTreeToAst(tree.rootNode as root_Node);
 
     const diagnostics: Diagnostic[] = [];
 
@@ -18,6 +19,7 @@ export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast
         if (node.isError) {
             let errorMessage = `invalid syntax, expecting one of: `;
             const cursor = node.walk();
+            // eslint-disable-next-line no-empty
             while (cursor.gotoFirstChild()) {}
             const it = parser.getLanguage().lookaheadIterator(cursor.currentNode.parseState);
             if (it) {
@@ -34,7 +36,7 @@ export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast
                 failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, nodePosition(node))
             );
         } else if (node.isMissing) {
-            let errorMessage = `missing ${node.type}`;
+            const errorMessage = `missing ${node.type}`;
             const pos = nodePosition(node);
             pos.to.index += 1;
             pos.to.column += 1;

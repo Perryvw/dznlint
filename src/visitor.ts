@@ -2,7 +2,7 @@ import * as ast from "./grammar/ast";
 import { ASTNode } from "./linting-rule";
 import { InputSource, Program } from "./semantics/program";
 import { TypeChecker } from "./semantics/type-checker";
-import { headTailToList, isKeyword } from "./util";
+import { isKeyword } from "./util";
 
 const stopVisiting = () => {};
 

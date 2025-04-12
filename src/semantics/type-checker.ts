@@ -21,6 +21,7 @@ import {
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
+import { SourceRange } from "../grammar/source-position";
 
 export class SemanticSymbol {
     public constructor(
@@ -33,7 +34,7 @@ export class SemanticSymbol {
     }
 }
 
-const EMPTY_POSITION: ast.SourceRange = {
+const EMPTY_POSITION: SourceRange = {
     from: { index: 0, column: 0, line: 1 },
     to: { index: 0, column: 0, line: 1 },
 };

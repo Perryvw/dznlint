@@ -1,20 +1,10 @@
+import { SourceRange } from "./grammar/source-position";
 import { InputSource } from "./semantics/program";
 
 export enum DiagnosticSeverity {
     Hint,
     Warning,
     Error,
-}
-
-export interface SourcePosition {
-    index: number;
-    line: number;
-    column: number;
-}
-
-export interface SourceRange {
-    from: SourcePosition;
-    to: SourcePosition;
 }
 
 export type DiagnosticCode = number & { __diagnosticIdBrand: never };

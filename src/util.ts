@@ -1,38 +1,10 @@
-import { SourcePosition, SourceRange } from "./diagnostic";
-import * as parser from "./grammar/parser";
 import * as ast from "./grammar/ast";
 
-export function nodeToSourceRange(node: { start: parser.PosInfo; end: parser.PosInfo }): SourceRange {
-    return {
-        from: posInfoToSourcePosition(node.start),
-        to: posInfoToSourcePosition(node.end),
-    };
-}
-
-export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
-    return {
-        index: pos.overallPos,
-        line: pos.line,
-        column: pos.offset,
-    };
-}
-
-export function fromToSourceRange(from: ast.SourceRange, to: ast.SourceRange): ast.SourceRange {
+export function combineSourceRanges(from: ast.SourceRange, to: ast.SourceRange): ast.SourceRange {
     return {
         from: from.from,
         to: to.to,
     };
-}
-
-export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
-    const result = [];
-    if (obj.head) {
-        result.push(obj.head);
-    }
-    for (const { elem } of obj.tail) {
-        if (elem) result.push(elem);
-    }
-    return result;
 }
 
 export function isIdentifier(node: ast.AnyAstNode): node is ast.Identifier {
@@ -82,6 +54,7 @@ export function isInevitableKeyword(node: ast.AnyAstNode): node is ast.Keyword<"
     return isKeyword(node) && node.text === "inevitable";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;
 }

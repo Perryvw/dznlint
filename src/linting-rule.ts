@@ -1,5 +1,5 @@
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
-import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity, SourceRange } from "./diagnostic";
+import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "./diagnostic";
 import { VisitorContext } from "./visitor";
 import * as ast from "./grammar/ast";
 
@@ -98,7 +98,7 @@ function wrapErrorHandling(linter: Linter<ASTNode>): Linter<ASTNode> {
         try {
             return linter(node, context);
         } catch (exception) {
-            const range: SourceRange = node.position;
+            const range: ast.SourceRange = node.position;
             return [
                 dznLintExceptionThrown(
                     DiagnosticSeverity.Error,

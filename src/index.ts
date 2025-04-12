@@ -1,4 +1,5 @@
-export { Diagnostic, DiagnosticSeverity, DiagnosticCode, SourcePosition, SourceRange } from "./diagnostic";
+export { Diagnostic, DiagnosticSeverity, DiagnosticCode } from "./diagnostic";
+export { SourcePosition, SourceRange } from "./grammar/source-position";
 
 export * from "./config/dznlint-configuration";
 export * from "./config/default-config";

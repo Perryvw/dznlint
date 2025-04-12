@@ -6,7 +6,7 @@ import { Diagnostic } from "../diagnostic";
 import { initParser, parseDznSource } from "../parse";
 import { normalizePath, resolveImport } from "../resolve-imports";
 import { setParentVisitor, visitFile } from "../visitor";
-import Parser = require("web-tree-sitter");
+import * as Parser from "web-tree-sitter";
 
 export interface LinterHost {
     includePaths: string[];

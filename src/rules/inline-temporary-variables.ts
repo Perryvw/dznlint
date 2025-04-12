@@ -7,7 +7,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { ASTNode, RuleFactory } from "../linting-rule";
-import { isIdentifier, nodeToSourceRange } from "../util";
+import { isIdentifier } from "../util";
 import { VisitResult } from "../visitor";
 
 export const variableCanBeInlined = createDiagnosticsFactory();

@@ -1,4 +1,8 @@
-// WIP: Custom AST
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
+import { SourceRange } from "./source-position";
+export { SourceRange } from "./source-position";
+
 export enum SyntaxKind {
     File,
     Keyword,
@@ -54,18 +58,6 @@ export enum SyntaxKind {
     TypeReference,
 
     ERROR,
-}
-
-// TODO: Duplicate definition with diagnostic.ts, unify
-export interface SourcePosition {
-    index: number;
-    line: number;
-    column: number;
-}
-
-export interface SourceRange {
-    from: SourcePosition;
-    to: SourcePosition;
 }
 
 export interface AstNode<TKind extends SyntaxKind> {
