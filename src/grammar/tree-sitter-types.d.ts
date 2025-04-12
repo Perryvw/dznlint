@@ -11,24 +11,6 @@ export interface UnnamedNode<T extends string> extends Parser.SyntaxNode {
 export interface TypedCursor<TNodes extends { type: string }> extends Parser.TreeCursor {
     nodeType: TNodes["type"];
 }
-export interface action_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "action";
-    childForFieldName(kind: "arguments"): arguments_Node;
-    childForFieldName(kind: "name"): name_Node;
-    childForFieldName(kind: "port_name"): port_name_Node;
-}
-export interface action_or_call_statement_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "action_or_call_statement";
-    childForFieldName(kind: "action_or_call"): action_Node | call_Node | interface_action_Node;
-}
 export interface arguments_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -39,7 +21,6 @@ export interface arguments_Node
         kind: "expression"
     ):
         | Array<
-              | action_Node
               | binary_expression_Node
               | call_Node
               | compound_name_Node
@@ -60,7 +41,6 @@ export interface assign_Node
     childForFieldName(
         kind: "right"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -110,7 +90,6 @@ export interface binary_expression_Node
     childForFieldName(
         kind: "left"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -135,7 +114,6 @@ export interface binary_expression_Node
     childForFieldName(
         kind: "right"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -162,14 +140,15 @@ export interface blocking_Node
     childForFieldName(
         kind: "statement"
     ):
-        | action_or_call_statement_Node
         | assign_Node
         | blocking_Node
+        | call_statement_Node
         | compound_Node
         | defer_Node
         | guard_Node
         | if_statement_Node
         | illegal_Node
+        | interface_action_statement_Node
         | invariant_Node
         | on_Node
         | reply_Node
@@ -193,7 +172,15 @@ export interface call_Node
     > {
     type: "call";
     childForFieldName(kind: "arguments"): arguments_Node;
-    childForFieldName(kind: "name"): name_Node;
+    childForFieldName(kind: "name"): compound_name_Node;
+}
+export interface call_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "call_statement";
+    childForFieldName(kind: "call"): call_Node;
 }
 export interface comment_Node
     extends Omit<
@@ -222,14 +209,15 @@ export interface compound_Node
         kind: "statement"
     ):
         | Array<
-              | action_or_call_statement_Node
               | assign_Node
               | blocking_Node
+              | call_statement_Node
               | compound_Node
               | defer_Node
               | guard_Node
               | if_statement_Node
               | illegal_Node
+              | interface_action_statement_Node
               | invariant_Node
               | on_Node
               | reply_Node
@@ -245,8 +233,8 @@ export interface compound_name_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "compound_name";
-    childForFieldName(kind: "global"): global_Node | undefined;
-    childrenForFieldName(kind: "part"): Array<UnnamedNode<"."> | identifier_Node>;
+    childForFieldName(kind: "global"): UnnamedNode<"."> | undefined;
+    childrenForFieldName(kind: "part"): Array<identifier_Node>;
 }
 export interface defer_Node
     extends Omit<
@@ -258,12 +246,13 @@ export interface defer_Node
     childForFieldName(
         kind: "statement"
     ):
-        | action_or_call_statement_Node
         | assign_Node
+        | call_statement_Node
         | compound_Node
         | defer_Node
         | if_statement_Node
         | illegal_Node
+        | interface_action_statement_Node
         | reply_Node
         | return_Node
         | skip_statement_Node
@@ -335,7 +324,7 @@ export interface fields_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "fields";
-    childrenForFieldName(kind: "name"): Array<member_name_Node | name_Node>;
+    childrenForFieldName(kind: "name"): Array<member_name_Node>;
 }
 export interface formal_Node
     extends Omit<
@@ -383,7 +372,6 @@ export interface function_body_one_line_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -391,13 +379,6 @@ export interface function_body_one_line_Node
         | group_Node
         | literal_Node
         | unary_expression_Node;
-}
-export interface global_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "global";
 }
 export interface group_Node
     extends Omit<
@@ -408,7 +389,6 @@ export interface group_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -426,14 +406,15 @@ export interface guard_Node
     childForFieldName(
         kind: "body"
     ):
-        | action_or_call_statement_Node
         | assign_Node
         | blocking_Node
+        | call_statement_Node
         | compound_Node
         | defer_Node
         | guard_Node
         | if_statement_Node
         | illegal_Node
+        | interface_action_statement_Node
         | invariant_Node
         | on_Node
         | reply_Node
@@ -443,7 +424,6 @@ export interface guard_Node
     childForFieldName(
         kind: "condition"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -452,6 +432,13 @@ export interface guard_Node
         | literal_Node
         | otherwise_Node
         | unary_expression_Node;
+}
+export interface identifier_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "identifier";
 }
 export interface if_statement_Node
     extends Omit<
@@ -462,12 +449,13 @@ export interface if_statement_Node
     childForFieldName(
         kind: "else_statement"
     ):
-        | action_or_call_statement_Node
         | assign_Node
+        | call_statement_Node
         | compound_Node
         | defer_Node
         | if_statement_Node
         | illegal_Node
+        | interface_action_statement_Node
         | reply_Node
         | return_Node
         | skip_statement_Node
@@ -476,7 +464,6 @@ export interface if_statement_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -487,16 +474,19 @@ export interface if_statement_Node
     childForFieldName(
         kind: "statement"
     ):
-        | action_or_call_statement_Node
         | assign_Node
+        | call_statement_Node
         | compound_Node
         | defer_Node
         | if_statement_Node
         | illegal_Node
+        | interface_action_statement_Node
         | reply_Node
         | return_Node
         | skip_statement_Node
         | variable_Node;
+    firstNamedChild: if_keyword_Node;
+    namedChildren: [if_keyword_Node];
 }
 export interface illegal_Node
     extends Omit<
@@ -548,6 +538,14 @@ export interface interface_action_Node
     > {
     type: "interface_action";
 }
+export interface interface_action_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "interface_action_statement";
+    childForFieldName(kind: "name"): interface_action_Node;
+}
 export interface interface_body_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -568,7 +566,6 @@ export interface invariant_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -615,14 +612,15 @@ export interface on_Node
     childForFieldName(
         kind: "body"
     ):
-        | action_or_call_statement_Node
         | assign_Node
         | blocking_Node
+        | call_statement_Node
         | compound_Node
         | defer_Node
         | guard_Node
         | if_statement_Node
         | illegal_Node
+        | interface_action_statement_Node
         | invariant_Node
         | on_Node
         | reply_Node
@@ -639,7 +637,7 @@ export interface port_Node
     type: "port";
     childForFieldName(kind: "direction"): port_direction_Node;
     childForFieldName(kind: "formals"): formals_Node | undefined;
-    childForFieldName(kind: "name"): port_name_Node;
+    childForFieldName(kind: "name"): name_Node;
     childForFieldName(kind: "qualifiers"): port_qualifiers_Node | undefined;
     childForFieldName(kind: "type"): compound_name_Node;
 }
@@ -649,23 +647,6 @@ export interface port_direction_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "port_direction";
-}
-export interface port_event_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "port_event";
-    childForFieldName(kind: "formals"): trigger_formals_Node;
-    childForFieldName(kind: "name"): name_Node;
-    childForFieldName(kind: "port"): port_name_Node;
-}
-export interface port_name_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "port_name";
 }
 export interface port_qualifier_Node
     extends Omit<
@@ -691,7 +672,6 @@ export interface reply_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -700,7 +680,7 @@ export interface reply_Node
         | literal_Node
         | unary_expression_Node
         | undefined;
-    childForFieldName(kind: "port"): port_name_Node | undefined;
+    childForFieldName(kind: "port"): name_Node | undefined;
 }
 export interface return_Node
     extends Omit<
@@ -711,7 +691,6 @@ export interface return_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -775,8 +754,10 @@ export interface trigger_Node
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
     type: "trigger";
-    firstNamedChild: event_name_Node | inevitable_Node | optional_Node | port_event_Node;
-    namedChildren: [event_name_Node | inevitable_Node | optional_Node | port_event_Node];
+    childForFieldName(kind: "formals"): trigger_formals_Node | undefined;
+    childForFieldName(kind: "name"): compound_name_Node | undefined;
+    firstNamedChild: inevitable_Node | optional_Node | undefined;
+    namedChildren: [inevitable_Node | optional_Node | undefined];
 }
 export interface trigger_formal_Node
     extends Omit<
@@ -820,7 +801,6 @@ export interface unary_expression_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -846,7 +826,6 @@ export interface variable_Node
     childForFieldName(
         kind: "expression"
     ):
-        | action_Node
         | binary_expression_Node
         | call_Node
         | compound_name_Node
@@ -879,12 +858,12 @@ export interface file_name_Node
     > {
     type: "file_name";
 }
-export interface identifier_Node
+export interface if_keyword_Node
     extends Omit<
         Parser.SyntaxNode,
         "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
     > {
-    type: "identifier";
+    type: "if_keyword";
 }
 export interface inevitable_Node
     extends Omit<
@@ -922,8 +901,6 @@ export interface otherwise_Node
     type: "otherwise";
 }
 export type AllNodes =
-    | action_Node
-    | action_or_call_statement_Node
     | arguments_Node
     | assign_Node
     | behavior_Node
@@ -933,6 +910,7 @@ export type AllNodes =
     | blocking_Node
     | body_Node
     | call_Node
+    | call_statement_Node
     | comment_Node
     | component_Node
     | compound_Node
@@ -951,9 +929,9 @@ export type AllNodes =
     | formals_Node
     | function_Node
     | function_body_one_line_Node
-    | global_Node
     | group_Node
     | guard_Node
+    | identifier_Node
     | if_statement_Node
     | illegal_Node
     | import_Node
@@ -961,6 +939,7 @@ export type AllNodes =
     | int_Node
     | interface_Node
     | interface_action_Node
+    | interface_action_statement_Node
     | interface_body_Node
     | invariant_Node
     | literal_Node
@@ -969,8 +948,6 @@ export type AllNodes =
     | on_Node
     | port_Node
     | port_direction_Node
-    | port_event_Node
-    | port_name_Node
     | port_qualifier_Node
     | port_qualifiers_Node
     | reply_Node
@@ -991,7 +968,7 @@ export type AllNodes =
     | asterisk_Node
     | dollars_content_Node
     | file_name_Node
-    | identifier_Node
+    | if_keyword_Node
     | inevitable_Node
     | member_name_Node
     | number_Node

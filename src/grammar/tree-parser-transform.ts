@@ -8,7 +8,7 @@ type ChildrenTypes<
     name extends string,
 > = T["childrenForFieldName"] extends { (kind: name): infer R } ? (R extends Array<infer S> ? S : never) : never;
 
-export function transformRoot(root: parser.root_Node): ast.File {
+export function treeSitterTreeToAst(root: parser.root_Node): ast.File {
     return {
         kind: ast.SyntaxKind.File,
         position: nodePosition(root),
@@ -418,14 +418,16 @@ type CompoundStatements = ChildrenTypes<parser.compound_Node, "statement">;
 
 function transformCompoundStatement(node: CompoundStatements): ast.Statement {
     switch (node.type) {
-        case "action_or_call_statement":
-            return wrapExpressionStatement(node, transformActionOrCall(node.childForFieldName("action_or_call")));
+        case "call_statement":
+            return wrapExpressionStatement(node, transformCallExpression(node.childForFieldName("call")));
         case "blocking":
             return transformBlocking(node);
         case "compound":
             return transformCompound(node);
         case "guard":
             return transformGuardStatement(node);
+        case "interface_action_statement":
+            return wrapExpressionStatement(node, transformName(node.childForFieldName("name")));
         case "invariant":
             return transformInvariantStatement(node);
         case "on":
@@ -448,25 +450,6 @@ function transformCompoundStatement(node: CompoundStatements): ast.Statement {
             return transformEmptyStatement(node);
         default:
             throw assertNever(node, "unknown statement kind");
-    }
-}
-
-function transformActionOrCall(
-    node: parser.action_Node | parser.call_Node | parser.interface_action_Node
-): ast.CallExpression | ast.Name {
-    switch (node.type) {
-        case "action":
-            return transformCallExpression(node);
-        case "call":
-            return transformCallExpression(node);
-        case "interface_action":
-            return {
-                kind: ast.SyntaxKind.Identifier,
-                position: nodePosition(node),
-                text: node.text,
-            };
-        default:
-            throw assertNever(node, "unknown action or calll kind");
     }
 }
 
@@ -499,39 +482,28 @@ function transformOnStatement(node: parser.on_Node): ast.OnStatement {
         };
     }
 
-    function transformTrigger(triggerParent: parser.trigger_Node): ast.OnTrigger {
-        const trigger = triggerParent.firstNamedChild;
-        switch (trigger.type) {
-            case "event_name":
-                return {
-                    kind: ast.SyntaxKind.OnTrigger,
-                    position: nodePosition(trigger),
-                    name: createIdentifier(trigger, trigger.text),
-                };
-            case "port_event":
-                const parameterList = trigger.childForFieldName("formals");
-                const formals = parameterList.childrenForFieldName("trigger_formal") ?? [];
-                return {
-                    kind: ast.SyntaxKind.OnTrigger,
-                    position: nodePosition(trigger),
-                    name: {
-                        kind: ast.SyntaxKind.CompoundName,
-                        position: nodePosition(trigger),
-                        compound: transformIdentifier(trigger.childForFieldName("port")),
-                        name: transformIdentifier(trigger.childForFieldName("name")),
-                    },
-                    parameterList: {
-                        kind: ast.SyntaxKind.OnTriggerParameters,
-                        position: nodePosition(parameterList),
-                        parameters: formals.map(transformTriggerFormal),
-                    },
-                };
-            case "inevitable":
-                return transformKeyword(trigger, "inevitable");
-            case "optional":
-                return transformKeyword(trigger, "optional");
-            default:
-                throw assertNever(trigger, "unknown trigger kind");
+    function transformTrigger(trigger: parser.trigger_Node): ast.OnTrigger {
+        const name = trigger.childForFieldName("name");
+        const parameterList = trigger.childForFieldName("formals");
+
+        if (name) {
+            return {
+                kind: ast.SyntaxKind.OnTrigger,
+                position: nodePosition(trigger),
+                name: transformName(name),
+                parameterList: parameterList && {
+                    kind: ast.SyntaxKind.OnTriggerParameters,
+                    position: nodePosition(parameterList),
+                    parameters: parameterList.childrenForFieldName("trigger_formal")?.map(transformTriggerFormal) ?? [],
+                },
+            };
+        } else {
+            const keyword = trigger.firstNamedChild!;
+            if (keyword?.type === "optional") {
+                return transformKeyword(keyword, "optional");
+            } else {
+                return transformKeyword(keyword, "inevitable");
+            }
         }
     }
 
@@ -607,12 +579,11 @@ function transformReturnStatement(node: parser.return_Node): ast.ReturnStatement
 function transformEmptyStatement(node: parser.skip_statement_Node): ast.EmptyStatement {
     return {
         kind: ast.SyntaxKind.EmptyStatement,
-        position: nodePosition(node)
-    }
+        position: nodePosition(node),
+    };
 }
 
 type ExpressionsTypes =
-    | parser.action_Node
     | parser.binary_expression_Node
     | parser.call_Node
     | parser.compound_name_Node
@@ -624,8 +595,6 @@ type ExpressionsTypes =
 
 function transformExpression(node: ExpressionsTypes): ast.Expression {
     switch (node.type) {
-        case "action":
-            return transformCallExpression(node);
         case "binary_expression":
             return transformBinaryExpression(node);
         case "call":
@@ -647,23 +616,11 @@ function transformExpression(node: ExpressionsTypes): ast.Expression {
     }
 }
 
-function transformCallExpression(node: parser.action_Node | parser.call_Node): ast.CallExpression {
-    let name: ast.Name = transformIdentifier(node.childForFieldName("name"));
-
-    if (node.type === "action") {
-        const port = transformIdentifier(node.childForFieldName("port_name"));
-        name = {
-            kind: ast.SyntaxKind.CompoundName,
-            position: combinePositions(port.position, name.position),
-            compound: port,
-            name,
-        };
-    }
-
+function transformCallExpression(node: parser.call_Node): ast.CallExpression {
     return {
         kind: ast.SyntaxKind.CallExpression,
         position: nodePosition(node),
-        expression: name,
+        expression: transformName(node.childForFieldName("name")),
         arguments: transformArguments(node.childForFieldName("arguments")),
     };
 }
@@ -790,8 +747,8 @@ function transformIdentifier(
     node:
         | parser.event_name_Node
         | parser.identifier_Node
+        | parser.interface_action_Node
         | parser.name_Node
-        | parser.port_name_Node
         | parser.scoped_name_Node
         | parser.type_name_Node
         | parser.var_name_Node
@@ -804,7 +761,7 @@ function transformIdentifier(
 }
 
 function transformName(
-    node: parser.compound_name_Node | parser.name_Node | parser.scoped_name_Node | parser.type_name_Node
+    node: parser.compound_name_Node | parser.name_Node | parser.scoped_name_Node | parser.type_name_Node | parser.interface_action_Node
 ): ast.Name {
     if (node.type === "type_name") {
         const name = node.childForFieldName("name");

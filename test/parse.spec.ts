@@ -156,7 +156,7 @@ test("namespaced enum", async () => {
     );
 });
 
-test("namespaced shortcut", async () => {
+test("namespaced global", async () => {
     await expectCanParseWithoutDiagnostics("MyEnum test = .MyEnum.a;");
 });
 
@@ -499,5 +499,7 @@ async function expectCanParseWithoutDiagnostics(dzn: string, ignoreCodes: Diagno
         console.log(formatDiagnostic(diagnostic));
     }
 
-    expect(filteredDiagnostics).toHaveLength(0);
+    if (filteredDiagnostics.length > 0) {
+        expect(filteredDiagnostics.map(formatDiagnostic).join("\n")).toBe("<no diagnostics>");
+    }
 }

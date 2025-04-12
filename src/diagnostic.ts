@@ -71,7 +71,7 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
 
 function findFullLine(range: SourceRange, source: string) {
     let lineStart = range.from.index;
-    for (; lineStart >= 0; lineStart--) {
+    for (; lineStart > 0; lineStart--) {
         if (source[lineStart] === "\n") {
             ++lineStart;
             break;
