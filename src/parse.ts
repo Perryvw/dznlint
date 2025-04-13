@@ -7,7 +7,7 @@ import { InputSource, Program } from "./semantics/program";
 import { root_Node } from "./grammar/tree-sitter-types";
 import { nodePosition, treeSitterTreeToAst } from "./grammar/tree-parser-transform";
 import { visitFile } from "./visitor";
-import { setParentVisitor } from "./grammar/set-ast-parent";
+import { setParentVisitor } from "./grammar/set-ast-parents";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
