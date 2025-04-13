@@ -1485,7 +1485,7 @@ function formatIfStatement(cursor: Grammar.CursorPosition<Grammar.if_statement_N
     cursor.gotoFirstChild();
     do {
         switch (cursor.nodeType) {
-            case "if_keyword":
+            case "if":
                 formatter.keyword("if");
                 break;
             case "(":

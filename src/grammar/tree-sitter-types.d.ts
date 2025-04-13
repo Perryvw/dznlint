@@ -849,13 +849,6 @@ export interface file_name_Node
     > {
     type: "file_name";
 }
-export interface if_keyword_Node
-    extends Omit<
-        Parser.SyntaxNode,
-        "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"
-    > {
-    type: "if_keyword";
-}
 export interface inevitable_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -958,7 +951,6 @@ export type AllNodes =
     | asterisk_Node
     | dollars_content_Node
     | file_name_Node
-    | if_keyword_Node
     | inevitable_Node
     | member_name_Node
     | number_Node

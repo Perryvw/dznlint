@@ -54,11 +54,11 @@ test("function call argument count must match when calling an event", async () =
                 in void bar(in bool a, in bool b, ExtType c);
             }
             component C {
-                requires I if;
+                requires I p;
 
                 behavior {
                     void foo() {
-                        if.bar(true, false, $hi$);
+                        p.bar(true, false, $hi$);
                     }
                 }
             }`,
@@ -68,11 +68,11 @@ test("function call argument count must match when calling an event", async () =
                 in void bar(in bool a, in bool b, ExtType c);
             }
             component C {
-                requires I if;
+                requires I p;
 
                 behavior {
                     void foo() {
-                        if.bar(true, false);
+                        p.bar(true, false);
                     }
                 }
             }`,

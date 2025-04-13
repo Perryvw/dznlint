@@ -951,8 +951,8 @@ interface if_statement_Node extends BaseNode {
     _id: 157;
     isNamed: true;
     walk(): TypedCursor<
-        | if_keyword_Node
-        | UnnamedNode<"(", 158>
+        | UnnamedNode<"if", 158>
+        | UnnamedNode<"(", 159>
         | unary_expression_Node
         | group_Node
         | dollars_Node
@@ -960,7 +960,7 @@ interface if_statement_Node extends BaseNode {
         | compound_name_Node
         | call_Node
         | binary_expression_Node
-        | UnnamedNode<")", 159>
+        | UnnamedNode<")", 160>
         | call_statement_Node
         | variable_Node
         | assign_Node
@@ -972,16 +972,11 @@ interface if_statement_Node extends BaseNode {
         | compound_Node
         | reply_Node
         | defer_Node
-        | UnnamedNode<"else", 160>
+        | UnnamedNode<"else", 161>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
     >;
-}
-interface if_keyword_Node extends BaseNode {
-    type: "if_keyword";
-    _id: 161;
-    isNamed: true;
 }
 interface reply_Node extends BaseNode {
     type: "reply";
@@ -1391,10 +1386,10 @@ export type AllNodes =
     | UnnamedNode<";", 153>
     | UnnamedNode<"=", 155>
     | UnnamedNode<";", 156>
-    | if_keyword_Node
-    | UnnamedNode<"(", 158>
-    | UnnamedNode<")", 159>
-    | UnnamedNode<"else", 160>
+    | UnnamedNode<"if", 158>
+    | UnnamedNode<"(", 159>
+    | UnnamedNode<")", 160>
+    | UnnamedNode<"else", 161>
     | UnnamedNode<".", 163>
     | UnnamedNode<"reply", 164>
     | UnnamedNode<"(", 165>
