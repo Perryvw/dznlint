@@ -126,7 +126,7 @@ export class TypeChecker {
         if (node.parent && isCompoundName(node.parent) && node.parent.name === node) {
             if (!node.parent.compound) return undefined;
 
-            const parentType = this.typeOfNode(node.parent);
+            const parentType = this.typeOfNode(node.parent.compound);
             return this.getMembersOfType(parentType).get(node.parent.name.text);
         }
 

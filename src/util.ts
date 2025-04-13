@@ -1,4 +1,61 @@
 import * as ast from "./grammar/ast";
+import { Program, SourceFile } from "./semantics/program";
+import { visitFile, VisitResult } from "./visitor";
+
+export function findLeafAtPosition(
+    file: SourceFile,
+    line: number,
+    column: number,
+    program: Program
+): ast.AnyAstNode | undefined {
+    let leaf: ast.AnyAstNode | undefined;
+    if (file.ast) {
+        visitFile(
+            file.ast,
+            file.source,
+            node => {
+                if (!isPositionInNode(node, line, column)) {
+                    return VisitResult.StopVisiting;
+                }
+                leaf = node;
+            },
+            program
+        );
+    }
+    return leaf;
+}
+
+export function findNameAtPosition(
+    file: SourceFile,
+    line: number,
+    column: number,
+    program: Program
+): ast.Identifier | undefined {
+    let name: ast.Identifier | undefined;
+    if (file.ast) {
+        visitFile(
+            file.ast,
+            file.source,
+            node => {
+                if (!isPositionInNode(node, line, column)) {
+                    return VisitResult.StopVisiting;
+                }
+                if (isIdentifier(node)) {
+                    name = node;
+                }
+            },
+            program
+        );
+    }
+    return name;
+}
+
+export function isPositionInNode(node: ast.AnyAstNode, line: number, column: number): boolean {
+    const left =
+        line > node.position.from.line || (line === node.position.from.line && column >= node.position.from.column);
+    const right = line < node.position.to.line || (line === node.position.to.line && column <= node.position.to.column);
+    return left && right;
+}
 
 export function combineSourceRanges(from: ast.SourceRange, to: ast.SourceRange): ast.SourceRange {
     return {
