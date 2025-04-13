@@ -3,15 +3,13 @@ import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "./diag
 import { VisitorContext } from "./visitor";
 import * as ast from "./grammar/ast";
 
-//export type ASTNode = { kind: parser.ASTKinds; parent?: ASTNode };
-export type ASTNode = ast.AnyAstNode;
-export type Linter<T extends ASTNode> = (node: T, context: VisitorContext) => Diagnostic[];
+export type Linter<T extends ast.AnyAstNode> = (node: T, context: VisitorContext) => Diagnostic[];
 
 export type RuleFactory = (context: RuleFactoryContext) => void;
 
 export interface RuleFactoryContext {
     userConfig: DznLintUserConfiguration;
-    registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
+    registerRule<TNode extends ast.AnyAstNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
 }
 
 import call_arguments_must_match from "./rules/call-arguments-must-match";
@@ -71,16 +69,16 @@ export function loadLinters(config: DznLintUserConfiguration) {
         port_parameter_direction,
     ];
 
-    const linters = new Map<ast.SyntaxKind, Linter<ASTNode>[]>();
+    const linters = new Map<ast.SyntaxKind, Linter<ast.AnyAstNode>[]>();
 
     const ruleFactoryContext: RuleFactoryContext = {
         userConfig: config,
-        registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>) {
+        registerRule<TNode extends ast.AnyAstNode>(kind: TNode["kind"], rule: Linter<TNode>) {
             if (!linters.has(kind)) {
                 linters.set(kind, []);
             }
 
-            linters.get(kind)?.push(wrapErrorHandling(rule as Linter<ASTNode>));
+            linters.get(kind)?.push(wrapErrorHandling(rule as Linter<ast.AnyAstNode>));
         },
     };
 
@@ -93,7 +91,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
 
 export const dznLintExceptionThrown = createDiagnosticsFactory();
 
-function wrapErrorHandling(linter: Linter<ASTNode>): Linter<ASTNode> {
+function wrapErrorHandling<TNode extends ast.AnyAstNode>(linter: Linter<TNode>): Linter<TNode> {
     return (node, context) => {
         try {
             return linter(node, context);

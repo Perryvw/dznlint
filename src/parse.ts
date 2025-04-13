@@ -3,15 +3,18 @@ import * as Parser from "web-tree-sitter";
 
 import { createDiagnosticsFactory, DiagnosticSeverity } from "./diagnostic";
 import { Diagnostic } from "./diagnostic";
-import { InputSource } from "./semantics/program";
+import { InputSource, Program } from "./semantics/program";
 import { root_Node } from "./grammar/tree-sitter-types";
 import { nodePosition, treeSitterTreeToAst } from "./grammar/tree-parser-transform";
+import { visitFile } from "./visitor";
+import { setParentVisitor } from "./grammar/set-ast-parent";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
-export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast.File; diagnostics: Diagnostic[] } {
-    const tree = parser.parse(source.fileContent);
+export function parseDznSource(source: InputSource, program: Program): { ast?: ast.File; diagnostics: Diagnostic[] } {
+    const tree = program.parser.parse(source.fileContent);
     const ast = treeSitterTreeToAst(tree.rootNode as root_Node, source.fileName);
+    visitFile(ast, source, setParentVisitor, program);
 
     const diagnostics: Diagnostic[] = [];
 
@@ -21,7 +24,7 @@ export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast
             const cursor = node.walk();
             // eslint-disable-next-line no-empty
             while (cursor.gotoFirstChild()) {}
-            const it = parser.getLanguage().lookaheadIterator(cursor.currentNode.parseState);
+            const it = program.parser.getLanguage().lookaheadIterator(cursor.currentNode.parseState);
             if (it) {
                 const parts = [];
                 for (const next of it) {

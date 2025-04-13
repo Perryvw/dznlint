@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { Diagnostic, DiagnosticSeverity } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTNode, RuleFactory } from "../linting-rule";
+import { RuleFactory } from "../linting-rule";
 import { isIdentifier, isKeyword } from "../util";
 import { VisitorContext } from "../visitor";
 
@@ -39,7 +39,7 @@ export const no_unused_parameters: RuleFactory = factoryContext => {
 
 function findUnusedParameters(
     parameters: ast.Identifier[],
-    body: ASTNode,
+    body: ast.AnyAstNode,
     context: VisitorContext,
     severity: DiagnosticSeverity
 ): Diagnostic[] {

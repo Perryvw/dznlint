@@ -3,7 +3,7 @@
 import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "../diagnostic";
-import { ASTNode, RuleFactory } from "../linting-rule";
+import { RuleFactory } from "../linting-rule";
 import { isCompound, isIdentifier, isKeyword, isOnStatement } from "../util";
 
 export const portMissingBlocking = createDiagnosticsFactory();
@@ -115,6 +115,6 @@ function isPortBlocking(port: ast.Port) {
     return port.qualifiers?.some(q => q.text === "blocking") ?? false;
 }
 
-function isBlockingCompound(node: ASTNode): node is ast.Compound {
+function isBlockingCompound(node: ast.AnyAstNode): node is ast.Compound {
     return isCompound(node) && node.blocking !== undefined;
 }

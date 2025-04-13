@@ -5,7 +5,7 @@ import * as ast from "../grammar/ast";
 import { Diagnostic } from "../diagnostic";
 import { initParser, parseDznSource } from "../parse";
 import { normalizePath, resolveImport } from "../resolve-imports";
-import { setParentVisitor, visitFile } from "../visitor";
+import { visitFile } from "../visitor";
 import * as Parser from "web-tree-sitter";
 
 export interface LinterHost {
@@ -95,11 +95,8 @@ export class SourceFile {
         public source: InputSource,
         program: Program
     ) {
-        const { ast, diagnostics } = parseDznSource(source, program.parser);
+        const { ast, diagnostics } = parseDznSource(source, program);
+        this.ast = ast;
         this.parseDiagnostics = diagnostics;
-        if (ast) {
-            visitFile(ast, source, setParentVisitor, program);
-            this.ast = ast;
-        }
     }
 }

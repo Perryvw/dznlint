@@ -6,7 +6,7 @@
 import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTNode, RuleFactory } from "../linting-rule";
+import { RuleFactory } from "../linting-rule";
 import { isIdentifier } from "../util";
 import { VisitResult } from "../visitor";
 
@@ -31,7 +31,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
             const name = node.name.text;
             let count = 0;
 
-            let singleUsage: ASTNode | undefined;
+            let singleUsage: ast.AnyAstNode | undefined;
 
             context.visit(context.currentScope().root, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
@@ -60,7 +60,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
     }
 };
 
-function canInlineAtLocation(node: ASTNode): boolean {
+function canInlineAtLocation(node: ast.AnyAstNode): boolean {
     if (!node.parent) return true;
 
     return node.parent.kind !== ast.SyntaxKind.ReturnStatement && node.parent.kind !== ast.SyntaxKind.CallExpression;

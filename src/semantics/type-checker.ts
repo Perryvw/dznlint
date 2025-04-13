@@ -1,7 +1,6 @@
 import * as util from "util";
 
 import * as ast from "../grammar/ast";
-import { ASTNode } from "../linting-rule";
 import {
     findFirstParent,
     isCompoundBindingExpression,
@@ -25,7 +24,7 @@ import { SourceRange } from "../grammar/source-position";
 
 export class SemanticSymbol {
     public constructor(
-        public declaration: ASTNode,
+        public declaration: ast.AnyAstNode,
         public name?: ast.Name
     ) {}
 
@@ -57,7 +56,7 @@ export enum TypeKind {
 export interface Type {
     kind: TypeKind;
     name: string;
-    declaration?: ASTNode;
+    declaration?: ast.AnyAstNode;
 }
 
 const ERROR_TYPE = {
@@ -73,15 +72,15 @@ const BOOL_TYPE = {
 
 const BOOL_SYMBOL = new SemanticSymbol(null!);
 
-const TRUE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
-const FALSE_DECLARATION: ASTNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
+const TRUE_DECLARATION: ast.AnyAstNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
+const FALSE_DECLARATION: ast.AnyAstNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
 const TRUE_SYMBOL = new SemanticSymbol(TRUE_DECLARATION);
 const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
 
 export class TypeChecker {
     public constructor(private program: Program) {}
 
-    public typeOfNode(node: ASTNode, typeReference = false): Type {
+    public typeOfNode(node: ast.AnyAstNode, typeReference = false): Type {
         if (node.kind === ast.SyntaxKind.BinaryExpression || node.kind === ast.SyntaxKind.UnaryOperatorExpression) {
             // Okay so this is definitely not true, but then again, we don't have to worry about everything else for now
             return BOOL_TYPE;
@@ -96,7 +95,7 @@ export class TypeChecker {
         return this.typeOfSymbol(symbol);
     }
 
-    private symbols = new Map<ASTNode, SemanticSymbol>();
+    private symbols = new Map<ast.AnyAstNode, SemanticSymbol>();
 
     private builtInSymbols = new Map<string, SemanticSymbol>([
         ["void", new SemanticSymbol(null!)],
@@ -358,7 +357,7 @@ export class TypeChecker {
         return result;
     });
 
-    private getOrCreateSymbol(node: ASTNode): SemanticSymbol {
+    private getOrCreateSymbol(node: ast.AnyAstNode): SemanticSymbol {
         if (this.symbols.has(node)) {
             return this.symbols.get(node)!;
         } else {
@@ -368,8 +367,8 @@ export class TypeChecker {
         }
     }
 
-    private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ASTNode> => {
-        const result = new Map<string, ASTNode>();
+    private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ast.AnyAstNode> => {
+        const result = new Map<string, ast.AnyAstNode>();
 
         if (scope.kind === ast.SyntaxKind.System) {
             for (const instance_or_binding of scope.instancesAndBindings) {
