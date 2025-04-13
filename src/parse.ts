@@ -11,7 +11,7 @@ export const failedToFullyParseFile = createDiagnosticsFactory();
 
 export function parseDznSource(source: InputSource, parser: Parser): { ast?: ast.File; diagnostics: Diagnostic[] } {
     const tree = parser.parse(source.fileContent);
-    const ast = treeSitterTreeToAst(tree.rootNode as root_Node);
+    const ast = treeSitterTreeToAst(tree.rootNode as root_Node, source.fileName);
 
     const diagnostics: Diagnostic[] = [];
 

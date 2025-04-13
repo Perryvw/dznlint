@@ -9,10 +9,11 @@ type ChildrenTypes<
     name extends string,
 > = T["childrenForFieldName"] extends { (kind: name): infer R } ? (R extends Array<infer S> ? S : never) : never;
 
-export function treeSitterTreeToAst(root: parser.root_Node): ast.File {
+export function treeSitterTreeToAst(root: parser.root_Node, fileName: string | undefined): ast.File {
     return {
         kind: ast.SyntaxKind.File,
         position: nodePosition(root),
+        fileName: fileName,
         statements: root.childrenForFieldName("statement")?.map(transformRootStatement) ?? ([] as ast.Statement[]),
     };
 }

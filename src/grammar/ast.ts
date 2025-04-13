@@ -71,6 +71,7 @@ export interface Keyword<TKind extends string> extends AstNode<SyntaxKind.Keywor
 export type AnyAstNode = AstNode<SyntaxKind>;
 
 export interface File extends AstNode<SyntaxKind.File> {
+    fileName?: string;
     statements: RootStatement[];
 }
 
