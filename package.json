@@ -9,6 +9,10 @@
         "dist/**/*.wasm"
     ],
     "main": "dist/index.js",
+    "exports": {
+        ".": "./dist/index.js",
+        "./*": "./dist/*.js"
+    },
     "types": "dist/index.d.ts",
     "bin": {
         "dznlint": "dist/cli/dznlint.js"
