@@ -201,7 +201,7 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.condition, cb);
         context.pushScope(node);
         context.visit(node.statement, cb);
-        
+
         if (node.else) {
             return context.visit(node.else, cb);
         }

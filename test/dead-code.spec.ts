@@ -56,6 +56,6 @@ test("code after return statements else/if", async () => {
                     else return false;
                 }
             }
-        }`
+        }`,
     });
 });

@@ -1,4 +1,4 @@
-import { assertNever, combineSourceRanges } from "../util";
+import { assertNever, combineSourceRanges, isIdentifier } from "../util";
 import * as ast from "./ast";
 import * as parser from "./tree-sitter-types";
 
@@ -234,12 +234,24 @@ function transformFunction(node: parser.function_Node): ast.FunctionDefinition {
 }
 
 function transformNamespace(node: parser.namespace_Node): ast.Namespace {
-    return {
+    let name = transformName(node.childForFieldName("name"));
+    let namespace: ast.Namespace = {
         kind: ast.SyntaxKind.Namespace,
         position: nodePosition(node),
-        name: transformName(node.childForFieldName("name")),
+        name: isIdentifier(name) ? name : name.name,
         statements: (node.childrenForFieldName("body_statement") ?? []).map(transformNamespaceStatement),
     };
+    // Desugar namespace a.b.c {} into namespace a { namsepace b { namespace c {}}}
+    while (name.kind !== ast.SyntaxKind.Identifier && name.compound) {
+        name = name.compound;
+        namespace = {
+            kind: ast.SyntaxKind.Namespace,
+            position: namespace.position,
+            name: isIdentifier(name) ? name : name.name,
+            statements: [namespace],
+        };
+    }
+    return namespace;
 }
 
 type NamespaceStatements = ChildrenTypes<parser.namespace_Node, "body_statement">;

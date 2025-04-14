@@ -7,7 +7,9 @@ test.only("find declaration of port", async () => {
     const program = await Program.Init();
     const typeChecker = new TypeChecker(program);
 
-    const nameAtPosition = await findNameAtCursor(program, `
+    const nameAtPosition = await findNameAtCursor(
+        program,
+        `
         interface I {
             in void Foo();
         }
@@ -18,7 +20,8 @@ test.only("find declaration of port", async () => {
                 on i<cursor>.Foo(): {}
             }
         }
-    `);
+    `
+    );
     expect(nameAtPosition).toBeDefined();
 
     const symbol = typeChecker.symbolOfNode(nameAtPosition!);
@@ -32,7 +35,9 @@ test.only("find declaration of event", async () => {
     const program = await Program.Init();
     const typeChecker = new TypeChecker(program);
 
-    const nameAtPosition = await findNameAtCursor(program, `
+    const nameAtPosition = await findNameAtCursor(
+        program,
+        `
         interface I {
             in void Foo();
         }
@@ -43,7 +48,8 @@ test.only("find declaration of event", async () => {
                 on i.<cursor>Foo(): {}
             }
         }
-    `);
+    `
+    );
     expect(nameAtPosition).toBeDefined();
 
     const symbol = typeChecker.symbolOfNode(nameAtPosition!);
@@ -57,7 +63,9 @@ test.only("find declaration of interface", async () => {
     const program = await Program.Init();
     const typeChecker = new TypeChecker(program);
 
-    const nameAtPosition = await findNameAtCursor(program, `
+    const nameAtPosition = await findNameAtCursor(
+        program,
+        `
         interface I {
             in void Foo();
         }
@@ -68,7 +76,8 @@ test.only("find declaration of interface", async () => {
                 on i.Foo(): {}
             }
         }
-    `);
+    `
+    );
     expect(nameAtPosition).toBeDefined();
 
     const symbol = typeChecker.symbolOfNode(nameAtPosition!);
@@ -88,8 +97,7 @@ async function findNameAtCursor(program: Program, text: string): Promise<ast.Any
     return findNameAtPosition(sourceFile, line, column, program);
 }
 
-function findCursor(text: string): { line: number; column: number; }
-{
+function findCursor(text: string): { line: number; column: number } {
     const index = text.indexOf("<cursor>");
     expect(index).toBeGreaterThanOrEqual(0);
 
