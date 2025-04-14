@@ -201,11 +201,11 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.condition, cb);
         context.pushScope(node);
         context.visit(node.statement, cb);
-        context.popScope();
-
+        
         if (node.else) {
             return context.visit(node.else, cb);
         }
+        context.popScope();
     },
     [ast.SyntaxKind.Instance]: (node: ast.Instance, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
