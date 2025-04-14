@@ -5,7 +5,6 @@ import * as ast from "../grammar/ast";
 import { Diagnostic } from "../diagnostic";
 import { initParser, parseDznSource } from "../parse";
 import { normalizePath, resolveImport } from "../resolve-imports";
-import { visitFile } from "../visitor";
 import * as Parser from "web-tree-sitter";
 
 export interface LinterHost {

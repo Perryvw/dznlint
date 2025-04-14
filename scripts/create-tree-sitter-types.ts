@@ -34,7 +34,7 @@ for (const node of nodeTypes.filter(n => n.named)) {
     result.push(
         `export interface ${nameOfTypeNode(
             node
-        )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "children" | "firstNamedChild" | "namedChildren"> {`
+        )} extends Omit<Parser.SyntaxNode, "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"> {`
     );
     result.push(`    type: "${node.type}";`);
 

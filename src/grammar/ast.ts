@@ -64,7 +64,13 @@ export interface AstNode<TKind extends SyntaxKind> {
     kind: TKind;
     position: SourceRange;
     parent?: AnyAstNode;
+    errors?: Error[];
 }
+
+export interface Error extends AstNode<SyntaxKind.ERROR> {
+    text: string;
+}
+
 export interface Keyword<TKind extends string> extends AstNode<SyntaxKind.Keyword> {
     text: TKind;
 }

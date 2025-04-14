@@ -18,6 +18,14 @@ export function findLeafAtPosition(
                     return VisitResult.StopVisiting;
                 }
                 leaf = node;
+                if (node.errors) {
+                    for (const err of node.errors) {
+                        if (isPositionInNode(err, line, column)) {
+                            leaf = err;
+                            return VisitResult.StopVisiting;
+                        }
+                    }
+                }
             },
             program
         );

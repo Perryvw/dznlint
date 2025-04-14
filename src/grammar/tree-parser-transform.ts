@@ -373,6 +373,7 @@ function transformBehavior(node: parser.behavior_Node): ast.Behavior {
     return {
         kind: ast.SyntaxKind.Behavior,
         position: nodePosition(node),
+        errors: body.hasError ? collectErrors(body) : undefined,
         name: name && transformIdentifier(name),
         statements: (body.childrenForFieldName("statement") ?? []).map(transformBehaviorStatement),
     };
@@ -853,4 +854,18 @@ export function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.Sou
             column: node.endPosition.column,
         },
     };
+}
+
+function collectErrors(node: parser.AllNodes): ast.Error[] | undefined {
+    const errors: ast.Error[] = [];
+    for (const child of node.children) {
+        if (child.isError) {
+            errors.push({
+                kind: ast.SyntaxKind.ERROR,
+                position: nodePosition(child),
+                text: child.text,
+            });
+        }
+    }
+    return errors.length > 0 ? errors : undefined;
 }
