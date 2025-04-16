@@ -13,6 +13,7 @@ export function treeSitterTreeToAst(root: parser.root_Node, fileName: string | u
     return {
         kind: ast.SyntaxKind.File,
         position: nodePosition(root),
+        errors: collectErrors(root),
         fileName: fileName,
         statements: root.childrenForFieldName("statement")?.map(transformRootStatement) ?? ([] as ast.Statement[]),
     };
@@ -238,6 +239,7 @@ function transformNamespace(node: parser.namespace_Node): ast.Namespace {
     let namespace: ast.Namespace = {
         kind: ast.SyntaxKind.Namespace,
         position: nodePosition(node),
+        errors: collectErrors(node),
         name: isIdentifier(name) ? name : name.name,
         statements: (node.childrenForFieldName("body_statement") ?? []).map(transformNamespaceStatement),
     };
@@ -373,7 +375,7 @@ function transformBehavior(node: parser.behavior_Node): ast.Behavior {
     return {
         kind: ast.SyntaxKind.Behavior,
         position: nodePosition(node),
-        errors: body.hasError ? collectErrors(body) : undefined,
+        errors: collectErrors(body),
         name: name && transformIdentifier(name),
         statements: (body.childrenForFieldName("statement") ?? []).map(transformBehaviorStatement),
     };
@@ -421,6 +423,7 @@ function transformCompound(node: parser.compound_Node): ast.Compound {
     return {
         kind: ast.SyntaxKind.Compound,
         position: nodePosition(node),
+        errors: collectErrors(node),
         blocking: undefined,
         statements: node.childrenForFieldName("statement")?.map(transformCompoundStatement) ?? [],
     };
@@ -857,6 +860,8 @@ export function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.Sou
 }
 
 function collectErrors(node: parser.AllNodes): ast.Error[] | undefined {
+    if (!node.hasError) return undefined;
+
     const errors: ast.Error[] = [];
     for (const child of node.children) {
         if (child.isError) {

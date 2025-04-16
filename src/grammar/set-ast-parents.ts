@@ -2,8 +2,14 @@ import * as ast from "./ast";
 import { VisitorCallback } from "../visitor";
 import { isKeyword } from "../util";
 
-export const setParentVisitor: VisitorCallback = (node, context) =>
-    context.visit(node, n => setParentVisitors[n.kind]?.(n));
+export const setParentVisitor: VisitorCallback = node => {
+    setParentVisitors[node.kind]?.(node);
+    if (node.errors) {
+        for (const err of node.errors) {
+            setParent(err, node);
+        }
+    }
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = {

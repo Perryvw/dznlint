@@ -105,6 +105,25 @@ export class TypeChecker {
         ["inevitable", new SemanticSymbol(null!)],
     ]);
 
+    private resolveNameInScopeTree(
+        name: string,
+        leafScope: ScopedBlock,
+        typeReference: boolean
+    ): SemanticSymbol | undefined {
+        let scope: ScopedBlock | undefined = leafScope;
+        const scopeNamespaces = [];
+        while (scope) {
+            const symbol = this.findVariableInScope(name, scope, scopeNamespaces);
+            if (symbol && (!typeReference || this.isTypeSymbol(symbol))) return symbol;
+
+            if (isNamespace(scope)) {
+                scopeNamespaces.push(nameToString(scope.name));
+            }
+            scope = findFirstParent(scope, isScopedBlock);
+        }
+        return undefined;
+    }
+
     public symbolOfNode(node: ast.AnyAstNode, typeReference = false): SemanticSymbol | undefined {
         if (this.symbols.has(node)) return this.symbols.get(node);
         if (isTypeReference(node)) {
@@ -133,23 +152,14 @@ export class TypeChecker {
         // Try to resolve type the hard way
         if (isIdentifier(node)) {
             let scope = findFirstParent(node, isScopedBlock);
-            const scopeNamespaces = [];
-            while (scope) {
-                // To avoid resolving variables in on expressions to the parameters in the on triggers,
-                // check if node is part of the body of the on statement, if not, move on to the next scope
-                if (scope.kind === ast.SyntaxKind.OnStatement && !isChildOf(node, scope.body)) {
-                    scope = findFirstParent(scope, isScopedBlock);
-                    continue;
-                }
-                const symbol = this.findVariableInScope(node.text, scope, scopeNamespaces);
-                if (symbol && (!typeReference || this.isTypeSymbol(symbol))) return symbol;
-
-                if (isNamespace(scope)) {
-                    scopeNamespaces.push(nameToString(scope.name));
-                }
+            if (!scope) return undefined;
+            // To avoid resolving variables in on expressions to the parameters in the on triggers,
+            // check if node is part of the body of the on statement, if not, move on to the next scope
+            if (scope.kind === ast.SyntaxKind.OnStatement && !isChildOf(node, scope.body)) {
                 scope = findFirstParent(scope, isScopedBlock);
             }
-            return undefined;
+            if (!scope) return undefined;
+            return this.resolveNameInScopeTree(node.text, scope, typeReference);
         } else if (isCompoundName(node) && node.compound !== undefined) {
             const ownerType = this.typeOfNode(node.compound, typeReference);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
@@ -226,6 +236,20 @@ export class TypeChecker {
                 if (symbol) return symbol;
             }
         }
+    }
+
+    public resolveNameInScope(name: string, scope: ScopedBlock): SemanticSymbol | undefined {
+        const parts = name.split(".");
+        let symbol = this.resolveNameInScopeTree(parts[0], scope, false);
+        let i = 1;
+        while (symbol && i < parts.length) {
+            const ownerType = this.typeOfSymbol(symbol);
+            if (ownerType.kind === TypeKind.Invalid) return undefined;
+            const ownerMembers = this.getMembersOfType(ownerType);
+            symbol = ownerMembers.get(parts[i]);
+            i++;
+        }
+        return symbol;
     }
 
     public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {

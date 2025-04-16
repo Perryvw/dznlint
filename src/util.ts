@@ -1,5 +1,6 @@
 import * as ast from "./grammar/ast";
 import { Program, SourceFile } from "./semantics/program";
+import { SemanticSymbol, TypeChecker } from "./semantics/type-checker";
 import { visitFile, VisitResult } from "./visitor";
 
 export function findLeafAtPosition(
@@ -56,6 +57,52 @@ export function findNameAtPosition(
         );
     }
     return name;
+}
+
+export function findNameAtLocationInErrorNode(
+    node: ast.Error,
+    line: number,
+    column: number,
+    typeChecker: TypeChecker
+): { scope: ScopedBlock; owningObject?: SemanticSymbol; prefix: string } {
+    const scope = findFirstParent(node, isScopedBlock) as ScopedBlock;
+
+    // Skip ahead to the starting index of the search line in the node text
+    let lineOffset = 0;
+    for (let l = node.position.from.line; l < line; l++) {
+        lineOffset = node.text.indexOf("\n", lineOffset) + 1;
+    }
+    // If node starts on same line as search line, offset the column instead because the node might start
+    // at a later column in the line
+    const columnOffset = node.position.from.line === line ? column - node.position.from.column : 0;
+    // This is the index in the node text we're looking for
+    const cursorIndex = lineOffset + columnOffset;
+
+    // Work backwards while still seeing valid name parts
+    const namePattern = /[a-zA-Z0-9\-_.]+/g;
+    namePattern.lastIndex = lineOffset; // Start looking at current line only
+
+    let match = namePattern.exec(node.text);
+    while (match) {
+        const matchText = match[0];
+        if (match.index + matchText.length === cursorIndex) {
+            if (matchText.includes(".")) {
+                const lastDot = matchText.lastIndexOf(".");
+                const owningObjectString = matchText.substring(0, lastDot);
+                return {
+                    scope,
+                    owningObject: typeChecker.resolveNameInScope(owningObjectString, scope),
+                    prefix: matchText.substring(lastDot + 1),
+                };
+            } else {
+                return { scope, prefix: matchText };
+            }
+        }
+        match = namePattern.exec(node.text);
+    }
+
+    // If no matches were found fall back on empty string
+    return { scope, prefix: "" };
 }
 
 export function isPositionInNode(node: ast.AnyAstNode, line: number, column: number): boolean {
