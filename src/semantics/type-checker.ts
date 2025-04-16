@@ -391,7 +391,7 @@ export class TypeChecker {
         }
     }
 
-    private findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ast.AnyAstNode> => {
+    public findVariablesDeclaredInScope = memoize(this, (scope: ScopedBlock): Map<string, ast.AnyAstNode> => {
         const result = new Map<string, ast.AnyAstNode>();
 
         if (scope.kind === ast.SyntaxKind.System) {
