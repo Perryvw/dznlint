@@ -19,8 +19,7 @@ test("find declaration of port", async () => {
             behavior {
                 on i<cursor>.Foo(): {}
             }
-        }
-    `
+        }`
     );
     expect(nameAtPosition).toBeDefined();
 
@@ -47,8 +46,7 @@ test("find declaration of event", async () => {
             behavior {
                 on i.<cursor>Foo(): {}
             }
-        }
-    `
+        }`
     );
     expect(nameAtPosition).toBeDefined();
 
@@ -75,8 +73,7 @@ test("find declaration of interface", async () => {
             behavior {
                 on i.Foo(): {}
             }
-        }
-    `
+        }`
     );
     expect(nameAtPosition).toBeDefined();
 
@@ -102,8 +99,7 @@ test("keyword without definition", async () => {
             behavior {
                 on i.Foo(): {}
             }
-        }
-    `
+        }`
     );
 
     expect(nameAtPosition).toBeUndefined();
@@ -123,8 +119,7 @@ describe("incomplete tree", () => {
                 behavior {
                     on i.<cursor>
                 }
-            }
-    `
+            }`
         );
         expect(leafAtPosition).toBeDefined();
         expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
@@ -157,8 +152,7 @@ describe("incomplete tree", () => {
                 behavior {
                     [i.<cursor>]
                 }
-            }
-    `
+            }`
         );
         expect(leafAtPosition).toBeDefined();
         expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
@@ -191,8 +185,7 @@ describe("incomplete tree", () => {
                 behavior {
                     [<cursor>]
                 }
-            }
-        `
+            }`
         );
         expect(leafAtPosition).toBeDefined();
         expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
@@ -226,8 +219,7 @@ describe("incomplete tree", () => {
                         i.<cursor>
                     }
                 }
-            }
-        `
+            }`
         );
         expect(leafAtPosition).toBeDefined();
         expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
@@ -263,8 +255,7 @@ describe("incomplete tree", () => {
                         i.abc<cursor>
                     }
                 }
-            }
-        `
+            }`
         );
         expect(leafAtPosition).toBeDefined();
         expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
@@ -283,6 +274,98 @@ describe("incomplete tree", () => {
         // The name is in the compound scope of bla()
         expect(scope.kind).toBe(ast.SyntaxKind.Compound);
         expect(scope.parent?.kind).toBe(ast.SyntaxKind.FunctionDefinition);
+    });
+
+    test("name in error node with suffix", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                behavior {
+                    void bla() {
+                        abc<cursor>def(
+                    }
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { scope, owningObject, prefix, suffix } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+        // prefix of thing is "abc"
+        expect(prefix).toBe("abc");
+        expect(suffix).toBe("def");
+        // No owning object
+        expect(owningObject).toBeUndefined();
+        // The name is in the compound scope of bla()
+        expect(scope.kind).toBe(ast.SyntaxKind.Compound);
+        expect(scope.parent?.kind).toBe(ast.SyntaxKind.FunctionDefinition);
+    });
+
+    test("comound name in error node with suffix", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                requires I i;
+                behavior {
+                    void bla() {
+                        i.abc<cursor>def(
+                    }
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { scope, owningObject, prefix, suffix } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+        // prefix of thing is "abc"
+        expect(prefix).toBe("abc");
+        expect(suffix).toBe("def");
+        // The object owning the name abc is the port i
+        expect(owningObject?.declaration.kind).toBe(ast.SyntaxKind.Port);
+        expect((owningObject?.declaration as ast.Port).name.text).toBe("i");
+        // The name is in the compound scope of bla()
+        expect(scope.kind).toBe(ast.SyntaxKind.Compound);
+        expect(scope.parent?.kind).toBe(ast.SyntaxKind.FunctionDefinition);
+    });
+
+    test("incomplete compound followed by reply", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                behavior {
+                    void bla() {
+                        i.<cursor>
+                        reply();
+                    }
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Reply]);
+
+        expect((leafAtPosition as ast.Reply).port?.text).toBe("i");
     });
 });
 

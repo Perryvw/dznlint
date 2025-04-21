@@ -64,7 +64,7 @@ export function findNameAtLocationInErrorNode(
     line: number,
     column: number,
     typeChecker: TypeChecker
-): { scope: ScopedBlock; owningObject?: SemanticSymbol; prefix: string } {
+): { scope: ScopedBlock; owningObject?: SemanticSymbol; prefix: string; suffix: string } {
     const scope = findFirstParent(node, isScopedBlock) as ScopedBlock;
 
     // Skip ahead to the starting index of the search line in the node text
@@ -85,24 +85,33 @@ export function findNameAtLocationInErrorNode(
     let match = namePattern.exec(node.text);
     while (match) {
         const matchText = match[0];
-        if (match.index + matchText.length === cursorIndex) {
+        if (match.index + matchText.length >= cursorIndex) {
+            // Calculate how much of the name is after the cursor
+            const overrun = match.index + matchText.length - cursorIndex;
+
+            // If dealing with a compound name, look up the owning symbol
             if (matchText.includes(".")) {
                 const lastDot = matchText.lastIndexOf(".");
                 const owningObjectString = matchText.substring(0, lastDot);
+                const prefix = matchText.substring(lastDot + 1, cursorIndex);
+                const suffix = matchText.substring(cursorIndex, cursorIndex + overrun);
                 return {
                     scope,
                     owningObject: typeChecker.resolveNameInScope(owningObjectString, scope),
-                    prefix: matchText.substring(lastDot + 1),
+                    prefix,
+                    suffix,
                 };
             } else {
-                return { scope, prefix: matchText };
+                const prefix = matchText.substring(0, matchText.length - overrun);
+                const suffix = matchText.substring(matchText.length - overrun);
+                return { scope, prefix, suffix };
             }
         }
         match = namePattern.exec(node.text);
     }
 
     // If no matches were found fall back on empty string
-    return { scope, prefix: "" };
+    return { scope, prefix: "", suffix: "" };
 }
 
 export function isPositionInNode(node: ast.AnyAstNode, line: number, column: number): boolean {
@@ -166,6 +175,10 @@ export function isInevitableKeyword(node: ast.AnyAstNode): node is ast.Keyword<"
     return isKeyword(node) && node.text === "inevitable";
 }
 
+export function isReplyKeyword(node: ast.AnyAstNode): node is ast.Keyword<"reply"> {
+    return isKeyword(node) && node.text === "reply";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;
@@ -189,6 +202,10 @@ export function isTypeReference(node: ast.AnyAstNode): node is ast.TypeReference
 
 export function isPort(node: ast.AnyAstNode): node is ast.Port {
     return node.kind === ast.SyntaxKind.Port;
+}
+
+export function isReply(node: ast.AnyAstNode): node is ast.Reply {
+    return node.kind === ast.SyntaxKind.Reply;
 }
 
 export function isInjected(port: ast.Port) {

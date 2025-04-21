@@ -59,7 +59,7 @@ export interface Type {
     declaration?: ast.AnyAstNode;
 }
 
-const ERROR_TYPE = {
+export const ERROR_TYPE = {
     kind: TypeKind.Invalid,
     name: "invalid type",
     declaration: null!,
@@ -70,10 +70,35 @@ const BOOL_TYPE = {
     name: "bool",
 } satisfies Type;
 
-const BOOL_SYMBOL = new SemanticSymbol(null!);
+const VOID_DECLARATION: ast.Keyword<"void"> = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION, text: "void" };
+const BOOL_DECLARATION: ast.Keyword<"bool"> = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION, text: "bool" };
+const TRUE_DECLARATION: ast.BooleanLiteral = {
+    kind: ast.SyntaxKind.BooleanLiteral,
+    position: EMPTY_POSITION,
+    value: true,
+};
+const FALSE_DECLARATION: ast.BooleanLiteral = {
+    kind: ast.SyntaxKind.BooleanLiteral,
+    position: EMPTY_POSITION,
+    value: false,
+};
+const REPLY_DECLARATION: ast.Keyword<"reply"> = {
+    kind: ast.SyntaxKind.Keyword,
+    position: EMPTY_POSITION,
+    text: "reply",
+};
+const OPTIONAL_DECLARATION: ast.Keyword<"optional"> = {
+    kind: ast.SyntaxKind.Keyword,
+    position: EMPTY_POSITION,
+    text: "optional",
+};
+const INEVITABLE_DECLARATION: ast.Keyword<"inevitable"> = {
+    kind: ast.SyntaxKind.Keyword,
+    position: EMPTY_POSITION,
+    text: "inevitable",
+};
 
-const TRUE_DECLARATION: ast.AnyAstNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
-const FALSE_DECLARATION: ast.AnyAstNode = { kind: ast.SyntaxKind.BooleanLiteral, position: EMPTY_POSITION };
+const BOOL_SYMBOL = new SemanticSymbol(BOOL_DECLARATION);
 const TRUE_SYMBOL = new SemanticSymbol(TRUE_DECLARATION);
 const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
 
@@ -98,11 +123,11 @@ export class TypeChecker {
     private symbols = new Map<ast.AnyAstNode, SemanticSymbol>();
 
     private builtInSymbols = new Map<string, SemanticSymbol>([
-        ["void", new SemanticSymbol(null!)],
+        ["void", new SemanticSymbol(VOID_DECLARATION)],
         ["bool", BOOL_SYMBOL],
-        ["reply", new SemanticSymbol(null!)],
-        ["optional", new SemanticSymbol(null!)],
-        ["inevitable", new SemanticSymbol(null!)],
+        ["reply", new SemanticSymbol(REPLY_DECLARATION)],
+        ["optional", new SemanticSymbol(OPTIONAL_DECLARATION)],
+        ["inevitable", new SemanticSymbol(INEVITABLE_DECLARATION)],
     ]);
 
     private resolveNameInScopeTree(
@@ -339,6 +364,7 @@ export class TypeChecker {
 
     public getMembersOfType = memoize(this, (type: Type): Map<string, SemanticSymbol> => {
         if (!type.declaration) return new Map();
+        if (type === ERROR_TYPE) return new Map();
 
         const result = new Map<string, SemanticSymbol>();
 
@@ -492,6 +518,9 @@ export class TypeChecker {
                 }
             }
         } else if (scope.kind === ast.SyntaxKind.OnStatement) {
+            // Also add reply as a variable defined inside the on
+            result.set("reply", this.builtInSymbols.get("reply")!.declaration);
+
             const on = scope as ast.OnStatement;
             for (const trigger of on.triggers) {
                 if (!isKeyword(trigger) && trigger.parameterList?.parameters) {

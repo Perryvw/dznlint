@@ -6,3 +6,7 @@ export * from "./config/default-config";
 export * from "./config/validate";
 
 export * from "./api";
+
+export * as ast from "./grammar";
+export * as utils from "./util";
+export * as semantics from "./semantics";
