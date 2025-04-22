@@ -474,7 +474,7 @@ test("global functions", async () => {
         interface I {} 
 
         void foo(provides I i) {}
-        void foo(requires I i) {}
+        void bar(requires I i) {}
     `);
 });
 

@@ -7,7 +7,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier } from "../util";
+import { findFirstParent, isIdentifier, isScopedBlock } from "../util";
 import { VisitResult } from "../visitor";
 
 export const variableCanBeInlined = createDiagnosticsFactory();
@@ -22,7 +22,9 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
                 return [];
             }
 
-            if (context.currentScope().root.kind === ast.SyntaxKind.Behavior) {
+            const scope = findFirstParent(node, isScopedBlock)!;
+
+            if (scope.kind === ast.SyntaxKind.Behavior) {
                 // Don't hint to inline variables in behavior root
                 return [];
             }
@@ -33,7 +35,7 @@ export const inline_temporary_variables: RuleFactory = factoryContext => {
 
             let singleUsage: ast.AnyAstNode | undefined;
 
-            context.visit(context.currentScope().root, subNode => {
+            context.visit(scope, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
                     count++;
                     singleUsage = subNode;

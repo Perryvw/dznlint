@@ -5,44 +5,14 @@ import { isKeyword } from "./util";
 
 const stopVisiting = () => {};
 
-type ScopeRoot =
-    | ast.Behavior
-    | ast.ComponentDefinition
-    | ast.Compound
-    | ast.File
-    | ast.FunctionDefinition
-    | ast.IfStatement
-    | ast.InterfaceDefinition
-    | ast.Namespace
-    | ast.OnStatement
-    | ast.System;
-
-interface Scope {
-    root: ScopeRoot;
-    variable_declarations: Record<string, ast.Identifier>;
-}
-
 export class VisitorContext {
     typeChecker: TypeChecker;
-    scopeStack: Scope[] = [];
 
     constructor(
         public source: InputSource,
         public program: Program
     ) {
         this.typeChecker = new TypeChecker(program);
-    }
-
-    pushScope(root: ScopeRoot): void {
-        this.scopeStack.unshift({ root, variable_declarations: {} });
-    }
-
-    currentScope(): Scope {
-        return this.scopeStack[0];
-    }
-
-    popScope(): void {
-        this.scopeStack.shift();
     }
 
     visit(node: ast.AnyAstNode, callback: VisitorCallback) {
@@ -69,11 +39,9 @@ export type VisitorCallback = (node: ast.AnyAstNode, context: VisitorContext) =>
 const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorContext, cb: VisitorCallback) => void>> = {
     // Root node
     [ast.SyntaxKind.File]: (node: ast.File, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
         for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
 
     [ast.SyntaxKind.AssignmentStatement]: (
@@ -85,11 +53,9 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.right, cb);
     },
     [ast.SyntaxKind.Behavior]: (node: ast.Behavior, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
         for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
     [ast.SyntaxKind.BinaryExpression]: (node: ast.BinaryExpression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.left, cb);
@@ -118,8 +84,6 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.pushScope(node);
-
         context.visit(node.name, cb);
 
         for (const port of node.ports) {
@@ -129,14 +93,11 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         if (node.body) {
             context.visit(node.body, cb);
         }
-        context.popScope();
     },
     [ast.SyntaxKind.Compound]: (node: ast.Compound, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
         for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
     [ast.SyntaxKind.CompoundName]: (node: ast.CompoundName, context: VisitorContext, cb: VisitorCallback) => {
         if (node.compound) context.visit(node.compound, cb);
@@ -173,14 +134,11 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
     ) => {
         context.visit(node.returnType, cb);
         context.visit(node.name, cb);
-        context.pushScope(node);
 
         for (const parameter of node.parameters) {
-            context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
             context.visit(parameter, cb);
         }
         context.visit(node.body, cb);
-        context.popScope();
     },
     [ast.SyntaxKind.FunctionParameter]: (node: ast.FunctionParameter, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
@@ -199,13 +157,11 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
     },
     [ast.SyntaxKind.IfStatement]: (node: ast.IfStatement, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.condition, cb);
-        context.pushScope(node);
         context.visit(node.statement, cb);
 
         if (node.else) {
             return context.visit(node.else, cb);
         }
-        context.popScope();
     },
     [ast.SyntaxKind.Instance]: (node: ast.Instance, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
@@ -216,8 +172,6 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.pushScope(node);
-
         context.visit(node.name, cb);
 
         for (const type_or_event of node.body) {
@@ -229,7 +183,6 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
                 context.visit(statement, cb);
             }
         }
-        context.popScope();
     },
     [ast.SyntaxKind.InvariantStatement]: (
         node: ast.InvariantStatement,
@@ -239,26 +192,18 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.expression, cb);
     },
     [ast.SyntaxKind.Namespace]: (node: ast.Namespace, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
         for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
     [ast.SyntaxKind.OnStatement]: (node: ast.OnStatement, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-
         for (const trigger of node.triggers) {
             context.visit(trigger, cb);
         }
 
         context.visit(node.body, cb);
-
-        context.popScope();
     },
     [ast.SyntaxKind.OnParameter]: (node: ast.OnParameter, context: VisitorContext, cb: VisitorCallback) => {
-        context.currentScope().variable_declarations[node.name.text] = node.name;
-
         context.visit(node.name, cb);
 
         if (node.assignment) {
@@ -284,7 +229,6 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.expression, cb);
     },
     [ast.SyntaxKind.Port]: (node: ast.Port, context: VisitorContext, cb: VisitorCallback) => {
-        context.currentScope().variable_declarations[node.name.text] = node.name;
         context.visit(node.type, cb);
         context.visit(node.name, cb);
     },
@@ -298,11 +242,9 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         }
     },
     [ast.SyntaxKind.System]: (node: ast.System, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
         for (const instance_or_binding of node.instancesAndBindings) {
             context.visit(instance_or_binding, cb);
         }
-        context.popScope();
     },
     [ast.SyntaxKind.TypeReference]: (node: ast.TypeReference, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.typeName, cb);
@@ -312,7 +254,6 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.currentScope().variable_declarations[node.name.text] = node.name;
         context.visit(node.type, cb);
         context.visit(node.name, cb);
         if (node.initializer) {

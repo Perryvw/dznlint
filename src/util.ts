@@ -152,8 +152,24 @@ export function isEvent(node: ast.AnyAstNode): node is ast.Event {
     return node.kind === ast.SyntaxKind.Event;
 }
 
+export function isComponentDefinition(statement: ast.AnyAstNode): statement is ast.ComponentDefinition {
+    return statement.kind === ast.SyntaxKind.ComponentDefinition;
+}
+
 export function isFunctionDefinition(statement: ast.AnyAstNode): statement is ast.FunctionDefinition {
     return statement.kind === ast.SyntaxKind.FunctionDefinition;
+}
+
+export function isFunctionParameter(expression: ast.AnyAstNode): expression is ast.FunctionParameter {
+    return expression.kind === ast.SyntaxKind.FunctionParameter;
+}
+
+export function isOnParameter(expression: ast.AnyAstNode): expression is ast.OnParameter {
+    return expression.kind === ast.SyntaxKind.OnParameter;
+}
+
+export function isVariableDefinition(statement: ast.AnyAstNode): statement is ast.VariableDefinition {
+    return statement.kind === ast.SyntaxKind.VariableDefinition;
 }
 
 export function isAsterisk(node: ast.AnyAstNode): node is ast.Keyword<"*"> {
@@ -182,6 +198,10 @@ export function isReplyKeyword(node: ast.AnyAstNode): node is ast.Keyword<"reply
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;
+}
+
+export function isExtern(statement: ast.AnyAstNode): statement is ast.ExternDeclaration {
+    return statement.kind === ast.SyntaxKind.ExternDeclaration;
 }
 
 export function isInstance(statement: ast.AnyAstNode): statement is ast.Instance {
@@ -226,6 +246,7 @@ export type ScopedBlock = ast.AnyAstNode &
         | ast.ComponentDefinition
         | ast.Compound
         | ast.FunctionDefinition
+        | ast.IfStatement
         | ast.InterfaceDefinition
         | ast.Namespace
         | ast.OnStatement
@@ -244,6 +265,7 @@ export function isScopedBlock(node: ast.AnyAstNode): node is ScopedBlock {
         node.kind === ast.SyntaxKind.Namespace ||
         node.kind === ast.SyntaxKind.OnStatement ||
         node.kind === ast.SyntaxKind.System ||
+        node.kind === ast.SyntaxKind.IfStatement ||
         node.kind === ast.SyntaxKind.File
     );
 }

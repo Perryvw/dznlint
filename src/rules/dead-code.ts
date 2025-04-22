@@ -4,6 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
+import { findFirstParent, isScopedBlock } from "../util";
 
 export const deadCode = createDiagnosticsFactory();
 
@@ -14,8 +15,8 @@ export const dead_code: RuleFactory = factoryContext => {
         factoryContext.registerRule<ast.ReturnStatement>(ast.SyntaxKind.ReturnStatement, (node, context) => {
             const diagnostics = [] as Diagnostic[];
 
-            const scopeRoot = context.currentScope().root;
-            if (scopeRoot.kind === ast.SyntaxKind.Compound) {
+            const scopeRoot = findFirstParent(node, isScopedBlock);
+            if (scopeRoot && scopeRoot.kind === ast.SyntaxKind.Compound) {
                 const scopeStatements = scopeRoot.statements;
                 const returnIndex = scopeStatements.indexOf(node);
 

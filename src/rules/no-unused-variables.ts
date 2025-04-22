@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier } from "../util";
+import { findFirstParent, isIdentifier, isScopedBlock } from "../util";
 import { VisitResult } from "../visitor";
 
 export const unusedVariable = createDiagnosticsFactory();
@@ -21,8 +21,10 @@ export const no_unused_variables: RuleFactory = factoryContext => {
                 return [];
             }
 
+            const scope = findFirstParent(node, isScopedBlock)!;
+
             let found = false;
-            context.visit(context.currentScope().root, subNode => {
+            context.visit(scope, subNode => {
                 if (isIdentifier(subNode) && subNode !== node.name && subNode.text === name) {
                     found = true;
                     return VisitResult.StopVisiting;

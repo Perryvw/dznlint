@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier, systemInstances } from "../util";
+import { findFirstParent, isComponentDefinition, isIdentifier, systemInstances } from "../util";
 
 export const recursiveSystem = createDiagnosticsFactory();
 
@@ -15,8 +15,7 @@ export const no_recursive_system: RuleFactory = factoryContext => {
         factoryContext.registerRule<ast.System>(ast.SyntaxKind.System, (node, context) => {
             const diagnostics = [];
 
-            const component = context.scopeStack.find(s => s.root.kind === ast.SyntaxKind.ComponentDefinition)!
-                .root as ast.ComponentDefinition;
+            const component = findFirstParent(node, isComponentDefinition)!;
             const componentName = component.name.text;
 
             // Check if the type of any of the instances of the system is the same system

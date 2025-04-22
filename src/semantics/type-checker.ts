@@ -529,8 +529,10 @@ export class TypeChecker {
                     }
                 }
             }
+        } else if (scope.kind === ast.SyntaxKind.IfStatement) {
+            return new Map();
         } else {
-            assertNever(scope, "Should be able to handle all possible kinds");
+            assertNever(scope, "Should be able to handle all possible kinds finding variables in scope");
         }
 
         return result;

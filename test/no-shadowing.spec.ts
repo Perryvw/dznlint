@@ -157,3 +157,17 @@ test("variable shadowing function parameter", async () => {
         }`,
     });
 });
+
+test("reproduce scope issue with else statements", async () => {
+    await testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                on i.foo(abc): {
+                    if (true) {} else {}
+                }
+                on i.bar(abc): {}
+            }
+        }`,
+    });
+});
