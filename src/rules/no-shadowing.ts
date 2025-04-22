@@ -55,7 +55,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
             for (const trigger of node.triggers) {
                 if (!isKeyword(trigger) && trigger.parameterList) {
                     for (const param of trigger.parameterList.parameters) {
-                        const previousDefinition = findDeclarationInUpperScope(param.name.text, param, context);
+                        const previousDefinition = findDeclarationInUpperScope(param.name.text, node, context);
                         if (previousDefinition) {
                             diagnostics.push(
                                 ...createDiagnostics(param.name, declarationName(previousDefinition), context.source)

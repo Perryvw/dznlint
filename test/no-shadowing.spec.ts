@@ -171,3 +171,14 @@ test("reproduce scope issue with else statements", async () => {
         }`,
     });
 });
+
+test("on triggers with same variable", async () => {
+    await testdznlint({
+        diagnostic: shadowingVariablesNotAllowed.code,
+        pass: `component A {
+            behavior {
+                on i.foo(abc), i.bar(abc): {}
+            }
+        }`,
+    });
+});
