@@ -164,6 +164,10 @@ export function isFunctionParameter(expression: ast.AnyAstNode): expression is a
     return expression.kind === ast.SyntaxKind.FunctionParameter;
 }
 
+export function isGuardStatement(statement: ast.AnyAstNode): statement is ast.GuardStatement {
+    return statement.kind === ast.SyntaxKind.GuardStatement;
+}
+
 export function isOnParameter(expression: ast.AnyAstNode): expression is ast.OnParameter {
     return expression.kind === ast.SyntaxKind.OnParameter;
 }
@@ -240,12 +244,17 @@ export function isInterfaceDefinition(node: ast.AnyAstNode): node is ast.Interfa
     return node.kind === ast.SyntaxKind.InterfaceDefinition;
 }
 
+export function isErrorNode(node: ast.AnyAstNode): node is ast.Error {
+    return node.kind === ast.SyntaxKind.ERROR;
+}
+
 export type ScopedBlock = ast.AnyAstNode &
     (
         | ast.Behavior
         | ast.ComponentDefinition
         | ast.Compound
         | ast.FunctionDefinition
+        | ast.GuardStatement
         | ast.IfStatement
         | ast.InterfaceDefinition
         | ast.Namespace
@@ -261,6 +270,7 @@ export function isScopedBlock(node: ast.AnyAstNode): node is ScopedBlock {
         node.kind === ast.SyntaxKind.ComponentDefinition ||
         node.kind === ast.SyntaxKind.Compound ||
         node.kind === ast.SyntaxKind.FunctionDefinition ||
+        node.kind === ast.SyntaxKind.GuardStatement ||
         node.kind === ast.SyntaxKind.InterfaceDefinition ||
         node.kind === ast.SyntaxKind.Namespace ||
         node.kind === ast.SyntaxKind.OnStatement ||
