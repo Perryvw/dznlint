@@ -376,6 +376,9 @@ export class TypeChecker {
         } else if (type.kind === TypeKind.External) {
             // empty, external types have no members (for now)
             return result;
+        } else if (type.kind === TypeKind.Event) {
+            // empty, events have no members
+            return result;
         } else if (isScopedBlock(type.declaration)) {
             for (const [name, declaration] of this.findVariablesDeclaredInScope(type.declaration)) {
                 result.set(name, this.getOrCreateSymbol(declaration));

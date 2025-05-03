@@ -655,14 +655,8 @@ function formatGuard(cursor: Grammar.CursorPosition<Grammar.guard_Node>, formatt
     cursor.gotoFirstChild();
     do {
         switch (cursor.nodeType) {
-            case "[":
-                formatter.startGuard();
-                break;
-            case "]":
-                formatter.endGuard();
-                break;
-            case "compound_name":
-                formatCompoundName(cursor.currentNode, formatter);
+            case "guard_condition":
+                formatGuardCondition(cursor.pos(), formatter);
                 break;
             case "compound":
                 formatCompound(cursor, formatter);
@@ -673,23 +667,11 @@ function formatGuard(cursor: Grammar.CursorPosition<Grammar.guard_Node>, formatt
             case "assign":
                 formatAssign(cursor.pos(), formatter);
                 break;
-            case "binary_expression":
-                formatBinaryExpression(cursor, formatter);
-                break;
             case "blocking":
                 formatBlocking(cursor, formatter);
                 break;
-            case "call":
-                formatCall(cursor.pos(), formatter);
-                break;
             case "defer":
                 formatDefer(cursor, formatter);
-                break;
-            case "dollars":
-                formatDollars(cursor.pos(), formatter);
-                break;
-            case "group":
-                formatGroup(cursor, formatter);
                 break;
             case "guard":
                 formatGuard(cursor, formatter);
@@ -703,17 +685,11 @@ function formatGuard(cursor: Grammar.CursorPosition<Grammar.guard_Node>, formatt
             case "interface_action_statement":
                 formatInterfaceActionStatement(cursor.pos(), formatter);
                 break;
-            case "literal":
-                formatter.literal(cursor.nodeText);
-                break;
             case "skip_statement":
                 formatter.semicolon();
                 break;
             case "on":
                 formatOn(cursor, formatter);
-                break;
-            case "otherwise":
-                formatter.keyword("otherwise");
                 break;
             case "reply":
                 formatReply(cursor.pos(), formatter);
@@ -724,11 +700,60 @@ function formatGuard(cursor: Grammar.CursorPosition<Grammar.guard_Node>, formatt
             case "variable":
                 formatVariable(cursor.pos(), formatter);
                 break;
-            case "unary_expression":
-                formatUnaryExpression(cursor, formatter);
-                break;
             case "return":
                 formatReturn(cursor.pos(), formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(cursor.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(cursor.nodeText);
+                break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
+            default:
+                assertNever(cursor);
+                throw `cannot format guard child ${cursor}`;
+        }
+    } while (cursor.gotoNextSibling());
+    cursor.gotoParent();
+}
+
+function formatGuardCondition(cursor: Grammar.CursorPosition<Grammar.guard_condition_Node>, formatter: Formatter) {
+    cursor.gotoFirstChild();
+    do {
+        switch (cursor.nodeType) {
+            case "[":
+                formatter.startGuard();
+                break;
+            case "]":
+                formatter.endGuard();
+                break;
+            case "compound_name":
+                formatCompoundName(cursor.currentNode, formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(cursor, formatter);
+                break;
+            case "call":
+                formatCall(cursor.pos(), formatter);
+                break;
+            case "dollars":
+                formatDollars(cursor.pos(), formatter);
+                break;
+            case "group":
+                formatGroup(cursor, formatter);
+                break;
+            case "literal":
+                formatter.literal(cursor.nodeText);
+                break;
+            case "otherwise":
+                formatter.keyword("otherwise");
+                break;
+            case "unary_expression":
+                formatUnaryExpression(cursor, formatter);
                 break;
             // generics
             case "comment":

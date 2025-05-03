@@ -472,10 +472,21 @@ function transformGuardStatement(node: parser.guard_Node): ast.GuardStatement {
     return {
         kind: ast.SyntaxKind.GuardStatement,
         position: nodePosition(node),
+        errors: collectErrors(node),
         blocking: undefined,
-        condition: transformExpression(node.childForFieldName("condition")),
+        condition: transformGuardCondition(node.childForFieldName("condition")),
         statement: transformCompoundStatement(node.childForFieldName("body")),
     };
+}
+function transformGuardCondition(node: parser.guard_condition_Node): ast.Expression | ast.Error {
+    if (node.hasError) {
+        return {
+            kind: ast.SyntaxKind.ERROR,
+            position: nodePosition(node),
+            text: node.text
+        };
+    }
+    return transformExpression(node.childForFieldName("expression"));
 }
 
 function transformInvariantStatement(node: parser.invariant_Node): ast.InvariantStatement {

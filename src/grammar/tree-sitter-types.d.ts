@@ -412,8 +412,16 @@ export interface guard_Node
         | return_Node
         | skip_statement_Node
         | variable_Node;
+    childForFieldName(kind: "condition"): guard_condition_Node;
+}
+export interface guard_condition_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "guard_condition";
     childForFieldName(
-        kind: "condition"
+        kind: "expression"
     ):
         | binary_expression_Node
         | call_Node
@@ -914,6 +922,7 @@ export type AllNodes =
     | function_body_one_line_Node
     | group_Node
     | guard_Node
+    | guard_condition_Node
     | identifier_Node
     | if_statement_Node
     | illegal_Node

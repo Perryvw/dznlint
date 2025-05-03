@@ -172,6 +172,39 @@ describe("incomplete tree", () => {
         expect(scope.kind).toBe(ast.SyntaxKind.Behavior);
     });
 
+    test("binary expression in guard", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                provides I i;
+
+                behavior {
+                    [i.s.bla || i.<cursor>] {}
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { scope, owningObject, prefix } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+        // prefix of thing is empty because there is no text after .
+        expect(prefix).toBe("");
+        // The object owning the incomplete name is the port i
+        expect(owningObject?.declaration.kind).toBe(ast.SyntaxKind.Port);
+        expect((owningObject?.declaration as ast.Port).name.text).toBe("i");
+        // The name is in scope of the behavior (the guard is not complete and not recognized)
+        expect(scope.kind).toBe(ast.SyntaxKind.GuardStatement);
+    });
+
     test("empty guard", async () => {
         const program = await Program.Init();
         const typeChecker = new TypeChecker(program);

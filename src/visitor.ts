@@ -271,7 +271,9 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
     // Leaf nodes, no need to visit children of these
     [ast.SyntaxKind.BooleanLiteral]: stopVisiting,
     [ast.SyntaxKind.DollarLiteral]: stopVisiting,
+    [ast.SyntaxKind.EmptyStatement]: stopVisiting,
     [ast.SyntaxKind.EnumDefinition]: stopVisiting,
+    [ast.SyntaxKind.ERROR]: stopVisiting,
     [ast.SyntaxKind.ExternDeclaration]: stopVisiting,
     [ast.SyntaxKind.Identifier]: stopVisiting,
     [ast.SyntaxKind.Keyword]: stopVisiting,

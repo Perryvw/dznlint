@@ -241,7 +241,7 @@ export interface OnStatement extends AstNode<SyntaxKind.OnStatement> {
 
 export interface GuardStatement extends AstNode<SyntaxKind.GuardStatement> {
     blocking?: Keyword<"blocking">;
-    condition: Keyword<"otherwise"> | Expression;
+    condition: Keyword<"otherwise"> | Expression | Error;
     statement: Statement;
 }
 

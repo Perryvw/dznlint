@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isAsterisk, isIdentifier, isIllegalKeyword, isKeyword, nameToString } from "../util";
+import { isAsterisk, isErrorNode, isIdentifier, isIllegalKeyword, isKeyword, nameToString } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();
@@ -179,7 +179,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             if (!node.condition || typeof node.condition === "string" /* otherwise */) {
                 return [];
             }
-            return node.condition ? checkExpressionNames(node.condition, "variable", context) : [];
+            return (node.condition && !isErrorNode(node.condition)) ? checkExpressionNames(node.condition, "variable", context) : [];
         });
 
         factoryContext.registerRule<ast.AssignmentStatement>(ast.SyntaxKind.AssignmentStatement, (node, context) => {
