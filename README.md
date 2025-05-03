@@ -282,3 +282,11 @@ As of Dezyne 2.15, a provided port should be marked blocking if any of its calls
 Function parameters that are ports must be annotated with `provides` or `required`. Function parameters that are not ports must **not** be marked with these two.
 
 **Possible values:** "hint" | "warning" | **"error"**
+
+---
+
+## trailing_assignments
+
+Will find trailing assignments used in interfaces. Trailing assignments can have unexpected effects when using using shared state, so it might be useful to be aware of where trailing assignments are used, or to disallow them completely.
+
+**Possible values:** "hint" | "warning" | "error" (default: off)
