@@ -179,7 +179,9 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             if (!node.condition || typeof node.condition === "string" /* otherwise */) {
                 return [];
             }
-            return (node.condition && !isErrorNode(node.condition)) ? checkExpressionNames(node.condition, "variable", context) : [];
+            return node.condition && !isErrorNode(node.condition)
+                ? checkExpressionNames(node.condition, "variable", context)
+                : [];
         });
 
         factoryContext.registerRule<ast.AssignmentStatement>(ast.SyntaxKind.AssignmentStatement, (node, context) => {

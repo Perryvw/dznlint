@@ -74,7 +74,7 @@ export function findNameAtLocationInErrorNode(
     }
     // If node starts on same line as search line, offset the column instead because the node might start
     // at a later column in the line
-    const columnOffset = node.position.from.line === line ? column - node.position.from.column : 0;
+    const columnOffset = column - (node.position.from.line === line ? node.position.from.column : 0);
     // This is the index in the node text we're looking for
     const cursorIndex = lineOffset + columnOffset;
 

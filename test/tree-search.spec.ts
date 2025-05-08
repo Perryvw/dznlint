@@ -343,7 +343,7 @@ describe("incomplete tree", () => {
         expect(scope.parent?.kind).toBe(ast.SyntaxKind.FunctionDefinition);
     });
 
-    test("comound name in error node with suffix", async () => {
+    test("compound name in error node with suffix", async () => {
         const program = await Program.Init();
         const typeChecker = new TypeChecker(program);
 
@@ -377,6 +377,39 @@ describe("incomplete tree", () => {
         // The name is in the compound scope of bla()
         expect(scope.kind).toBe(ast.SyntaxKind.Compound);
         expect(scope.parent?.kind).toBe(ast.SyntaxKind.FunctionDefinition);
+    });
+
+    test("compound name in error node consisting of multiple lines", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                requires I i;
+                behavior {
+                    foo
+                    j.a(); i.<cursor>
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { scope, owningObject, prefix, suffix } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+        // prefix of thing is "abc"
+        expect(prefix).toBe("");
+        // The object owning the name abc is the port i
+        expect(ast.SyntaxKind[owningObject?.declaration.kind!]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
+        expect((owningObject?.declaration as ast.Port).name.text).toBe("i");
+        // The name is in the compound scope of bla()
+        expect(ast.SyntaxKind[scope.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Behavior]);
     });
 
     test("incomplete compound followed by reply", async () => {

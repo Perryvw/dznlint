@@ -483,7 +483,7 @@ function transformGuardCondition(node: parser.guard_condition_Node): ast.Express
         return {
             kind: ast.SyntaxKind.ERROR,
             position: nodePosition(node),
-            text: node.text
+            text: node.text,
         };
     }
     return transformExpression(node.childForFieldName("expression"));
