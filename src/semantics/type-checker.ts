@@ -167,7 +167,11 @@ export class TypeChecker {
             if (builtInType) return builtInType;
         }
 
-        if (node.parent && isCompoundName(node.parent) && node.parent.name === node) {
+        if (
+            node.parent &&
+            (isCompoundName(node.parent) || isCompoundBindingExpression(node.parent)) &&
+            node.parent.name === node
+        ) {
             if (!node.parent.compound) return undefined;
 
             const parentType = this.typeOfNode(node.parent.compound);

@@ -105,6 +105,33 @@ test("keyword without definition", async () => {
     expect(nameAtPosition).toBeUndefined();
 });
 
+test("resolving port in system", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const nameAtPosition = await findNameAtCursor(
+        program,
+        `
+        namespace ns {
+            component c {
+                provides I p;
+            }
+        }
+        component s {
+            system {
+                ns.c ns;
+                ns.p<cursor> <=> ns.b;
+            }
+        }`
+    );
+
+    expect(nameAtPosition).toBeDefined();
+
+    const symbol = typeChecker.symbolOfNode(nameAtPosition!);
+    expect(symbol).toBeDefined();
+    expect(ast.SyntaxKind[symbol?.declaration.kind!]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
+});
+
 describe("incomplete tree", () => {
     test("compound name in on", async () => {
         const program = await Program.Init();
