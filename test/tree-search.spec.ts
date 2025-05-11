@@ -54,7 +54,7 @@ test("find declaration of event", async () => {
     expect(symbol).toBeDefined();
 
     expect(symbol?.declaration.kind).toBe(ast.SyntaxKind.Event);
-    expect((symbol?.declaration as ast.Event).eventName.text).toBe("Foo");
+    expect((symbol?.declaration as ast.Event).name.text).toBe("Foo");
 });
 
 test("find declaration of interface", async () => {

@@ -311,7 +311,7 @@ export class TypeChecker {
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === ast.SyntaxKind.Event) {
             const definition = declaration as ast.Event;
-            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.eventName.text };
+            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
         } else if (symbol.declaration.kind === ast.SyntaxKind.ComponentDefinition) {
             const definition = declaration as ast.ComponentDefinition;
             return { kind: TypeKind.Component, name: definition.name.text, declaration: definition };
@@ -452,7 +452,7 @@ export class TypeChecker {
             }
         } else if (scope.kind === ast.SyntaxKind.InterfaceDefinition) {
             for (const type_or_event of scope.body) {
-                const name = type_or_event.kind === ast.SyntaxKind.Event ? type_or_event.eventName : type_or_event.name;
+                const name = type_or_event.kind === ast.SyntaxKind.Event ? type_or_event.name : type_or_event.name;
                 result.set(nameToString(name), type_or_event);
             }
         } else if (scope.kind === ast.SyntaxKind.ComponentDefinition) {

@@ -342,7 +342,7 @@ function transformEvent(node: parser.event_Node): ast.Event {
         position: nodePosition(node),
         direction: transformDirection<ast.EventDirection>(direction),
         type: transformTypeReference(node.childForFieldName("type_name")),
-        eventName: transformIdentifier(node.childForFieldName("event_name")),
+        name: transformIdentifier(node.childForFieldName("event_name")),
         parameters: parameters.childrenForFieldName("formal")?.map(transformEventParameter) ?? [],
     };
 }

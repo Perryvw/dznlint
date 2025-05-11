@@ -114,7 +114,7 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
     },
     [ast.SyntaxKind.Event]: (node: ast.Event, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
-        context.visit(node.eventName, cb);
+        context.visit(node.name, cb);
 
         for (const param of node.parameters) {
             context.visit(param.type, cb);

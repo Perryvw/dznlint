@@ -149,7 +149,7 @@ export interface EventParameter extends AstNode<SyntaxKind.EventParameter> {
 export interface Event extends AstNode<SyntaxKind.Event> {
     direction: EventDirection;
     type: TypeReference;
-    eventName: Identifier;
+    name: Identifier;
     parameters: EventParameter[];
 }
 

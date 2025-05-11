@@ -80,7 +80,7 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
         }
     },
     [ast.SyntaxKind.Event]: (node: ast.Event) => {
-        setParent(node.eventName, node);
+        setParent(node.name, node);
         setParent(node.type, node);
 
         for (const param of node.parameters) {

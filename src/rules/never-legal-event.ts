@@ -19,7 +19,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
             if (node.behavior) {
                 // Find all in-events to check
                 const inEvents = node.body.filter(isInEvent);
-                const unSeenEvents = new Map(inEvents.map(e => [e.eventName.text, e]));
+                const unSeenEvents = new Map(inEvents.map(e => [e.name.text, e]));
 
                 context.visit(node.behavior, subNode => {
                     // Look for 'on X,Y,Z: S' where S is not illegal
@@ -47,7 +47,7 @@ export const never_legal_event: RuleFactory = factoryContext => {
                             config.severity,
                             "This event is never legal in the interface behavior",
                             context.source,
-                            event.eventName.position
+                            event.name.position
                         )
                     );
                 }

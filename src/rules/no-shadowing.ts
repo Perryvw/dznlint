@@ -143,7 +143,7 @@ function declarationName(declaration: ast.AnyAstNode): ast.Identifier {
     } else if (isNamespace(declaration)) {
         return isCompoundName(declaration.name) ? declaration.name.name : declaration.name;
     } else if (isEvent(declaration)) {
-        return declaration.eventName;
+        return declaration.name;
     } else if (isPort(declaration)) {
         return declaration.name;
     } else if (isExtern(declaration)) {

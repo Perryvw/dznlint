@@ -21,7 +21,7 @@ export const never_fired_event: RuleFactory = factoryContext => {
 
             // Look up all out events to check
             const outEvents = node.body.filter(isOutEvent);
-            const unSeenEvents = new Map(outEvents.map(e => [e.eventName.text, e]));
+            const unSeenEvents = new Map(outEvents.map(e => [e.name.text, e]));
 
             context.visit(node.behavior, subNode => {
                 // Look for identifier for events that have no parameters
@@ -42,7 +42,7 @@ export const never_fired_event: RuleFactory = factoryContext => {
                         config.severity,
                         "This event is never fired in the interface behavior",
                         context.source,
-                        event.eventName.position
+                        event.name.position
                     )
                 );
             }
