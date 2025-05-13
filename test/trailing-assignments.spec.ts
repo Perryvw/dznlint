@@ -20,7 +20,7 @@ test("trailing assignment after out event", async () => {
                     [s.A] {
                         on f: {
                             s = State.B;
-                            foo();
+                            bla;
                         }
                     }
                 }
@@ -39,7 +39,7 @@ test("trailing assignment after out event", async () => {
 
                     [s.A] {
                         on f: {
-                            foo();
+                            bla;
                             s = State.B;
                         }
                     }

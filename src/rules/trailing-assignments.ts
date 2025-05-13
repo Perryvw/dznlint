@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isAssignment, isCallExpression, isCompound, isExpressionStatement, isOnStatement, isReply } from "../util";
+import { isAssignment, isCompound, isExpressionStatement, isIdentifier, isOnStatement, isReply } from "../util";
 
 export const trailingAssignment = createDiagnosticsFactory();
 
@@ -27,7 +27,7 @@ export const trailing_assignments: RuleFactory = factoryContext => {
                         // After seeing a reply or expression statement, assignments are no longer allowed
                         if (
                             isExpressionStatement(statement) &&
-                            (isCallExpression(statement.expression) || isReply(statement.expression))
+                            (isIdentifier(statement.expression) || isReply(statement.expression))
                         ) {
                             assignmentsAllowed = false;
                             continue;
