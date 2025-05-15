@@ -7,6 +7,7 @@ import { format as formatInternal } from "./format/format";
 
 export { LinterHost };
 export { Program };
+export { SourceFile };
 
 export async function lintString(
     source: string,
