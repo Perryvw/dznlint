@@ -9,4 +9,5 @@ export * from "./api";
 
 export * as ast from "./grammar";
 export * as utils from "./util";
+export * as resolve_imports from "./resolve-imports";
 export * as semantics from "./semantics";
