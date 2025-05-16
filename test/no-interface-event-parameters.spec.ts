@@ -23,6 +23,20 @@ test("interface on triggers should not have a parameter list", async () => {
     });
 });
 
+test("empty parameter lists are also not okay", async () => {
+    await testdznlint({
+        diagnostic: invalidInterfaceOnTrigger.code,
+        fail: `
+            interface I {
+                in void foo();
+
+                behavior {
+                    on foo(): {}
+                }
+            }`,
+    });
+});
+
 test("component on should have a parameter list", async () => {
     await testdznlint({
         diagnostic: invalidInterfaceOnTrigger.code,
