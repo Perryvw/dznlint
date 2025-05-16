@@ -129,7 +129,7 @@ test("resolving port in system", async () => {
 
     const symbol = typeChecker.symbolOfNode(nameAtPosition!);
     expect(symbol).toBeDefined();
-    expect(ast.SyntaxKind[symbol?.declaration.kind!]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
+    expect(ast.SyntaxKind[symbol!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
 });
 
 describe("incomplete tree", () => {
@@ -424,7 +424,7 @@ describe("incomplete tree", () => {
         expect(leafAtPosition).toBeDefined();
         expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
 
-        const { scope, owningObject, prefix, suffix } = findNameAtLocationInErrorNode(
+        const { scope, owningObject, prefix } = findNameAtLocationInErrorNode(
             leafAtPosition as ast.Error,
             cursorPos.line,
             cursorPos.column,
@@ -433,7 +433,7 @@ describe("incomplete tree", () => {
         // prefix of thing is "abc"
         expect(prefix).toBe("");
         // The object owning the name abc is the port i
-        expect(ast.SyntaxKind[owningObject?.declaration.kind!]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
         expect((owningObject?.declaration as ast.Port).name.text).toBe("i");
         // The name is in the compound scope of bla()
         expect(ast.SyntaxKind[scope.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Behavior]);
@@ -441,9 +441,8 @@ describe("incomplete tree", () => {
 
     test("incomplete compound followed by reply", async () => {
         const program = await Program.Init();
-        const typeChecker = new TypeChecker(program);
 
-        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+        const { leafAtPosition } = await findLeafAtCursor(
             program,
             `
             component C {
