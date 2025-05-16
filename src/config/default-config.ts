@@ -12,17 +12,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     implicit_illegal: "warning",
     inline_temporary_variables: false,
     invariant_must_be_bool: "error",
-    naming_convention: [
-        "hint",
-        {
-            component: "[A-Z][a-zA-Z0-9]*",
-            enum: "[A-Z][a-zA-Z0-9]*",
-            enum_member: "[A-Z][a-zA-Z0-9]*",
-            interface: "I[A-Z][a-zA-Z0-9]*",
-            local: "[a-z_][a-zA-Z0-9]*",
-            type: "[A-Z][a-zA-Z0-9]*",
-        },
-    ],
+    naming_convention: false,
     never_fired_event: "warning",
     never_legal_event: "warning",
     no_bool_out_parameters: "error",
