@@ -12,6 +12,7 @@
             "args": ["--runInBand", "--no-cache", "--runTestsByPath", "${relativeFile}"],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
+            "experimentalNetworking": "off",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
         },
@@ -23,6 +24,7 @@
             "args": ["${workspaceRoot}/dist/cli/dznlint.js", "${relativeFile}"],
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
+            "experimentalNetworking": "off",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
         }

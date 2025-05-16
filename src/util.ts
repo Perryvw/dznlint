@@ -204,6 +204,10 @@ export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;
 }
 
+export function isAssignment(statement: ast.AnyAstNode): statement is ast.AssignmentStatement {
+    return statement.kind === ast.SyntaxKind.AssignmentStatement;
+}
+
 export function isExtern(statement: ast.AnyAstNode): statement is ast.ExternDeclaration {
     return statement.kind === ast.SyntaxKind.ExternDeclaration;
 }
