@@ -244,7 +244,7 @@ export function isInterfaceDefinition(node: ast.AnyAstNode): node is ast.Interfa
     return node.kind === ast.SyntaxKind.InterfaceDefinition;
 }
 
-export function isImported(node: ast.AnyAstNode): node is ast.ImportStatement {
+export function isImportStatement(node: ast.AnyAstNode): node is ast.ImportStatement {
     return node.kind === ast.SyntaxKind.ImportStatement;
 }
 
