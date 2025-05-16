@@ -1,8 +1,8 @@
 import { portBindingMismatch } from "../src/rules/no-mismatching-binding-types";
 import { testdznlint } from "./util";
 
-test("binding type mismatch", () => {
-    testdznlint({
+test("binding type mismatch", async () => {
+    await testdznlint({
         diagnostic: portBindingMismatch.code,
         pass: `
         interface I {}
@@ -32,8 +32,8 @@ test("binding type mismatch", () => {
     });
 });
 
-test("assigning port to locator is not a type mismatch", () => {
-    testdznlint({
+test("assigning port to locator is not a type mismatch", async () => {
+    await testdznlint({
         diagnostic: portBindingMismatch.code,
         pass: `
         interface I {}

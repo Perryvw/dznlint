@@ -1,20 +1,10 @@
+import { SourceRange } from "./grammar/source-position";
 import { InputSource } from "./semantics/program";
 
 export enum DiagnosticSeverity {
     Hint,
     Warning,
     Error,
-}
-
-export interface SourcePosition {
-    index: number;
-    line: number;
-    column: number;
-}
-
-export interface SourceRange {
-    from: SourcePosition;
-    to: SourcePosition;
 }
 
 export type DiagnosticCode = number & { __diagnosticIdBrand: never };
@@ -71,7 +61,7 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
 
 function findFullLine(range: SourceRange, source: string) {
     let lineStart = range.from.index;
-    for (; lineStart >= 0; lineStart--) {
+    for (; lineStart > 0; lineStart--) {
         if (source[lineStart] === "\n") {
             ++lineStart;
             break;

@@ -1,12 +1,12 @@
 // no identifiers used for bindings that are unknown
 
+import * as ast from "../grammar/ast";
 import { Diagnostic } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import { ASTKinds, binding } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { Type, TypeKind } from "../semantics/type-checker";
-import { nodeToSourceRange } from "../util";
+import { isAsterisk } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const portBindingMismatch = createDiagnosticsFactory();
@@ -15,18 +15,18 @@ export const no_mismatching_binding_types: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_mismatching_binding_types", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        const createDiagnostic = (typeLeft: Type, typeRight: Type, node: binding, context: VisitorContext) =>
+        const createDiagnostic = (typeLeft: Type, typeRight: Type, node: ast.Binding, context: VisitorContext) =>
             portBindingMismatch(
                 config.severity,
                 `Cannot bind port of type ${typeRight.name} to a port of type ${typeLeft.name}.`,
                 context.source,
-                nodeToSourceRange(node)
+                node.position
             );
 
-        factoryContext.registerRule<binding>(ASTKinds.binding, (node, context) => {
+        factoryContext.registerRule<ast.Binding>(ast.SyntaxKind.Binding, (node, context) => {
             const diagnostics: Diagnostic[] = [];
 
-            if (node.left.kind === ASTKinds.asterisk_binding || node.right.kind === ASTKinds.asterisk_binding) {
+            if (isAsterisk(node.left) || isAsterisk(node.right)) {
                 // No need to check binding to the locator
                 return [];
             }

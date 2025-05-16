@@ -1,32 +1,12 @@
-import * as parser from "./grammar/parser";
-import { ASTNode } from "./linting-rule";
+import * as ast from "./grammar/ast";
 import { InputSource, Program } from "./semantics/program";
 import { TypeChecker } from "./semantics/type-checker";
-import { headTailToList } from "./util";
+import { isKeyword } from "./util";
 
 const stopVisiting = () => {};
 
-type ScopeRoot =
-    | parser.behavior
-    | parser.component
-    | parser.compound
-    | parser.file
-    | parser.function_definition
-    | parser.if_statement
-    | parser.else_statement
-    | parser.interface_definition
-    | parser.namespace
-    | parser.on
-    | parser.system;
-
-interface Scope {
-    root: ScopeRoot;
-    variable_declarations: Record<string, parser.identifier>;
-}
-
 export class VisitorContext {
     typeChecker: TypeChecker;
-    scopeStack: Scope[] = [];
 
     constructor(
         public source: InputSource,
@@ -35,19 +15,7 @@ export class VisitorContext {
         this.typeChecker = new TypeChecker(program);
     }
 
-    pushScope(root: ScopeRoot): void {
-        this.scopeStack.unshift({ root, variable_declarations: {} });
-    }
-
-    currentScope(): Scope {
-        return this.scopeStack[0];
-    }
-
-    popScope(): void {
-        this.scopeStack.shift();
-    }
-
-    visit(node: ASTNode, callback: VisitorCallback) {
+    visit(node: ast.AnyAstNode, callback: VisitorCallback) {
         const result = callback(node, this);
 
         if (result !== VisitResult.StopVisiting) {
@@ -65,145 +33,118 @@ export enum VisitResult {
     Continue,
     StopVisiting,
 }
-export type VisitorCallback = (node: ASTNode, context: VisitorContext) => VisitResult | void;
+export type VisitorCallback = (node: ast.AnyAstNode, context: VisitorContext) => VisitResult | void;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorContext, cb: VisitorCallback) => void>> = {
+const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorContext, cb: VisitorCallback) => void>> = {
     // Root node
-    [parser.ASTKinds.file]: (node: parser.file, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-        for (const { statement } of node.statements) {
+    [ast.SyntaxKind.File]: (node: ast.File, context: VisitorContext, cb: VisitorCallback) => {
+        for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
 
-    [parser.ASTKinds.assignment]: (node: parser.assignment, context: VisitorContext, cb: VisitorCallback) => {
-        context.visit(node.left, cb);
-        context.visit(node.right, cb);
-    },
-    [parser.ASTKinds.behavior]: (node: parser.behavior, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-        for (const { statement } of node.block.statements) {
-            context.visit(statement, cb);
-        }
-        context.popScope();
-    },
-    [parser.ASTKinds.binary_expression]: (
-        node: parser.binary_expression,
+    [ast.SyntaxKind.AssignmentStatement]: (
+        node: ast.AssignmentStatement,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
         context.visit(node.left, cb);
         context.visit(node.right, cb);
     },
-    [parser.ASTKinds.binding]: (node: parser.binding, context: VisitorContext, cb: VisitorCallback) => {
+    [ast.SyntaxKind.Behavior]: (node: ast.Behavior, context: VisitorContext, cb: VisitorCallback) => {
+        for (const statement of node.statements) {
+            context.visit(statement, cb);
+        }
+    },
+    [ast.SyntaxKind.BinaryExpression]: (node: ast.BinaryExpression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.left, cb);
         context.visit(node.right, cb);
     },
-    [parser.ASTKinds.binding_expression_$0]: (
-        node: parser.binding_expression_$0,
+    [ast.SyntaxKind.Binding]: (node: ast.Binding, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.left, cb);
+        context.visit(node.right, cb);
+    },
+    [ast.SyntaxKind.BindingCompoundName]: (
+        node: ast.BindingCompoundName,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
         context.visit(node.compound, cb);
         context.visit(node.name, cb);
     },
-    [parser.ASTKinds.call_expression]: (node: parser.call_expression, context: VisitorContext, cb: VisitorCallback) => {
+    [ast.SyntaxKind.CallExpression]: (node: ast.CallExpression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.expression, cb);
-        for (const { expression } of node.arguments.arguments) {
+        for (const expression of node.arguments.arguments) {
             context.visit(expression, cb);
         }
     },
-    [parser.ASTKinds.component]: (node: parser.component, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-        for (const { port } of node.ports) {
+    [ast.SyntaxKind.ComponentDefinition]: (
+        node: ast.ComponentDefinition,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        context.visit(node.name, cb);
+
+        for (const port of node.ports) {
             context.visit(port, cb);
         }
 
         if (node.body) {
             context.visit(node.body, cb);
         }
-        context.popScope();
     },
-    [parser.ASTKinds.compound]: (node: parser.compound, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-        for (const { statement } of node.statements) {
+    [ast.SyntaxKind.Compound]: (node: ast.Compound, context: VisitorContext, cb: VisitorCallback) => {
+        for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
-    [parser.ASTKinds.compound_name_$0]: (
-        node: parser.compound_name_$0,
-        context: VisitorContext,
-        cb: VisitorCallback
-    ) => {
+    [ast.SyntaxKind.CompoundName]: (node: ast.CompoundName, context: VisitorContext, cb: VisitorCallback) => {
         if (node.compound) context.visit(node.compound, cb);
         context.visit(node.name, cb);
     },
-    [parser.ASTKinds.defer_statement]: (node: parser.defer_statement, context: VisitorContext, cb: VisitorCallback) => {
-        if (node.header.arguments) {
-            for (const argument of node.header.arguments.arguments) {
-                context.visit(argument.expression, cb);
+    [ast.SyntaxKind.DeferStatement]: (node: ast.DeferStatement, context: VisitorContext, cb: VisitorCallback) => {
+        if (node.arguments) {
+            for (const argument of node.arguments.arguments) {
+                context.visit(argument, cb);
             }
         }
 
         context.visit(node.statement, cb);
     },
-    [parser.ASTKinds.dollar_statement]: (
-        node: parser.dollar_statement,
-        context: VisitorContext,
-        cb: VisitorCallback
-    ) => {
-        context.visit(node.expression, cb);
-    },
-    [parser.ASTKinds.event]: (node: parser.event, context: VisitorContext, cb: VisitorCallback) => {
+    [ast.SyntaxKind.Event]: (node: ast.Event, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
-        context.visit(node.event_name, cb);
+        context.visit(node.name, cb);
 
-        if (node.event_params) {
-            for (const param of headTailToList(node.event_params)) {
-                context.visit(param.type, cb);
-            }
+        for (const param of node.parameters) {
+            context.visit(param.type, cb);
         }
     },
-    [parser.ASTKinds.expression_statement]: (
-        node: parser.expression_statement,
+    [ast.SyntaxKind.ExpressionStatement]: (
+        node: ast.ExpressionStatement,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
         context.visit(node.expression, cb);
     },
-    [parser.ASTKinds.function_definition]: (
-        node: parser.function_definition,
+    [ast.SyntaxKind.FunctionDefinition]: (
+        node: ast.FunctionDefinition,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.visit(node.return_type, cb);
+        context.visit(node.returnType, cb);
         context.visit(node.name, cb);
-        context.pushScope(node);
-        if (node.parameters.parameters) {
-            for (const parameter of headTailToList(node.parameters.parameters)) {
-                context.currentScope().variable_declarations[parameter.name.text] = parameter.name;
-                context.visit(parameter, cb);
-            }
+
+        for (const parameter of node.parameters) {
+            context.visit(parameter, cb);
         }
-        if (node.body.kind === parser.ASTKinds.function_inline_body) {
-            context.visit(node.body.expression, cb);
-        } else {
-            context.visit(node.body, cb);
-        }
-        context.popScope();
+        context.visit(node.body, cb);
     },
-    [parser.ASTKinds.function_parameter]: (
-        node: parser.function_parameter,
-        context: VisitorContext,
-        cb: VisitorCallback
-    ) => {
+    [ast.SyntaxKind.FunctionParameter]: (node: ast.FunctionParameter, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
         context.visit(node.name, cb);
     },
-    [parser.ASTKinds.guard]: (node: parser.guard, context: VisitorContext, cb: VisitorCallback) => {
+    [ast.SyntaxKind.GuardStatement]: (node: ast.GuardStatement, context: VisitorContext, cb: VisitorCallback) => {
         if (node.condition) {
             if (typeof node.condition !== "string") {
                 context.visit(node.condition, cb);
@@ -214,135 +155,113 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
             context.visit(node.statement, cb);
         }
     },
-    [parser.ASTKinds.if_statement]: (node: parser.if_statement, context: VisitorContext, cb: VisitorCallback) => {
-        context.visit(node.expression, cb);
-        context.pushScope(node);
+    [ast.SyntaxKind.IfStatement]: (node: ast.IfStatement, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.condition, cb);
         context.visit(node.statement, cb);
-        context.popScope();
 
-        for (const elseStatement of node.else_statements) {
-            const { elseif, statement } = elseStatement;
-            if (elseif) {
-                context.visit(elseif.expression, cb);
-            }
-
-            context.pushScope(elseStatement);
-            context.visit(statement, cb);
-            context.popScope();
+        if (node.else) {
+            return context.visit(node.else, cb);
         }
     },
-    [parser.ASTKinds.instance]: (node: parser.instance, context: VisitorContext, cb: VisitorCallback) => {
+    [ast.SyntaxKind.Instance]: (node: ast.Instance, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
         context.visit(node.name, cb);
     },
-    [parser.ASTKinds.interface_definition]: (
-        node: parser.interface_definition,
+    [ast.SyntaxKind.InterfaceDefinition]: (
+        node: ast.InterfaceDefinition,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.pushScope(node);
-        for (const { type_or_event } of node.body) {
+        context.visit(node.name, cb);
+
+        for (const type_or_event of node.body) {
             context.visit(type_or_event, cb);
         }
 
         if (node.behavior) {
-            for (const { statement } of node.behavior.block.statements) {
+            for (const statement of node.behavior.statements) {
                 context.visit(statement, cb);
             }
         }
-        context.popScope();
     },
-    [parser.ASTKinds.invariant_statement]: (
-        node: parser.invariant_statement,
+    [ast.SyntaxKind.InvariantStatement]: (
+        node: ast.InvariantStatement,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
         context.visit(node.expression, cb);
     },
-    [parser.ASTKinds.namespace]: (node: parser.namespace, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-        for (const { statement } of node.root.statements) {
+    [ast.SyntaxKind.Namespace]: (node: ast.Namespace, context: VisitorContext, cb: VisitorCallback) => {
+        for (const statement of node.statements) {
             context.visit(statement, cb);
         }
-        context.popScope();
     },
-    [parser.ASTKinds.on]: (node: parser.on, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-
-        for (const trigger of headTailToList(node.on_trigger_list)) {
-            if (trigger) context.visit(trigger, cb);
+    [ast.SyntaxKind.OnStatement]: (node: ast.OnStatement, context: VisitorContext, cb: VisitorCallback) => {
+        for (const trigger of node.triggers) {
+            context.visit(trigger, cb);
         }
 
-        context.visit(node.body.statement, cb);
-
-        context.popScope();
+        context.visit(node.body, cb);
     },
-    [parser.ASTKinds.on_body]: (node: parser.on_body, context: VisitorContext, cb: VisitorCallback) => {
-        context.visit(node.statement, cb);
-    },
-    [parser.ASTKinds.on_parameter]: (node: parser.on_parameter, context: VisitorContext, cb: VisitorCallback) => {
-        context.currentScope().variable_declarations[node.name.text] = node.name;
-
+    [ast.SyntaxKind.OnParameter]: (node: ast.OnParameter, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.name, cb);
 
         if (node.assignment) {
-            context.visit(node.assignment.name, cb);
+            context.visit(node.assignment, cb);
         }
     },
-    [parser.ASTKinds.on_trigger]: (node: parser.on_trigger, context: VisitorContext, cb: VisitorCallback) => {
+    [ast.SyntaxKind.OnTrigger]: (node: ast.OnTrigger, context: VisitorContext, cb: VisitorCallback) => {
+        if (isKeyword(node)) return;
+
         context.visit(node.name, cb);
 
-        if (node.parameters?.parameters) {
-            for (const parameter of headTailToList(node.parameters.parameters)) {
+        if (node.parameterList?.parameters) {
+            for (const parameter of node.parameterList.parameters) {
                 context.visit(parameter, cb);
             }
         }
     },
-    [parser.ASTKinds.parenthesized_expression]: (
-        node: parser.parenthesized_expression,
+    [ast.SyntaxKind.ParenthesizedExpression]: (
+        node: ast.ParenthesizedExpression,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
         context.visit(node.expression, cb);
     },
-    [parser.ASTKinds.port]: (node: parser.port, context: VisitorContext, cb: VisitorCallback) => {
-        context.currentScope().variable_declarations[node.name.text] = node.name;
+    [ast.SyntaxKind.Port]: (node: ast.Port, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.type, cb);
         context.visit(node.name, cb);
     },
-    [parser.ASTKinds.return_statement]: (
-        node: parser.return_statement,
-        context: VisitorContext,
-        cb: VisitorCallback
-    ) => {
-        if (node.expression) {
-            context.visit(node.expression, cb);
+    [ast.SyntaxKind.Reply]: (node: ast.Reply, context: VisitorContext, cb: VisitorCallback) => {
+        if (node.port) context.visit(node.port, cb);
+        if (node.value) context.visit(node.value, cb);
+    },
+    [ast.SyntaxKind.ReturnStatement]: (node: ast.ReturnStatement, context: VisitorContext, cb: VisitorCallback) => {
+        if (node.returnValue) {
+            context.visit(node.returnValue, cb);
         }
     },
-    [parser.ASTKinds.system]: (node: parser.system, context: VisitorContext, cb: VisitorCallback) => {
-        context.pushScope(node);
-        for (const { instance_or_binding } of node.instances_and_bindings) {
+    [ast.SyntaxKind.System]: (node: ast.System, context: VisitorContext, cb: VisitorCallback) => {
+        for (const instance_or_binding of node.instancesAndBindings) {
             context.visit(instance_or_binding, cb);
         }
-        context.popScope();
     },
-    [parser.ASTKinds.type_reference]: (node: parser.type_reference, context: VisitorContext, cb: VisitorCallback) => {
-        context.visit(node.type_name, cb);
+    [ast.SyntaxKind.TypeReference]: (node: ast.TypeReference, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.typeName, cb);
     },
-    [parser.ASTKinds.variable_definition]: (
-        node: parser.variable_definition,
+    [ast.SyntaxKind.VariableDefinition]: (
+        node: ast.VariableDefinition,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
-        context.currentScope().variable_declarations[node.name.text] = node.name;
         context.visit(node.type, cb);
         context.visit(node.name, cb);
         if (node.initializer) {
-            context.visit(node.initializer.expression, cb);
+            context.visit(node.initializer, cb);
         }
     },
-    [parser.ASTKinds.unary_operator_expression]: (
-        node: parser.unary_operator_expression,
+    [ast.SyntaxKind.UnaryOperatorExpression]: (
+        node: ast.UnaryOperatorExpression,
         context: VisitorContext,
         cb: VisitorCallback
     ) => {
@@ -350,247 +269,20 @@ const visitors: Partial<Record<parser.ASTKinds, (node: any, context: VisitorCont
     },
 
     // Leaf nodes, no need to visit children of these
-    [parser.ASTKinds.asterisk_binding]: stopVisiting,
-    [parser.ASTKinds.dollars]: stopVisiting,
-    [parser.ASTKinds.enum_definition]: stopVisiting,
-    [parser.ASTKinds.extern_definition]: stopVisiting,
-    [parser.ASTKinds.identifier]: stopVisiting,
-    [parser.ASTKinds.ILLEGAL]: stopVisiting,
-    [parser.ASTKinds.import_statement]: stopVisiting,
-    [parser.ASTKinds.int]: stopVisiting,
-    [parser.ASTKinds.member_identifier]: stopVisiting,
-    [parser.ASTKinds.numeric_literal]: stopVisiting,
-    [parser.ASTKinds.sl_comment]: stopVisiting,
+    [ast.SyntaxKind.BooleanLiteral]: stopVisiting,
+    [ast.SyntaxKind.DollarLiteral]: stopVisiting,
+    [ast.SyntaxKind.EmptyStatement]: stopVisiting,
+    [ast.SyntaxKind.EnumDefinition]: stopVisiting,
+    [ast.SyntaxKind.ERROR]: stopVisiting,
+    [ast.SyntaxKind.ExternDeclaration]: stopVisiting,
+    [ast.SyntaxKind.Identifier]: stopVisiting,
+    [ast.SyntaxKind.Keyword]: stopVisiting,
+    [ast.SyntaxKind.ImportStatement]: stopVisiting,
+    [ast.SyntaxKind.IntDefinition]: stopVisiting,
+    [ast.SyntaxKind.NumericLiteral]: stopVisiting,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const setParentVisitors: Partial<Record<parser.ASTKinds, (node: any) => void>> = {
-    // Root node
-    [parser.ASTKinds.file]: (node: parser.file) => {
-        for (const { statement } of node.statements) {
-            setParent(statement, node);
-        }
-    },
-
-    [parser.ASTKinds.assignment]: (node: parser.assignment) => {
-        setParent(node.left, node);
-        setParent(node.right, node);
-    },
-    [parser.ASTKinds.behavior]: (node: parser.behavior) => {
-        for (const { statement } of node.block.statements) {
-            setParent(statement, node);
-        }
-    },
-    [parser.ASTKinds.binary_expression]: (node: parser.binary_expression) => {
-        setParent(node.left, node);
-        setParent(node.right, node);
-    },
-    [parser.ASTKinds.binding]: (node: parser.binding) => {
-        setParent(node.left, node);
-        setParent(node.right, node);
-    },
-    [parser.ASTKinds.binding_expression_$0]: (node: parser.binding_expression_$0) => {
-        setParent(node.compound, node);
-        setParent(node.name, node);
-    },
-    [parser.ASTKinds.call_expression]: (node: parser.call_expression) => {
-        setParent(node.expression, node);
-        for (const { expression } of node.arguments.arguments) {
-            setParent(expression, node);
-        }
-    },
-    [parser.ASTKinds.component]: (node: parser.component) => {
-        for (const { port } of node.ports) {
-            setParent(port, node);
-        }
-
-        if (node.body) {
-            setParent(node.body, node);
-        }
-    },
-    [parser.ASTKinds.compound]: (node: parser.compound) => {
-        for (const { statement } of node.statements) {
-            setParent(statement, node);
-        }
-    },
-    [parser.ASTKinds.compound_name_$0]: (node: parser.compound_name_$0) => {
-        if (node.compound) setParent(node.compound, node);
-        setParent(node.name, node);
-    },
-    [parser.ASTKinds.defer_statement]: (node: parser.defer_statement) => {
-        if (node.header.arguments) {
-            for (const argument of node.header.arguments.arguments) {
-                setParent(argument.expression, node);
-            }
-        }
-        setParent(node.statement, node);
-    },
-    [parser.ASTKinds.dollar_statement]: (node: parser.dollar_statement) => {
-        setParent(node.expression, node);
-    },
-    [parser.ASTKinds.enum_definition]: (node: parser.enum_definition) => {
-        setParent(node.name, node);
-        for (const member of headTailToList(node.fields)) {
-            setParent(member, node);
-        }
-    },
-    [parser.ASTKinds.event]: (node: parser.event) => {
-        setParent(node.event_name, node);
-        setParent(node.type, node);
-        if (node.event_params) {
-            for (const param of headTailToList(node.event_params)) {
-                setParent(param, node);
-                setParent(param.name, param);
-                setParent(param.type, param);
-            }
-        }
-    },
-    [parser.ASTKinds.expression_statement]: (node: parser.expression_statement) => {
-        setParent(node.expression, node);
-    },
-    [parser.ASTKinds.function_definition]: (node: parser.function_definition) => {
-        setParent(node.body, node);
-        if (node.body.kind === parser.ASTKinds.compound) {
-            setParent(node.body, node);
-        } else {
-            setParent(node.body.expression, node);
-        }
-        setParent(node.return_type, node);
-        setParent(node.name, node);
-
-        if (node.parameters.parameters) {
-            for (const parameter of headTailToList(node.parameters.parameters)) {
-                setParent(parameter, node);
-            }
-        }
-    },
-    [parser.ASTKinds.function_parameter]: (node: parser.function_parameter) => {
-        setParent(node.type, node);
-        setParent(node.name, node);
-    },
-    [parser.ASTKinds.guard]: (node: parser.guard) => {
-        if (node.condition) {
-            if (typeof node.condition !== "string") {
-                setParent(node.condition, node);
-            }
-        }
-
-        if (node.statement) {
-            setParent(node.statement, node);
-        }
-    },
-    [parser.ASTKinds.if_statement]: (node: parser.if_statement) => {
-        setParent(node.expression, node);
-        setParent(node.statement, node);
-
-        for (const elseStatement of node.else_statements) {
-            setParent(elseStatement, node);
-            const { elseif, statement } = elseStatement;
-            if (elseif) {
-                setParent(elseif.expression, elseStatement);
-            }
-
-            setParent(statement, elseStatement);
-        }
-    },
-    [parser.ASTKinds.instance]: (node: parser.instance) => {
-        setParent(node.name, node);
-        setParent(node.type, node);
-    },
-    [parser.ASTKinds.interface_definition]: (node: parser.interface_definition) => {
-        for (const { type_or_event } of node.body) {
-            setParent(type_or_event, node);
-        }
-
-        if (node.behavior) {
-            setParent(node.behavior, node);
-            for (const { statement } of node.behavior.block.statements) {
-                setParent(statement, node.behavior);
-            }
-        }
-    },
-    [parser.ASTKinds.invariant_statement]: (node: parser.invariant_statement) => {
-        setParent(node.expression, node);
-    },
-    [parser.ASTKinds.namespace]: (node: parser.namespace) => {
-        while (node.name.kind !== parser.ASTKinds.identifier && node.name.compound) {
-            // De-sugar
-            const newNs = {
-                kind: parser.ASTKinds.namespace,
-                name: { ...node.name.name, kind: parser.ASTKinds.identifier },
-                root: { kind: parser.ASTKinds.namespace_root, statements: node.root.statements },
-            } satisfies parser.namespace;
-            node.name = node.name.compound;
-            node.root.statements = [{ kind: parser.ASTKinds.namespace_root_$0, statement: newNs }];
-        }
-        setParent(node.name, node);
-        for (const { statement } of node.root.statements) {
-            setParent(statement, node);
-        }
-    },
-    [parser.ASTKinds.on]: (node: parser.on) => {
-        for (const trigger of headTailToList(node.on_trigger_list)) {
-            if (trigger) setParent(trigger, node);
-        }
-
-        setParent(node.body, node);
-        setParent(node.body.statement, node.body);
-    },
-    [parser.ASTKinds.on_parameter]: (node: parser.on_parameter) => {
-        setParent(node.name, node);
-
-        if (node.assignment) {
-            setParent(node.assignment.name, node);
-        }
-    },
-    [parser.ASTKinds.on_trigger]: (node: parser.on_trigger) => {
-        setParent(node.name, node);
-
-        if (node.parameters?.parameters) {
-            for (const parameter of headTailToList(node.parameters.parameters)) {
-                setParent(parameter, node);
-            }
-        }
-    },
-    [parser.ASTKinds.parenthesized_expression]: (node: parser.parenthesized_expression) => {
-        setParent(node.expression, node);
-    },
-    [parser.ASTKinds.port]: (node: parser.port) => {
-        setParent(node.name, node);
-        setParent(node.type, node);
-    },
-    [parser.ASTKinds.return_statement]: (node: parser.return_statement) => {
-        if (node.expression) {
-            setParent(node.expression, node);
-        }
-    },
-    [parser.ASTKinds.system]: (node: parser.system) => {
-        for (const { instance_or_binding } of node.instances_and_bindings) {
-            setParent(instance_or_binding, node);
-        }
-    },
-    [parser.ASTKinds.type_reference]: (node: parser.type_reference) => {
-        setParent(node.type_name, node);
-    },
-    [parser.ASTKinds.variable_definition]: (node: parser.variable_definition) => {
-        setParent(node.type, node);
-        if (node.initializer) {
-            setParent(node.initializer.expression, node);
-        }
-    },
-    [parser.ASTKinds.unary_operator_expression]: (node: parser.unary_operator_expression) => {
-        setParent(node.expression, node);
-    },
-};
-
-export function visitFile(file: parser.file, source: InputSource, callback: VisitorCallback, program: Program) {
+export function visitFile(file: ast.File, source: InputSource, callback: VisitorCallback, program: Program) {
     const context = new VisitorContext(source, program);
     context.visit(file, callback);
-}
-
-export const setParentVisitor: VisitorCallback = (node, context) =>
-    context.visit(node, n => setParentVisitors[n.kind]?.(n));
-
-function setParent(node: ASTNode, parent: ASTNode) {
-    node.parent = parent;
 }

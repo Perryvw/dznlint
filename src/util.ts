@@ -1,141 +1,313 @@
-import { SourcePosition, SourceRange } from "./diagnostic";
-import * as parser from "./grammar/parser";
-import { ASTNode } from "./linting-rule";
+import * as ast from "./grammar/ast";
+import { Program, SourceFile } from "./semantics/program";
+import { SemanticSymbol, TypeChecker } from "./semantics/type-checker";
+import { visitFile, VisitResult } from "./visitor";
 
-export function nodeToSourceRange(node: { start: parser.PosInfo; end: parser.PosInfo }): SourceRange {
+export function findLeafAtPosition(
+    file: SourceFile,
+    line: number,
+    column: number,
+    program: Program
+): ast.AnyAstNode | undefined {
+    let leaf: ast.AnyAstNode | undefined;
+    if (file.ast) {
+        visitFile(
+            file.ast,
+            file.source,
+            node => {
+                if (!isPositionInNode(node, line, column)) {
+                    return VisitResult.StopVisiting;
+                }
+                leaf = node;
+                if (node.errors) {
+                    for (const err of node.errors) {
+                        if (isPositionInNode(err, line, column)) {
+                            leaf = err;
+                            return VisitResult.StopVisiting;
+                        }
+                    }
+                }
+            },
+            program
+        );
+    }
+    return leaf;
+}
+
+export function findNameAtPosition(
+    file: SourceFile,
+    line: number,
+    column: number,
+    program: Program
+): ast.Identifier | undefined {
+    let name: ast.Identifier | undefined;
+    if (file.ast) {
+        visitFile(
+            file.ast,
+            file.source,
+            node => {
+                if (!isPositionInNode(node, line, column)) {
+                    return VisitResult.StopVisiting;
+                }
+                if (isIdentifier(node)) {
+                    name = node;
+                }
+            },
+            program
+        );
+    }
+    return name;
+}
+
+export function findNameAtLocationInErrorNode(
+    node: ast.Error,
+    line: number,
+    column: number,
+    typeChecker: TypeChecker
+): { scope: ScopedBlock; owningObject?: SemanticSymbol; prefix: string; suffix: string } {
+    const scope = findFirstParent(node, isScopedBlock) as ScopedBlock;
+
+    // Skip ahead to the starting index of the search line in the node text
+    let lineOffset = 0;
+    for (let l = node.position.from.line; l < line; l++) {
+        lineOffset = node.text.indexOf("\n", lineOffset) + 1;
+    }
+    // If node starts on same line as search line, offset the column instead because the node might start
+    // at a later column in the line
+    const columnOffset = column - (node.position.from.line === line ? node.position.from.column : 0);
+    // This is the index in the node text we're looking for
+    const cursorIndex = lineOffset + columnOffset;
+
+    // Work backwards while still seeing valid name parts
+    const namePattern = /[a-zA-Z0-9\-_.]+/g;
+    namePattern.lastIndex = lineOffset; // Start looking at current line only
+
+    let match = namePattern.exec(node.text);
+    while (match) {
+        const matchText = match[0];
+        if (match.index + matchText.length >= cursorIndex) {
+            // Calculate how much of the name is after the cursor
+            const overrun = match.index + matchText.length - cursorIndex;
+
+            // If dealing with a compound name, look up the owning symbol
+            if (matchText.includes(".")) {
+                const lastDot = matchText.lastIndexOf(".");
+                const owningObjectString = matchText.substring(0, lastDot);
+                const prefix = matchText.substring(lastDot + 1, cursorIndex);
+                const suffix = matchText.substring(cursorIndex, cursorIndex + overrun);
+                return {
+                    scope,
+                    owningObject: typeChecker.resolveNameInScope(owningObjectString, scope),
+                    prefix,
+                    suffix,
+                };
+            } else {
+                const prefix = matchText.substring(0, matchText.length - overrun);
+                const suffix = matchText.substring(matchText.length - overrun);
+                return { scope, prefix, suffix };
+            }
+        }
+        match = namePattern.exec(node.text);
+    }
+
+    // If no matches were found fall back on empty string
+    return { scope, prefix: "", suffix: "" };
+}
+
+export function isPositionInNode(node: ast.AnyAstNode, line: number, column: number): boolean {
+    const left =
+        line > node.position.from.line || (line === node.position.from.line && column >= node.position.from.column);
+    const right = line < node.position.to.line || (line === node.position.to.line && column <= node.position.to.column);
+    return left && right;
+}
+
+export function combineSourceRanges(from: ast.SourceRange, to: ast.SourceRange): ast.SourceRange {
     return {
-        from: posInfoToSourcePosition(node.start),
-        to: posInfoToSourcePosition(node.end),
+        from: from.from,
+        to: to.to,
     };
 }
 
-export function posInfoToSourcePosition(pos: parser.PosInfo): SourcePosition {
-    return {
-        index: pos.overallPos,
-        line: pos.line,
-        column: pos.offset,
-    };
+export function isIdentifier(node: ast.AnyAstNode): node is ast.Identifier {
+    return node.kind === ast.SyntaxKind.Identifier;
 }
 
-export function headTailToList<T>(obj: { head?: T; tail: Array<{ elem: T }> }): Array<NonNullable<T>> {
-    const result = [];
-    if (obj.head) {
-        result.push(obj.head);
-    }
-    for (const { elem } of obj.tail) {
-        if (elem) result.push(elem);
-    }
-    return result;
+export function isCompoundName(node: ast.AnyAstNode): node is ast.CompoundName {
+    return node.kind === ast.SyntaxKind.CompoundName;
 }
 
-export function isIdentifier(node: ASTNode): node is parser.identifier {
-    return node.kind === parser.ASTKinds.identifier;
+export function isCompoundBindingExpression(node: ast.AnyAstNode): node is ast.BindingCompoundName {
+    return node.kind === ast.SyntaxKind.BindingCompoundName;
 }
 
-export function isCompoundName(node: ASTNode): node is parser.compound_name_$0 {
-    return node.kind === parser.ASTKinds.compound_name_$0;
+export function isCallExpression(node: ast.AnyAstNode): node is ast.CallExpression {
+    return node.kind === ast.SyntaxKind.CallExpression;
 }
 
-export function isCompoundBindingExpression(node: ASTNode): node is parser.binding_expression_$0 {
-    return node.kind === parser.ASTKinds.binding_expression_$0;
+export function isCompound(node: ast.AnyAstNode): node is ast.Compound {
+    return node.kind === ast.SyntaxKind.Compound;
 }
 
-export function isCallExpression(node: ASTNode): node is parser.call_expression {
-    return node.kind === parser.ASTKinds.call_expression;
+export function isEvent(node: ast.AnyAstNode): node is ast.Event {
+    return node.kind === ast.SyntaxKind.Event;
 }
 
-export function isCompound(node: ASTNode): node is parser.compound {
-    return node.kind === parser.ASTKinds.compound;
+export function isComponentDefinition(statement: ast.AnyAstNode): statement is ast.ComponentDefinition {
+    return statement.kind === ast.SyntaxKind.ComponentDefinition;
 }
 
-export function isEvent(node: ASTNode): node is parser.event {
-    return node.kind === parser.ASTKinds.event;
+export function isFunctionDefinition(statement: ast.AnyAstNode): statement is ast.FunctionDefinition {
+    return statement.kind === ast.SyntaxKind.FunctionDefinition;
 }
 
-export function isFunctionDefinition(statement: ASTNode): statement is parser.function_definition {
-    return statement.kind === parser.ASTKinds.function_definition;
+export function isFunctionParameter(expression: ast.AnyAstNode): expression is ast.FunctionParameter {
+    return expression.kind === ast.SyntaxKind.FunctionParameter;
 }
 
-export function isInstance(statement: ASTNode): statement is parser.instance {
-    return statement.kind === parser.ASTKinds.instance;
+export function isGuardStatement(statement: ast.AnyAstNode): statement is ast.GuardStatement {
+    return statement.kind === ast.SyntaxKind.GuardStatement;
 }
 
-export function isNamespace(node: ASTNode): node is parser.namespace {
-    return node.kind === parser.ASTKinds.namespace;
+export function isOnParameter(expression: ast.AnyAstNode): expression is ast.OnParameter {
+    return expression.kind === ast.SyntaxKind.OnParameter;
 }
 
-export function isSourceFile(node: ASTNode): node is parser.file {
-    return node.kind === parser.ASTKinds.file;
+export function isVariableDefinition(statement: ast.AnyAstNode): statement is ast.VariableDefinition {
+    return statement.kind === ast.SyntaxKind.VariableDefinition;
 }
 
-export function isTypeReference(node: ASTNode): node is parser.type_reference {
-    return node.kind === parser.ASTKinds.type_reference;
+export function isAsterisk(node: ast.AnyAstNode): node is ast.Keyword<"*"> {
+    return isKeyword(node) && node.text === "*";
 }
 
-export function isPort(node: ASTNode): node is parser.port {
-    return node.kind === parser.ASTKinds.port;
-}
-
-export function isInjected(port: parser.port) {
-    return port.qualifiers?.some(q => q.qualifier === "injected") === true;
-}
-
-export function isExpressionStatement(node: ASTNode): node is parser.expression_statement {
-    return node.kind === parser.ASTKinds.expression_statement;
-}
-
-export function isInterfaceDefinition(node: ASTNode): node is parser.interface_definition {
-    return node.kind === parser.ASTKinds.interface_definition;
-}
-
-export type ScopedBlock = ASTNode &
-    (
-        | parser.behavior
-        | parser.behavior_compound
-        | parser.component
-        | parser.compound
-        | parser.function_definition
-        | parser.interface_definition
-        | parser.namespace
-        | parser.on_body
-        | parser.system
-        | parser.file
-    );
-
-export function isScopedBlock(node: ASTNode): node is ScopedBlock {
+export function isIllegalKeyword(node: ast.AnyAstNode): node is ast.Keyword<"illegal"> {
     return (
-        node.kind === parser.ASTKinds.behavior ||
-        node.kind === parser.ASTKinds.behavior_compound ||
-        node.kind === parser.ASTKinds.component ||
-        node.kind === parser.ASTKinds.compound ||
-        node.kind === parser.ASTKinds.function_definition ||
-        node.kind === parser.ASTKinds.interface_definition ||
-        node.kind === parser.ASTKinds.namespace ||
-        node.kind === parser.ASTKinds.on_body ||
-        node.kind === parser.ASTKinds.system ||
-        node.kind === parser.ASTKinds.file
+        (isKeyword(node) && node.text === "illegal") ||
+        (isExpressionStatement(node) && isIllegalKeyword(node.expression))
     );
 }
 
-export function isOnStatement(node: ASTNode): node is parser.on {
-    return node.kind === parser.ASTKinds.on;
+export function isOptionalKeyword(node: ast.AnyAstNode): node is ast.Keyword<"optional"> {
+    return isKeyword(node) && node.text === "optional";
 }
 
-export function systemInstances(system: parser.system): parser.instance[] {
-    return system.instances_and_bindings
-        .map(e => e.instance_or_binding)
-        .filter(e => e.kind === parser.ASTKinds.instance) as parser.instance[];
+export function isInevitableKeyword(node: ast.AnyAstNode): node is ast.Keyword<"inevitable"> {
+    return isKeyword(node) && node.text === "inevitable";
 }
 
-export function systemBindings(system: parser.system): parser.binding[] {
-    return system.instances_and_bindings
-        .map(e => e.instance_or_binding)
-        .filter(e => e.kind === parser.ASTKinds.binding) as parser.binding[];
+export function isReplyKeyword(node: ast.AnyAstNode): node is ast.Keyword<"reply"> {
+    return isKeyword(node) && node.text === "reply";
 }
 
-export function findFirstParent<T extends ASTNode>(
-    node: ASTNode,
-    predicate: (node: ASTNode) => node is T
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
+    return node.kind === ast.SyntaxKind.Keyword;
+}
+
+export function isExtern(statement: ast.AnyAstNode): statement is ast.ExternDeclaration {
+    return statement.kind === ast.SyntaxKind.ExternDeclaration;
+}
+
+export function isInstance(statement: ast.AnyAstNode): statement is ast.Instance {
+    return statement.kind === ast.SyntaxKind.Instance;
+}
+
+export function isNamespace(node: ast.AnyAstNode): node is ast.Namespace {
+    return node.kind === ast.SyntaxKind.Namespace;
+}
+
+export function isSourceFile(node: ast.AnyAstNode): node is ast.File {
+    return node.kind === ast.SyntaxKind.File;
+}
+
+export function isTypeReference(node: ast.AnyAstNode): node is ast.TypeReference {
+    return node.kind === ast.SyntaxKind.TypeReference;
+}
+
+export function isPort(node: ast.AnyAstNode): node is ast.Port {
+    return node.kind === ast.SyntaxKind.Port;
+}
+
+export function isReply(node: ast.AnyAstNode): node is ast.Reply {
+    return node.kind === ast.SyntaxKind.Reply;
+}
+
+export function isInjected(port: ast.Port) {
+    return port.qualifiers.some(q => q.text === "injected") === true;
+}
+
+export function isExpressionStatement(node: ast.AnyAstNode): node is ast.ExpressionStatement {
+    return node.kind === ast.SyntaxKind.ExpressionStatement;
+}
+
+export function isInterfaceDefinition(node: ast.AnyAstNode): node is ast.InterfaceDefinition {
+    return node.kind === ast.SyntaxKind.InterfaceDefinition;
+}
+
+export function isImportStatement(node: ast.AnyAstNode): node is ast.ImportStatement {
+    return node.kind === ast.SyntaxKind.ImportStatement;
+}
+
+export function isErrorNode(node: ast.AnyAstNode): node is ast.Error {
+    return node.kind === ast.SyntaxKind.ERROR;
+}
+
+export type ScopedBlock = ast.AnyAstNode &
+    (
+        | ast.Behavior
+        | ast.ComponentDefinition
+        | ast.Compound
+        | ast.FunctionDefinition
+        | ast.GuardStatement
+        | ast.IfStatement
+        | ast.InterfaceDefinition
+        | ast.Namespace
+        | ast.OnStatement
+        | ast.System
+        | ast.File
+    );
+
+export function isScopedBlock(node: ast.AnyAstNode): node is ScopedBlock {
+    return (
+        node.kind === ast.SyntaxKind.Identifier ||
+        node.kind === ast.SyntaxKind.Behavior ||
+        node.kind === ast.SyntaxKind.ComponentDefinition ||
+        node.kind === ast.SyntaxKind.Compound ||
+        node.kind === ast.SyntaxKind.FunctionDefinition ||
+        node.kind === ast.SyntaxKind.GuardStatement ||
+        node.kind === ast.SyntaxKind.InterfaceDefinition ||
+        node.kind === ast.SyntaxKind.Namespace ||
+        node.kind === ast.SyntaxKind.OnStatement ||
+        node.kind === ast.SyntaxKind.System ||
+        node.kind === ast.SyntaxKind.IfStatement ||
+        node.kind === ast.SyntaxKind.File
+    );
+}
+
+export function isOnStatement(node: ast.AnyAstNode): node is ast.OnStatement {
+    return node.kind === ast.SyntaxKind.OnStatement;
+}
+
+export function systemInstances(system: ast.System): ast.Instance[] {
+    return system.instancesAndBindings.filter(e => e.kind === ast.SyntaxKind.Instance);
+}
+
+export function systemBindings(system: ast.System): ast.Binding[] {
+    return system.instancesAndBindings.filter(e => e.kind === ast.SyntaxKind.Binding);
+}
+
+export function isChildOf(child: ast.AnyAstNode, parent: ast.AnyAstNode): boolean {
+    let p = child.parent;
+    while (p) {
+        if (p === parent) return true;
+        p = p.parent;
+    }
+    return false;
+}
+
+export function findFirstParent<T extends ast.AnyAstNode>(
+    node: ast.AnyAstNode,
+    predicate: (node: ast.AnyAstNode) => node is T
 ): T | undefined {
     let n = node.parent;
     while (n) {
@@ -145,8 +317,8 @@ export function findFirstParent<T extends ASTNode>(
     return undefined;
 }
 
-export function nameToString(name: parser.compound_name): string {
-    if (name.kind === parser.ASTKinds.identifier) {
+export function nameToString(name: ast.Name): string {
+    if (name.kind === ast.SyntaxKind.Identifier) {
         return name.text;
     } else {
         if (name.compound) {
@@ -155,4 +327,9 @@ export function nameToString(name: parser.compound_name): string {
             return `.${name.name.text}`;
         }
     }
+}
+
+export function assertNever(x: never, message: string): void {
+    console.log("assertNever fail", message, x);
+    throw message;
 }

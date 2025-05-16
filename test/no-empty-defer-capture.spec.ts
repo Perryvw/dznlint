@@ -1,8 +1,8 @@
 import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 import { testdznlint } from "./util";
 
-test("empty defer capture", () => {
-    testdznlint({
+test("empty defer capture", async () => {
+    await testdznlint({
         diagnostic: emptyDeferCapture.code,
         pass: `component C {
             behavior {
@@ -25,8 +25,8 @@ test("empty defer capture", () => {
     });
 });
 
-test("implicit defer capture", () => {
-    testdznlint({
+test("implicit defer capture", async () => {
+    await testdznlint({
         diagnostic: emptyDeferCapture.code,
         pass: `component C {
             behavior {

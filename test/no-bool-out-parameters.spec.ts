@@ -1,8 +1,8 @@
 import { illegalBoolOutParameter } from "../src/rules/no-bool-out-parameters";
 import { testdznlint } from "./util";
 
-test("bool out parameter in function", () => {
-    testdznlint({
+test("bool out parameter in function", async () => {
+    await testdznlint({
         diagnostic: illegalBoolOutParameter.code,
         pass: `
             interface IA {
@@ -21,8 +21,8 @@ test("bool out parameter in function", () => {
     });
 });
 
-test("bool in parameter in function still allowed", () => {
-    testdznlint({
+test("bool in parameter in function still allowed", async () => {
+    await testdznlint({
         diagnostic: illegalBoolOutParameter.code,
         pass: `
             interface IA {
@@ -41,8 +41,8 @@ test("bool in parameter in function still allowed", () => {
     });
 });
 
-test("bool out parameter in event", () => {
-    testdznlint({
+test("bool out parameter in event", async () => {
+    await testdznlint({
         diagnostic: illegalBoolOutParameter.code,
         pass: `
             interface IA {
@@ -55,8 +55,8 @@ test("bool out parameter in event", () => {
     });
 });
 
-test("bool in parameter in event still allowed", () => {
-    testdznlint({
+test("bool in parameter in event still allowed", async () => {
+    await testdznlint({
         diagnostic: illegalBoolOutParameter.code,
         pass: `
             interface IA {

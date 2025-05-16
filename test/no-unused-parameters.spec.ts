@@ -1,8 +1,8 @@
 import { unusedParameter } from "../src/rules/no-unused-parameter";
 import { testdznlint } from "./util";
 
-test.each(["", "in", "out", "inout"])("no unused %s parameters in function", direction => {
-    testdznlint({
+test.each(["", "in", "out", "inout"])("no unused %s parameters in function", async direction => {
+    await testdznlint({
         diagnostic: unusedParameter.code,
         pass: `component A {
             behavior {
@@ -17,8 +17,8 @@ test.each(["", "in", "out", "inout"])("no unused %s parameters in function", dir
     });
 });
 
-test("no unused parameters in event trigger", () => {
-    testdznlint({
+test("no unused parameters in event trigger", async () => {
+    await testdznlint({
         diagnostic: unusedParameter.code,
         pass: `component A {
             behavior {
@@ -33,8 +33,8 @@ test("no unused parameters in event trigger", () => {
     });
 });
 
-test("parameter with <- assignment is not unused", () => {
-    testdznlint({
+test("parameter with <- assignment is not unused", async () => {
+    await testdznlint({
         diagnostic: unusedParameter.code,
         pass: `component A {
             behavior {
@@ -44,8 +44,8 @@ test("parameter with <- assignment is not unused", () => {
     });
 });
 
-test("no unused parameters in multiple event trigger", () => {
-    testdznlint({
+test("no unused parameters in multiple event trigger", async () => {
+    await testdznlint({
         diagnostic: unusedParameter.code,
         pass: `component A {
             behavior {
@@ -60,8 +60,8 @@ test("no unused parameters in multiple event trigger", () => {
     });
 });
 
-test("ignores underscores", () => {
-    testdznlint({
+test("ignores underscores", async () => {
+    await testdznlint({
         diagnostic: unusedParameter.code,
         pass: `component A {
             behavior {

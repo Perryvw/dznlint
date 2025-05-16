@@ -7,13 +7,14 @@ import { format as formatInternal } from "./format/format";
 
 export { LinterHost };
 export { Program };
+export { SourceFile };
 
-export function lintString(
+export async function lintString(
     source: string,
     config: DznLintUserConfiguration = {},
     host?: Partial<LinterHost>
-): Diagnostic[] {
-    const program = new Program(host);
+): Promise<Diagnostic[]> {
+    const program = await Program.Init(host);
 
     const diagnostics: Diagnostic[] = [];
     const sourceFile = program.parseFile("", source);
@@ -40,12 +41,12 @@ export function lintString(
 
 const couldNotReadFile = createDiagnosticsFactory();
 
-export function lintFiles(
+export async function lintFiles(
     fileNames: string[],
     config: DznLintUserConfiguration = {},
     host?: Partial<LinterHost>
-): Diagnostic[] {
-    const program = new Program(host);
+): Promise<Diagnostic[]> {
+    const program = await Program.Init(host);
 
     const diagnostics: Diagnostic[] = [];
     const files: SourceFile[] = [];

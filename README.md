@@ -6,6 +6,8 @@ A linter helping you write correct and consistent [Dezyne](https://dezyne.org/) 
 
 Requires Node.js to run.
 
+Built on top of the [tree-sitter-dezyne](https://github.com/j0ran/tree-sitter-dezyne) parser.
+
 ## Installation
 
 ```bash

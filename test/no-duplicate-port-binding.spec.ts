@@ -1,8 +1,8 @@
 import { duplicatePortBinding } from "../src/rules/no-duplicate-port-binding";
 import { testdznlint } from "./util";
 
-test("no duplicate port bindings", () => {
-    testdznlint({
+test("no duplicate port bindings", async () => {
+    await testdznlint({
         diagnostic: duplicatePortBinding.code,
         pass: `
         component Instance {}
@@ -32,8 +32,8 @@ test("no duplicate port bindings", () => {
     });
 });
 
-test("side doesn't matter", () => {
-    testdznlint({
+test("side doesn't matter", async () => {
+    await testdznlint({
         diagnostic: duplicatePortBinding.code,
         fail: `component A {
 
@@ -48,8 +48,8 @@ test("side doesn't matter", () => {
     });
 });
 
-test("also works when binding port to self", () => {
-    testdznlint({
+test("also works when binding port to self", async () => {
+    await testdznlint({
         diagnostic: duplicatePortBinding.code,
         fail: `component A {
 
@@ -62,8 +62,8 @@ test("also works when binding port to self", () => {
     });
 });
 
-test("multiple bindings of same type is allowed", () => {
-    testdznlint({
+test("multiple bindings of same type is allowed", async () => {
+    await testdznlint({
         diagnostic: duplicatePortBinding.code,
         pass: `
         interface Type {}
@@ -82,8 +82,8 @@ test("multiple bindings of same type is allowed", () => {
     });
 });
 
-test("binding to multiple instances of same type is allowed", () => {
-    testdznlint({
+test("binding to multiple instances of same type is allowed", async () => {
+    await testdznlint({
         diagnostic: duplicatePortBinding.code,
         pass: `
         interface Type {}
@@ -105,8 +105,8 @@ test("binding to multiple instances of same type is allowed", () => {
 });
 
 // https://github.com/Perryvw/dznlint/issues/11
-test("binding to locator does not yield duplicate binding errors (#11)", () => {
-    testdznlint({
+test("binding to locator does not yield duplicate binding errors (#11)", async () => {
+    await testdznlint({
         diagnostic: duplicatePortBinding.code,
         pass: `
         component A {

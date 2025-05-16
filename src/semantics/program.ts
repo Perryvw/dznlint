@@ -1,11 +1,11 @@
 import * as fs from "fs";
 
-import * as parser from "../grammar/parser";
+import * as ast from "../grammar/ast";
 
 import { Diagnostic } from "../diagnostic";
-import { parseDznSource } from "../parse";
+import { initParser, parseDznSource } from "../parse";
 import { normalizePath, resolveImport } from "../resolve-imports";
-import { setParentVisitor, visitFile } from "../visitor";
+import * as Parser from "web-tree-sitter";
 
 export interface LinterHost {
     includePaths: string[];
@@ -30,8 +30,16 @@ const defaultLinterHost: LinterHost = {
 export class Program {
     public host: LinterHost;
 
-    constructor(host?: Partial<LinterHost>) {
+    private constructor(
+        public parser: Parser,
+        host?: Partial<LinterHost>
+    ) {
         this.host = { ...defaultLinterHost, ...host };
+    }
+
+    public static async Init(host?: Partial<LinterHost>): Promise<Program> {
+        const parser = await initParser();
+        return new Program(parser, host);
     }
 
     private parsedFiles = new Map<string, SourceFile>();
@@ -60,7 +68,7 @@ export class Program {
         }
     }
 
-    public getFilePath(file: parser.file): string | undefined {
+    public getFilePath(file: ast.File): string | undefined {
         for (const [path, sourceFile] of this.parsedFiles) {
             if (sourceFile.ast === file) return path;
         }
@@ -80,17 +88,14 @@ export interface InputSource {
 
 export class SourceFile {
     public parseDiagnostics: Diagnostic[];
-    public ast?: parser.file;
+    public ast?: ast.File;
 
     public constructor(
         public source: InputSource,
         program: Program
     ) {
-        const { ast, diagnostics } = parseDznSource(source);
+        const { ast, diagnostics } = parseDznSource(source, program);
+        this.ast = ast;
         this.parseDiagnostics = diagnostics;
-        if (ast) {
-            visitFile(ast, source, setParentVisitor, program);
-            this.ast = ast;
-        }
     }
 }

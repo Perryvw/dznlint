@@ -1,8 +1,8 @@
 import { duplicateParameter } from "../src/rules/no-duplicate-parameters";
 import { testdznlint } from "./util";
 
-test("duplicate parameter name in on trigger", () => {
-    testdznlint({
+test("duplicate parameter name in on trigger", async () => {
+    await testdznlint({
         diagnostic: duplicateParameter.code,
         pass: `component A {
             behavior {
@@ -19,8 +19,8 @@ test("duplicate parameter name in on trigger", () => {
     });
 });
 
-test("duplicate parameter name in function", () => {
-    testdznlint({
+test("duplicate parameter name in function", async () => {
+    await testdznlint({
         diagnostic: duplicateParameter.code,
         pass: `component A {
             behavior {

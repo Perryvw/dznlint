@@ -1,8 +1,8 @@
 import { incorrectOnParameterCount } from "../src/rules/on-parameters-must-match";
 import { testdznlint } from "./util";
 
-test("on parameters must not be more than the event parameters", () => {
-    testdznlint({
+test("on parameters must not be more than the event parameters", async () => {
+    await testdznlint({
         diagnostic: incorrectOnParameterCount.code,
         pass: `
             interface I {
@@ -27,8 +27,8 @@ test("on parameters must not be more than the event parameters", () => {
     });
 });
 
-test("on parameters must not be less than the event parameters", () => {
-    testdznlint({
+test("on parameters must not be less than the event parameters", async () => {
+    await testdznlint({
         diagnostic: incorrectOnParameterCount.code,
         pass: `
             interface I {
@@ -53,8 +53,8 @@ test("on parameters must not be less than the event parameters", () => {
     });
 });
 
-test("on parameters are checked in multiple triggers lists too", () => {
-    testdznlint({
+test("on parameters are checked in multiple triggers lists too", async () => {
+    await testdznlint({
         diagnostic: incorrectOnParameterCount.code,
         pass: `
             interface I {
@@ -83,8 +83,8 @@ test("on parameters are checked in multiple triggers lists too", () => {
     });
 });
 
-test("warns when there are 0 arguments in on", () => {
-    testdznlint({
+test("warns when there are 0 arguments in on", async () => {
+    await testdznlint({
         diagnostic: incorrectOnParameterCount.code,
         fail: `
             interface I {
@@ -99,8 +99,8 @@ test("warns when there are 0 arguments in on", () => {
     });
 });
 
-test("warns when there are 0 arguments in event", () => {
-    testdznlint({
+test("warns when there are 0 arguments in event", async () => {
+    await testdznlint({
         diagnostic: incorrectOnParameterCount.code,
         fail: `
             interface I {
@@ -115,8 +115,8 @@ test("warns when there are 0 arguments in event", () => {
     });
 });
 
-test("no complaints on interfaces", () => {
-    testdznlint({
+test("no complaints on interfaces", async () => {
+    await testdznlint({
         diagnostic: incorrectOnParameterCount.code,
         pass: `
             interface I {

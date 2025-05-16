@@ -1,11 +1,25 @@
 // Do not redefine variables that already exist in scope
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
-import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
-import { ASTKinds, function_definition, identifier, instance, on, variable_definition } from "../grammar/parser";
+import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { headTailToList, nodeToSourceRange } from "../util";
+import {
+    findFirstParent,
+    isCompoundName,
+    isEvent,
+    isExtern,
+    isFunctionDefinition,
+    isFunctionParameter,
+    isInstance,
+    isKeyword,
+    isNamespace,
+    isOnParameter,
+    isPort,
+    isScopedBlock,
+    isVariableDefinition,
+} from "../util";
 import { VisitorContext } from "../visitor";
 
 export const shadowingVariablesNotAllowed = createDiagnosticsFactory();
@@ -14,32 +28,38 @@ export const no_shadowing: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_shadowing", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        const createDiagnostics = (newVariable: identifier, originalDefinition: identifier, source: InputSource) => [
+        const createDiagnostics = (
+            newVariable: ast.Identifier,
+            originalDefinition: ast.Identifier,
+            source: InputSource
+        ) => [
             // Create error diagnostic at re-definition node
             shadowingVariablesNotAllowed(
                 config.severity,
                 `Shadowing already defined variable '${newVariable.text}'.`,
                 source,
-                nodeToSourceRange(newVariable)
+                newVariable.position
             ),
             // Create hint diagnostic pointing back at original definition
             shadowingVariablesNotAllowed(
                 DiagnosticSeverity.Hint,
                 `Original declaration of '${newVariable.text}' here.`,
                 source,
-                nodeToSourceRange(originalDefinition)
+                originalDefinition.position
             ),
         ];
 
-        factoryContext.registerRule<on>(ASTKinds.on, (node, context) => {
-            const diagnostics = [];
+        factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
+            const diagnostics: Diagnostic[] = [];
 
-            for (const trigger of headTailToList(node.on_trigger_list)) {
-                if (trigger.parameters && trigger.parameters.parameters) {
-                    for (const param of headTailToList(trigger.parameters.parameters)) {
-                        const previousDefinition = findDeclarationInUpperScope(param.name.text, context);
+            for (const trigger of node.triggers) {
+                if (!isKeyword(trigger) && trigger.parameterList) {
+                    for (const param of trigger.parameterList.parameters) {
+                        const previousDefinition = findDeclarationInUpperScope(param.name.text, node, context);
                         if (previousDefinition) {
-                            diagnostics.push(...createDiagnostics(param.name, previousDefinition, context.source));
+                            diagnostics.push(
+                                ...createDiagnostics(param.name, declarationName(previousDefinition), context.source)
+                            );
                         }
                     }
                 }
@@ -48,37 +68,41 @@ export const no_shadowing: RuleFactory = factoryContext => {
             return diagnostics;
         });
 
-        factoryContext.registerRule<variable_definition>(ASTKinds.variable_definition, (node, context) => {
-            const previousDefinition = findDeclarationInUpperScope(node.name.text, context);
+        factoryContext.registerRule<ast.VariableDefinition>(ast.SyntaxKind.VariableDefinition, (node, context) => {
+            const previousDefinition = findDeclarationInUpperScope(node.name.text, node, context);
             if (previousDefinition) {
-                return [...createDiagnostics(node.name, previousDefinition, context.source)];
+                return [...createDiagnostics(node.name, declarationName(previousDefinition), context.source)];
             }
 
             return [];
         });
 
-        factoryContext.registerRule<instance>(ASTKinds.instance, (node, context) => {
-            const previousDefinition = findDeclarationInUpperScope(node.name.text, context);
+        factoryContext.registerRule<ast.Instance>(ast.SyntaxKind.Instance, (node, context) => {
+            const previousDefinition = findDeclarationInUpperScope(node.name.text, node, context);
             if (previousDefinition) {
-                return [...createDiagnostics(node.name, previousDefinition, context.source)];
+                return [...createDiagnostics(node.name, declarationName(previousDefinition), context.source)];
             }
 
             return [];
         });
 
-        factoryContext.registerRule<function_definition>(ASTKinds.function_definition, (node, context) => {
+        factoryContext.registerRule<ast.FunctionDefinition>(ast.SyntaxKind.FunctionDefinition, (node, context) => {
             const diagnostics = [];
 
-            const previousFunctionNameDefinition = findDeclarationInUpperScope(node.name.text, context);
-            if (previousFunctionNameDefinition) {
-                diagnostics.push(...createDiagnostics(node.name, previousFunctionNameDefinition, context.source));
+            const previousFunctionNameDefinition = findDeclarationInUpperScope(node.name.text, node, context);
+            if (previousFunctionNameDefinition && previousFunctionNameDefinition !== node) {
+                diagnostics.push(
+                    ...createDiagnostics(node.name, declarationName(previousFunctionNameDefinition), context.source)
+                );
             }
 
-            if (node.parameters.parameters) {
-                for (const { name } of headTailToList(node.parameters.parameters)) {
-                    const previousDefinition = findDeclarationInUpperScope(name.text, context);
+            if (node.parameters) {
+                for (const parameter of node.parameters) {
+                    const previousDefinition = findDeclarationInUpperScope(parameter.name.text, parameter, context);
                     if (previousDefinition) {
-                        diagnostics.push(...createDiagnostics(name, previousDefinition, context.source));
+                        diagnostics.push(
+                            ...createDiagnostics(parameter.name, declarationName(previousDefinition), context.source)
+                        );
                     }
                 }
             }
@@ -88,14 +112,45 @@ export const no_shadowing: RuleFactory = factoryContext => {
     }
 };
 
-function findDeclarationInUpperScope(name: string, context: VisitorContext): identifier | undefined {
-    for (const scope of context.scopeStack) {
-        const previousDefinition = scope.variable_declarations[name];
-        if (previousDefinition) {
-            return previousDefinition;
+function findDeclarationInUpperScope(
+    name: string,
+    node: ast.AnyAstNode,
+    context: VisitorContext
+): ast.AnyAstNode | undefined {
+    let scope = findFirstParent(node, isScopedBlock);
+    while (scope) {
+        const variables = context.typeChecker.findVariablesDeclaredInScope(scope);
+        const definition = variables.get(name);
+        if (definition && definition !== node) {
+            return definition;
         }
+        scope = findFirstParent(scope, isScopedBlock);
     }
     return undefined;
+}
+
+function declarationName(declaration: ast.AnyAstNode): ast.Identifier {
+    if (isFunctionDefinition(declaration)) {
+        return declaration.name;
+    } else if (isInstance(declaration)) {
+        return declaration.name;
+    } else if (isVariableDefinition(declaration)) {
+        return declaration.name;
+    } else if (isOnParameter(declaration)) {
+        return declaration.name;
+    } else if (isFunctionParameter(declaration)) {
+        return declaration.name;
+    } else if (isNamespace(declaration)) {
+        return isCompoundName(declaration.name) ? declaration.name.name : declaration.name;
+    } else if (isEvent(declaration)) {
+        return declaration.name;
+    } else if (isPort(declaration)) {
+        return declaration.name;
+    } else if (isExtern(declaration)) {
+        return declaration.name;
+    } else {
+        throw `Don't know how to get name of node of kind  ${ast.SyntaxKind[declaration.kind]}`;
+    }
 }
 
 export default no_shadowing;

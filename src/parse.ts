@@ -1,42 +1,80 @@
-import * as parser from "./grammar/parser";
+import * as ast from "./grammar/ast";
+import * as Parser from "web-tree-sitter";
 
 import { createDiagnosticsFactory, DiagnosticSeverity } from "./diagnostic";
 import { Diagnostic } from "./diagnostic";
-import { InputSource } from "./semantics/program";
+import { InputSource, Program } from "./semantics/program";
+import { root_Node } from "./grammar/tree-sitter-types";
+import { nodePosition, treeSitterTreeToAst } from "./grammar/tree-parser-transform";
+import { visitFile } from "./visitor";
+import { setParentVisitor } from "./grammar/set-ast-parents";
 
 export const failedToFullyParseFile = createDiagnosticsFactory();
 
-export function parseDznSource(source: InputSource): { ast?: parser.file; diagnostics: Diagnostic[] } {
-    const p = new parser.Parser(source.fileContent);
-    const { ast, errs } = p.parse();
+export function parseDznSource(source: InputSource, program: Program): { ast?: ast.File; diagnostics: Diagnostic[] } {
+    const tree = program.parser.parse(source.fileContent);
+    const ast = treeSitterTreeToAst(tree.rootNode as root_Node, source.fileName);
+    visitFile(ast, source, setParentVisitor, program);
 
-    const diagnostics = [];
-    for (const err of errs) {
-        diagnostics.push(
-            failedToFullyParseFile(DiagnosticSeverity.Error, err.toString(), source, {
-                from: { index: err.pos.overallPos, line: err.pos.line, column: err.pos.offset },
-                to: { index: err.pos.overallPos + 1, line: err.pos.line, column: err.pos.offset + 1 },
-            })
-        );
+    const diagnostics: Diagnostic[] = [];
+
+    function collectDiagnostics(node: Parser.SyntaxNode) {
+        if (node.isError) {
+            let errorMessage = `invalid syntax, expecting one of: `;
+            const cursor = node.walk();
+            // eslint-disable-next-line no-empty
+            while (cursor.gotoFirstChild()) {}
+            const it = program.parser.getLanguage().lookaheadIterator(cursor.currentNode.parseState);
+            if (it) {
+                const parts = [];
+                for (const next of it) {
+                    if (next !== "ERROR") {
+                        parts.push(next);
+                    }
+                }
+                errorMessage += parts.join(", ");
+            }
+
+            diagnostics.push(
+                failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, nodePosition(node))
+            );
+        } else if (node.isMissing) {
+            const errorMessage = `missing ${node.type}`;
+            const pos = nodePosition(node);
+            pos.to.index += 1;
+            pos.to.column += 1;
+
+            diagnostics.push(failedToFullyParseFile(DiagnosticSeverity.Error, errorMessage, source, pos));
+        } else {
+            for (const c of node.children) {
+                collectDiagnostics(c);
+            }
+        }
     }
+    collectDiagnostics(tree.rootNode);
 
     return { ast: ast == null ? undefined : ast, diagnostics };
 }
 
-import * as Parser from "web-tree-sitter";
+let treeSitterParser: Parser | undefined;
+export async function initParser(): Promise<Parser> {
+    if (treeSitterParser) return treeSitterParser;
+
+    await Parser.init();
+
+    const language = await Parser.Language.load(`${__dirname}/grammar/tree-sitter-dezyne.wasm`);
+    const parser = new Parser();
+    parser.setLanguage(language);
+
+    treeSitterParser = parser;
+
+    return parser;
+}
 
 export type TreeSitterNode = Parser.SyntaxNode;
 
-let treeSitterParser: Parser | undefined;
-
 export async function treeSitterParse(source: InputSource): Promise<Parser.SyntaxNode> {
-    if (treeSitterParser === undefined) {
-        await Parser.init();
-        treeSitterParser = new Parser();
-        const language = await Parser.Language.load(`${__dirname}/grammar/tree-sitter-dezyne.wasm`);
-        treeSitterParser.setLanguage(language);
-    }
-
-    const tree = treeSitterParser.parse(source.fileContent);
+    const parser = await initParser();
+    const tree = parser.parse(source.fileContent);
     return tree.rootNode;
 }

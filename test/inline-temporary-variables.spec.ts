@@ -1,8 +1,8 @@
 import { variableCanBeInlined } from "../src/rules/inline-temporary-variables";
 import { testdznlint } from "./util";
 
-test("temporary variable in event trigger", () => {
-    testdznlint({
+test("temporary variable in event trigger", async () => {
+    await testdznlint({
         config: { inline_temporary_variables: "hint" },
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
@@ -27,8 +27,8 @@ test("temporary variable in event trigger", () => {
     });
 });
 
-test("temporary variable in function", () => {
-    testdznlint({
+test("temporary variable in function", async () => {
+    await testdznlint({
         config: { inline_temporary_variables: "hint" },
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
@@ -53,8 +53,8 @@ test("temporary variable in function", () => {
     });
 });
 
-test("no inline suggestion on variables outside functions or event triggers", () => {
-    testdznlint({
+test("no inline suggestion on variables outside functions or event triggers", async () => {
+    await testdznlint({
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
             behavior {
@@ -67,8 +67,8 @@ test("no inline suggestion on variables outside functions or event triggers", ()
     });
 });
 
-test("no inline suggestion on out variables", () => {
-    testdznlint({
+test("no inline suggestion on out variables", async () => {
+    await testdznlint({
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
             behavior {
@@ -81,8 +81,8 @@ test("no inline suggestion on out variables", () => {
     });
 });
 
-test("no inline suggestion on return expressions", () => {
-    testdznlint({
+test("no inline suggestion on return expressions", async () => {
+    await testdznlint({
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
             behavior {
@@ -95,8 +95,8 @@ test("no inline suggestion on return expressions", () => {
     });
 });
 
-test("no inline suggestion on function arguments", () => {
-    testdznlint({
+test("no inline suggestion on function arguments", async () => {
+    await testdznlint({
         diagnostic: variableCanBeInlined.code,
         pass: `component A {
             behavior {

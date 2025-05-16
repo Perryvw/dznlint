@@ -1,10 +1,10 @@
 // Interface events that are never legal in the interface behavior
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
-import { ASTKinds, event, interface_definition, type_definition } from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { isCallExpression, isIdentifier, nodeToSourceRange } from "../util";
+import { isCallExpression, isIdentifier } from "../util";
 
 export const neverFiredEvent = createDiagnosticsFactory();
 
@@ -12,7 +12,7 @@ export const never_fired_event: RuleFactory = factoryContext => {
     const config = getRuleConfig("never_fired_event", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<interface_definition>(ASTKinds.interface_definition, (node, context) => {
+        factoryContext.registerRule<ast.InterfaceDefinition>(ast.SyntaxKind.InterfaceDefinition, (node, context) => {
             if (!node.behavior) {
                 return [];
             }
@@ -20,8 +20,8 @@ export const never_fired_event: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             // Look up all out events to check
-            const outEvents = node.body.map(e => e.type_or_event).filter(isOutEvent);
-            const unSeenEvents = new Map(outEvents.map(e => [e.event_name.text, e]));
+            const outEvents = node.body.filter(isOutEvent);
+            const unSeenEvents = new Map(outEvents.map(e => [e.name.text, e]));
 
             context.visit(node.behavior, subNode => {
                 // Look for identifier for events that have no parameters
@@ -42,7 +42,7 @@ export const never_fired_event: RuleFactory = factoryContext => {
                         config.severity,
                         "This event is never fired in the interface behavior",
                         context.source,
-                        nodeToSourceRange(event.event_name)
+                        event.name.position
                     )
                 );
             }
@@ -52,6 +52,6 @@ export const never_fired_event: RuleFactory = factoryContext => {
     }
 };
 
-function isOutEvent(node: event | type_definition): node is event {
-    return node.kind === ASTKinds.event && node.direction === "out";
+function isOutEvent(node: ast.Event | ast.TypeDefinition): node is ast.Event {
+    return node.kind === ast.SyntaxKind.Event && node.direction.text === "out";
 }

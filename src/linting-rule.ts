@@ -1,16 +1,15 @@
 import { DznLintUserConfiguration } from "./config/dznlint-configuration";
-import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity, SourceRange } from "./diagnostic";
+import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "./diagnostic";
 import { VisitorContext } from "./visitor";
-import * as parser from "./grammar/parser";
+import * as ast from "./grammar/ast";
 
-export type ASTNode = { kind: parser.ASTKinds; parent?: ASTNode };
-export type Linter<T extends ASTNode> = (node: T, context: VisitorContext) => Diagnostic[];
+export type Linter<T extends ast.AnyAstNode> = (node: T, context: VisitorContext) => Diagnostic[];
 
 export type RuleFactory = (context: RuleFactoryContext) => void;
 
 export interface RuleFactoryContext {
     userConfig: DznLintUserConfiguration;
-    registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
+    registerRule<TNode extends ast.AnyAstNode>(kind: TNode["kind"], rule: Linter<TNode>): void;
 }
 
 import call_arguments_must_match from "./rules/call-arguments-must-match";
@@ -39,7 +38,6 @@ import parameter_direction from "./rules/parameter-direction";
 import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
 import port_parameter_direction from "./rules/port-parameter-direction";
-import { nodeToSourceRange } from "./util";
 
 export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
@@ -71,16 +69,16 @@ export function loadLinters(config: DznLintUserConfiguration) {
         port_parameter_direction,
     ];
 
-    const linters = new Map<parser.ASTKinds, Linter<ASTNode>[]>();
+    const linters = new Map<ast.SyntaxKind, Linter<ast.AnyAstNode>[]>();
 
     const ruleFactoryContext: RuleFactoryContext = {
         userConfig: config,
-        registerRule<TNode extends ASTNode>(kind: TNode["kind"], rule: Linter<TNode>) {
+        registerRule<TNode extends ast.AnyAstNode>(kind: TNode["kind"], rule: Linter<TNode>) {
             if (!linters.has(kind)) {
                 linters.set(kind, []);
             }
 
-            linters.get(kind)?.push(wrapErrorHandling(rule as Linter<ASTNode>));
+            linters.get(kind)?.push(wrapErrorHandling(rule as Linter<ast.AnyAstNode>));
         },
     };
 
@@ -93,22 +91,12 @@ export function loadLinters(config: DznLintUserConfiguration) {
 
 export const dznLintExceptionThrown = createDiagnosticsFactory();
 
-function wrapErrorHandling(linter: Linter<ASTNode>): Linter<ASTNode> {
+function wrapErrorHandling<TNode extends ast.AnyAstNode>(linter: Linter<TNode>): Linter<TNode> {
     return (node, context) => {
         try {
             return linter(node, context);
         } catch (exception) {
-            const range: SourceRange =
-                "start" in node && "end" in node
-                    ? nodeToSourceRange(node as { start: parser.PosInfo; end: parser.PosInfo })
-                    : {
-                          from: { index: 0, line: 0, column: 0 },
-                          to: {
-                              index: context.source.fileContent.indexOf("\n"), // fall back to first line of file
-                              line: 0,
-                              column: context.source.fileContent.indexOf("\n"),
-                          },
-                      };
+            const range: ast.SourceRange = node.position;
             return [
                 dznLintExceptionThrown(
                     DiagnosticSeverity.Error,

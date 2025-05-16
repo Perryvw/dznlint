@@ -1,10 +1,10 @@
 // no identifiers used for variables that are unknown
 
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
-import * as parser from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
-import { headTailToList, isIdentifier, nameToString, nodeToSourceRange } from "../util";
+import { isAsterisk, isErrorNode, isIdentifier, isIllegalKeyword, isKeyword, nameToString } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();
@@ -13,9 +13,9 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_unknown_variables", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        factoryContext.registerRule<parser.binding>(parser.ASTKinds.binding, (node: parser.binding, context) => {
+        factoryContext.registerRule<ast.Binding>(ast.SyntaxKind.Binding, (node, context) => {
             const diagnostics: Diagnostic[] = [];
-            const checkBinding = (bindingExpression: parser.binding_expression) => {
+            const checkBinding = (bindingExpression: ast.BindingExpression) => {
                 const symbol = context.typeChecker.symbolOfNode(bindingExpression);
                 if (symbol === undefined) {
                     diagnostics.push(
@@ -30,38 +30,36 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return diagnostics;
         });
 
-        factoryContext.registerRule<parser.instance>(parser.ASTKinds.instance, (node: parser.instance, context) => {
+        factoryContext.registerRule<ast.Instance>(ast.SyntaxKind.Instance, (node, context) => {
             if (context.typeChecker.symbolOfNode(node.type) === undefined) {
-                return [createUnknownCompoundNameDiagnostic(node.type.type_name, "type", context)];
+                return [createUnknownCompoundNameDiagnostic(node.type.typeName, "type", context)];
             } else return [];
         });
 
-        factoryContext.registerRule<parser.event>(parser.ASTKinds.event, (node: parser.event, context) => {
+        factoryContext.registerRule<ast.Event>(ast.SyntaxKind.Event, (node, context) => {
             const diagnostics = [];
 
             // Check return type
             if (context.typeChecker.symbolOfNode(node.type) === undefined) {
-                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.type_name, "type", context));
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.typeName, "type", context));
             }
 
             // Check parameter types
-            if (node.event_params) {
-                for (const param of headTailToList(node.event_params)) {
-                    const typeSymbol = context.typeChecker.symbolOfNode(param.type);
-                    if (typeSymbol === undefined) {
-                        diagnostics.push(createUnknownCompoundNameDiagnostic(param.type.type_name, "type", context));
-                    }
+            for (const param of node.parameters) {
+                const typeSymbol = context.typeChecker.symbolOfNode(param.type);
+                if (typeSymbol === undefined) {
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(param.type.typeName, "type", context));
                 }
             }
 
             return diagnostics;
         });
 
-        factoryContext.registerRule<parser.on>(parser.ASTKinds.on, (node: parser.on, context) => {
+        factoryContext.registerRule<ast.OnStatement>(ast.SyntaxKind.OnStatement, (node, context) => {
             const diagnostics: Diagnostic[] = [];
-            const triggerList = headTailToList(node.on_trigger_list);
-            for (const trigger of triggerList) {
-                if (context.typeChecker.symbolOfNode(trigger.name) === undefined) {
+
+            for (const trigger of node.triggers) {
+                if (!isKeyword(trigger) && context.typeChecker.symbolOfNode(trigger.name) === undefined) {
                     diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "port or event", context));
                 }
             }
@@ -69,10 +67,10 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             // Find used parameters that are not present in each on trigger:
 
             // First get all parameters not escaped with _ that are not shared by all triggers
-            const occurrences: Record<string, parser.on_trigger[]> = {};
-            for (const trigger of triggerList) {
-                if (trigger.parameters?.parameters) {
-                    for (const param of headTailToList(trigger.parameters.parameters)) {
+            const occurrences: Record<string, ast.OnTrigger[]> = {};
+            for (const trigger of node.triggers) {
+                if (!isKeyword(trigger) && trigger.parameterList) {
+                    for (const param of trigger.parameterList.parameters) {
                         if (param.name.text.startsWith("_")) continue;
 
                         if (!occurrences[param.name.text]) {
@@ -84,7 +82,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                 }
             }
             // Get all parameters not escaped with _ that do not show up in all triggers:
-            const triggerCount = triggerList.length;
+            const triggerCount = node.triggers.length;
             const parametersAtRisk = Object.entries(occurrences).filter(
                 ([, triggers]) => triggers.length < triggerCount
             );
@@ -92,7 +90,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             // For each parameter at risk, check if it is actually used or not
             for (const [parameterName, triggers] of parametersAtRisk) {
                 // Check if parameter occurs in on body
-                const parameterReferences: parser.identifier[] = [];
+                const parameterReferences: ast.Identifier[] = [];
                 context.visit(node.body, subNode => {
                     if (isIdentifier(subNode) && subNode.text === parameterName) {
                         parameterReferences.push(subNode);
@@ -101,7 +99,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
 
                 // If parameter is used, generate diagnostics on all uses of that parameter
                 if (parameterReferences.length > 0) {
-                    const missingTriggers = triggerList.filter(t => !triggers.includes(t));
+                    const missingTriggers = node.triggers.filter(t => !triggers.includes(t));
                     const missingTriggersString = missingTriggers.map(stringifyTrigger).join("\n");
                     for (const reference of parameterReferences) {
                         diagnostics.push(
@@ -109,7 +107,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                                 config.severity,
                                 `Parameter ${parameterName} is undefined in some of the events in the event list! Parameter missing in: \n${missingTriggersString}`,
                                 context.source,
-                                nodeToSourceRange(reference)
+                                reference.position
                             )
                         );
                     }
@@ -119,132 +117,101 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return diagnostics;
         });
 
-        factoryContext.registerRule<parser.function_definition>(
-            parser.ASTKinds.function_definition,
-            (node: parser.function_definition, context) => {
-                const diagnostics = [];
-
-                if (context.typeChecker.symbolOfNode(node.return_type) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.return_type.type_name, "type", context));
-                }
-
-                if (node.parameters.parameters) {
-                    for (const parameter of headTailToList(node.parameters.parameters)) {
-                        if (context.typeChecker.symbolOfNode(parameter.type) === undefined) {
-                            diagnostics.push(
-                                createUnknownCompoundNameDiagnostic(parameter.type.type_name, "type", context)
-                            );
-                        }
-                    }
-                }
-                return diagnostics;
-            }
-        );
-
-        factoryContext.registerRule<parser.call_expression>(
-            parser.ASTKinds.call_expression,
-            (node: parser.call_expression, context) => {
-                const diagnostics = [];
-
-                if (context.typeChecker.symbolOfNode(node.expression) === undefined) {
-                    diagnostics.push(...checkExpressionNames(node.expression, "function", context));
-                }
-
-                for (const argument of node.arguments.arguments) {
-                    diagnostics.push(...checkExpressionNames(argument.expression, "variable", context));
-                }
-                return diagnostics;
-            }
-        );
-
-        factoryContext.registerRule<parser.variable_definition>(
-            parser.ASTKinds.variable_definition,
-            (node: parser.variable_definition, context) => {
-                const diagnostics = [];
-
-                if (context.typeChecker.symbolOfNode(node.type) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.type_name, "type", context));
-                }
-
-                if (node.initializer) {
-                    diagnostics.push(...checkExpressionNames(node.initializer.expression, "variable", context));
-                }
-
-                return diagnostics;
-            }
-        );
-
-        factoryContext.registerRule<parser.expression_statement>(
-            parser.ASTKinds.expression_statement,
-            (node: parser.expression_statement, context) => {
-                return checkExpressionNames(node.expression, "name", context);
-            }
-        );
-
-        factoryContext.registerRule<parser.component>(parser.ASTKinds.component, (node: parser.component, context) => {
+        factoryContext.registerRule<ast.FunctionDefinition>(ast.SyntaxKind.FunctionDefinition, (node, context) => {
             const diagnostics = [];
 
-            for (const { port } of node.ports) {
+            if (context.typeChecker.symbolOfNode(node.returnType) === undefined) {
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.returnType.typeName, "type", context));
+            }
+
+            for (const parameter of node.parameters) {
+                if (context.typeChecker.symbolOfNode(parameter.type) === undefined) {
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(parameter.type.typeName, "type", context));
+                }
+            }
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<ast.CallExpression>(ast.SyntaxKind.CallExpression, (node, context) => {
+            const diagnostics = [];
+
+            if (context.typeChecker.symbolOfNode(node.expression) === undefined) {
+                diagnostics.push(...checkExpressionNames(node.expression, "function", context));
+            }
+
+            for (const argument of node.arguments.arguments) {
+                diagnostics.push(...checkExpressionNames(argument, "variable", context));
+            }
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<ast.VariableDefinition>(ast.SyntaxKind.VariableDefinition, (node, context) => {
+            const diagnostics = [];
+
+            if (context.typeChecker.symbolOfNode(node.type) === undefined) {
+                diagnostics.push(createUnknownCompoundNameDiagnostic(node.type.typeName, "type", context));
+            }
+
+            if (node.initializer) {
+                diagnostics.push(...checkExpressionNames(node.initializer, "variable", context));
+            }
+
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<ast.ExpressionStatement>(ast.SyntaxKind.ExpressionStatement, (node, context) => {
+            return checkExpressionNames(node.expression, "name", context);
+        });
+
+        factoryContext.registerRule<ast.ComponentDefinition>(ast.SyntaxKind.ComponentDefinition, (node, context) => {
+            const diagnostics = [];
+
+            for (const port of node.ports) {
                 if (context.typeChecker.symbolOfNode(port.type) === undefined) {
-                    diagnostics.push(createUnknownCompoundNameDiagnostic(port.type.type_name, "interface", context));
+                    diagnostics.push(createUnknownCompoundNameDiagnostic(port.type.typeName, "interface", context));
                 }
             }
 
             return diagnostics;
         });
 
-        factoryContext.registerRule<parser.guard>(parser.ASTKinds.guard, (node: parser.guard, context) => {
+        factoryContext.registerRule<ast.GuardStatement>(ast.SyntaxKind.GuardStatement, (node, context) => {
             if (!node.condition || typeof node.condition === "string" /* otherwise */) {
                 return [];
             }
-            return node.condition ? checkExpressionNames(node.condition, "variable", context) : [];
+            return node.condition && !isErrorNode(node.condition)
+                ? checkExpressionNames(node.condition, "variable", context)
+                : [];
         });
 
-        factoryContext.registerRule<parser.assignment>(
-            parser.ASTKinds.assignment,
-            (node: parser.assignment, context) => {
-                return [
-                    ...checkExpressionNames(node.left, "variable", context),
-                    ...checkExpressionNames(node.right, "variable", context),
-                ];
-            }
-        );
+        factoryContext.registerRule<ast.AssignmentStatement>(ast.SyntaxKind.AssignmentStatement, (node, context) => {
+            return [
+                ...checkExpressionNames(node.left, "variable", context),
+                ...checkExpressionNames(node.right, "variable", context),
+            ];
+        });
 
-        factoryContext.registerRule<parser.if_statement>(
-            parser.ASTKinds.if_statement,
-            (node: parser.if_statement, context) => {
-                // Check main condition
-                const diagnostics = checkExpressionNames(node.expression, "if condition", context);
+        factoryContext.registerRule<ast.IfStatement>(ast.SyntaxKind.IfStatement, (node, context) => {
+            // Check condition
+            const diagnostics = checkExpressionNames(node.condition, "if condition", context);
+            // Body and else handled in the other rules
+            return diagnostics;
+        });
 
-                // Check conditions of all following else clauses
-                for (const elseStatement of node.else_statements) {
-                    if (elseStatement.elseif) {
-                        diagnostics.push(
-                            ...checkExpressionNames(elseStatement.elseif.expression, "if condition", context)
-                        );
-                    }
-                }
+        factoryContext.registerRule<ast.ReturnStatement>(ast.SyntaxKind.ReturnStatement, (node, context) => {
+            return node.returnValue ? checkExpressionNames(node.returnValue, "variable", context) : [];
+        });
 
-                return diagnostics;
-            }
-        );
+        factoryContext.registerRule<ast.Reply>(ast.SyntaxKind.Reply, (node, context) => {
+            return node.value ? checkExpressionNames(node.value, "variable", context) : [];
+        });
 
-        factoryContext.registerRule<parser.return_statement>(
-            parser.ASTKinds.return_statement,
-            (node: parser.return_statement, context) => {
-                return node.expression ? checkExpressionNames(node.expression, "variable", context) : [];
-            }
-        );
-
-        factoryContext.registerRule<parser.invariant_statement>(
-            parser.ASTKinds.invariant_statement,
-            (node: parser.invariant_statement, context) => {
-                return checkExpressionNames(node.expression, "name", context);
-            }
-        );
+        factoryContext.registerRule<ast.InvariantStatement>(ast.SyntaxKind.InvariantStatement, (node, context) => {
+            return checkExpressionNames(node.expression, "name", context);
+        });
 
         const createUnknownCompoundNameDiagnostic = (
-            compoundName: parser.compound_name | parser.binding_expression,
+            compoundName: ast.CompoundName | ast.BindingExpression,
             typeForMessage: string,
             context: VisitorContext
         ): Diagnostic => {
@@ -253,23 +220,22 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                     config.severity,
                     `Undefined ${typeForMessage} ${compoundName.text}`,
                     context.source,
-                    nodeToSourceRange(compoundName)
+                    compoundName.position
                 );
             }
 
-            if (compoundName.kind === parser.ASTKinds.asterisk_binding) {
+            if (isAsterisk(compoundName)) {
                 throw "Was not expecting this to happen";
             }
 
-            const memberName =
-                compoundName.name.kind === parser.ASTKinds.asterisk_binding ? "." : compoundName.name.text;
+            const memberName = compoundName.name.text;
 
-            if (compoundName.compound === null) {
+            if (!compoundName.compound) {
                 return unknownVariable(
                     config.severity,
                     `Undefined ${typeForMessage} .${memberName}`,
                     context.source,
-                    nodeToSourceRange(compoundName)
+                    compoundName.position
                 );
             }
 
@@ -280,7 +246,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                     config.severity,
                     `${ownerType.name} does not contain a member ${memberName}`,
                     context.source,
-                    nodeToSourceRange(compoundName.name)
+                    compoundName.name.position
                 );
             } else {
                 return createUnknownCompoundNameDiagnostic(compoundName.compound, "variable", context);
@@ -288,7 +254,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
         };
 
         const checkExpressionNames = (
-            expression: parser.expression,
+            expression: ast.Expression,
             nameForMessage: string,
             context: VisitorContext
         ): Diagnostic[] => {
@@ -301,42 +267,44 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return diagnostics;
         };
 
-        const findUsedNames = (expr: parser.expression): parser.compound_name[] => {
+        const findUsedNames = (expr: ast.Expression): ast.Name[] => {
             if (
-                expr.kind === parser.ASTKinds.dollars ||
-                expr.kind === parser.ASTKinds.numeric_literal ||
-                expr.kind === parser.ASTKinds.ILLEGAL
+                expr.kind === ast.SyntaxKind.DollarLiteral ||
+                expr.kind === ast.SyntaxKind.NumericLiteral ||
+                isIllegalKeyword(expr)
             ) {
                 return [];
             }
 
-            if (expr.kind === parser.ASTKinds.parenthesized_expression) {
+            if (expr.kind === ast.SyntaxKind.ParenthesizedExpression) {
                 return findUsedNames(expr.expression);
-            } else if (expr.kind === parser.ASTKinds.unary_operator_expression) {
+            } else if (expr.kind === ast.SyntaxKind.UnaryOperatorExpression) {
                 return findUsedNames(expr.expression);
-            } else if (expr.kind === parser.ASTKinds.call_expression) {
+            } else if (expr.kind === ast.SyntaxKind.CallExpression) {
                 // Ignore, already covered by its own call_expression rule (in this file)
                 return [];
             }
 
-            const result: parser.compound_name[] = [];
-            if (expr.kind === parser.ASTKinds.identifier || expr.kind === parser.ASTKinds.compound_name_$0) {
+            const result: ast.Name[] = [];
+            if (isIdentifier(expr)) {
                 result.push(expr);
-            } else if (expr.kind === parser.ASTKinds.binary_expression) {
+            } else if (expr.kind === ast.SyntaxKind.BinaryExpression) {
                 result.push(...findUsedNames(expr.left));
                 result.push(...findUsedNames(expr.right));
-            } else {
+            } else if (expr.kind === ast.SyntaxKind.CompoundName) {
                 result.push(expr);
             }
             return result;
         };
 
-        const stringifyTrigger = (trigger: parser.on_trigger): string => {
+        const stringifyTrigger = (trigger: ast.OnTrigger): string => {
+            if (isKeyword(trigger)) {
+                return trigger.text;
+            }
+
             let params = "";
-            if (trigger.parameters?.parameters) {
-                params = headTailToList(trigger.parameters.parameters)
-                    .map(p => p.name.text)
-                    .join(", ");
+            if (trigger.parameterList) {
+                params = trigger.parameterList.parameters.map(p => p.name.text).join(", ");
             }
             return `${nameToString(trigger.name)}(${params})`;
         };

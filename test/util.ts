@@ -12,14 +12,14 @@ interface LintTest {
     debug?: boolean;
 }
 
-export function testdznlint(test: LintTest) {
+export async function testdznlint(test: LintTest) {
     if (test.pass) {
         let passResult: Diagnostic[] = [];
 
         if (typeof test.pass === "string") {
-            passResult = lintString(test.pass, test.config);
+            passResult = await lintString(test.pass, test.config);
         } else {
-            const program = new Program();
+            const program = await Program.Init();
             const sourceFiles = Object.entries(test.pass).map(e => program.parseFile(e[0], e[1])!);
 
             const entryFile = sourceFiles.find(f => f.source.fileName === "main.dzn");
@@ -40,7 +40,7 @@ export function testdznlint(test: LintTest) {
     }
 
     if (test.fail) {
-        const failResult = lintString(test.fail, test.config);
+        const failResult = await lintString(test.fail, test.config);
 
         if (test.debug) {
             for (const d of failResult) {

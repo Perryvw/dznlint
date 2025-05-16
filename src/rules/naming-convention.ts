@@ -1,17 +1,8 @@
+import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
-import {
-    ASTKinds,
-    component,
-    enum_definition,
-    identifier,
-    interface_definition,
-    member_identifier,
-    variable_definition,
-} from "../grammar/parser";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { headTailToList, nodeToSourceRange } from "../util";
 
 export const nameDoesNotMatchConvention = createDiagnosticsFactory();
 
@@ -20,33 +11,28 @@ export const naming_convention: RuleFactory = factoryContext => {
 
     if (config.isEnabled) {
         const convention = config.config;
-        const fail = (
-            identifier: identifier | member_identifier,
-            type: string,
-            convention: string,
-            source: InputSource
-        ) =>
+        const fail = (identifier: ast.Identifier, type: string, convention: string, source: InputSource) =>
             nameDoesNotMatchConvention(
                 config.severity,
                 `${type} ${identifier.text} does not match naming convention: ${convention}.`,
                 source,
-                nodeToSourceRange(identifier)
+                identifier.position
             );
 
-        factoryContext.registerRule<component>(ASTKinds.component, (node, context) => {
+        factoryContext.registerRule<ast.ComponentDefinition>(ast.SyntaxKind.ComponentDefinition, (node, context) => {
             if (!identifierMatches(node.name, convention.component)) {
                 return [fail(node.name, "Component", convention.component, context.source)];
             }
             return [];
         });
 
-        factoryContext.registerRule<enum_definition>(ASTKinds.enum_definition, (node, context) => {
+        factoryContext.registerRule<ast.EnumDefinition>(ast.SyntaxKind.EnumDefinition, (node, context) => {
             const diagnostics = [];
             if (!identifierMatches(node.name, convention.enum)) {
                 diagnostics.push(fail(node.name, "Enum", convention.enum, context.source));
             }
 
-            for (const name of headTailToList(node.fields)) {
+            for (const name of node.members) {
                 if (name && !identifierMatches(name, convention.enum_member)) {
                     diagnostics.push(fail(name, "Enum member", convention.enum_member, context.source));
                 }
@@ -55,14 +41,14 @@ export const naming_convention: RuleFactory = factoryContext => {
             return diagnostics;
         });
 
-        factoryContext.registerRule<interface_definition>(ASTKinds.interface_definition, (node, context) => {
+        factoryContext.registerRule<ast.InterfaceDefinition>(ast.SyntaxKind.InterfaceDefinition, (node, context) => {
             if (!identifierMatches(node.name, convention.interface)) {
                 return [fail(node.name, "Interface", convention.interface, context.source)];
             }
             return [];
         });
 
-        factoryContext.registerRule<variable_definition>(ASTKinds.variable_definition, (node, context) => {
+        factoryContext.registerRule<ast.VariableDefinition>(ast.SyntaxKind.VariableDefinition, (node, context) => {
             if (!identifierMatches(node.name, convention.local)) {
                 return [fail(node.name, "Variable", convention.local, context.source)];
             }
@@ -73,6 +59,6 @@ export const naming_convention: RuleFactory = factoryContext => {
 
 export default naming_convention;
 
-function identifierMatches(identifier: identifier | member_identifier, pattern: string): boolean {
+function identifierMatches(identifier: ast.Identifier, pattern: string): boolean {
     return new RegExp(pattern).test(identifier.text);
 }

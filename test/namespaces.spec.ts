@@ -1,8 +1,8 @@
 import { unknownVariable } from "../src/rules/no-unknown-variables";
 import { testdznlint } from "./util";
 
-test("namespace merging", () => {
-    testdznlint({
+test("namespace merging", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace NS {
@@ -20,8 +20,8 @@ test("namespace merging", () => {
     });
 });
 
-test("nested namespace merging merging", () => {
-    testdznlint({
+test("nested namespace merging merging", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace NS {
@@ -43,8 +43,8 @@ test("nested namespace merging merging", () => {
     });
 });
 
-test("access to variables in same namespace", () => {
-    testdznlint({
+test("access to variables in same namespace", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace NS {
@@ -59,8 +59,8 @@ test("access to variables in same namespace", () => {
     });
 });
 
-test("access to variables in nested namespace in same namespace", () => {
-    testdznlint({
+test("access to variables in nested namespace in same namespace", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace NS.A {
@@ -75,8 +75,8 @@ test("access to variables in nested namespace in same namespace", () => {
     });
 });
 
-test("lookup namespaced variable name in own namespace", () => {
-    testdznlint({
+test("lookup namespaced variable name in own namespace", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace NS {
@@ -89,8 +89,8 @@ test("lookup namespaced variable name in own namespace", () => {
     });
 });
 
-test("nested merged namespace sibling lookup", () => {
-    testdznlint({
+test("nested merged namespace sibling lookup", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: `
         namespace NS.A {
@@ -105,8 +105,8 @@ test("nested merged namespace sibling lookup", () => {
     });
 });
 
-test("merge multiple namespace imports", () => {
-    testdznlint({
+test("merge multiple namespace imports", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: {
             ["import1.dzn"]: `
@@ -129,8 +129,8 @@ test("merge multiple namespace imports", () => {
     });
 });
 
-test("chain namespace imports", () => {
-    testdznlint({
+test("chain namespace imports", async () => {
+    await testdznlint({
         diagnostic: unknownVariable.code,
         pass: {
             ["import1.dzn"]: `

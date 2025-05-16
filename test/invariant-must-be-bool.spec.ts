@@ -1,8 +1,8 @@
 import { invariantNotABool } from "../src/rules/invariant-must-be-bool";
 import { testdznlint } from "./util";
 
-test("invariant must evaluate to a boolean type", () => {
-    testdznlint({
+test("invariant must evaluate to a boolean type", async () => {
+    await testdznlint({
         diagnostic: invariantNotABool.code,
         pass: `
         component C {
@@ -25,8 +25,8 @@ test("invariant must evaluate to a boolean type", () => {
     });
 });
 
-test("invariant with negation", () => {
-    testdznlint({
+test("invariant with negation", async () => {
+    await testdznlint({
         diagnostic: invariantNotABool.code,
         pass: `
         component C {
@@ -40,8 +40,8 @@ test("invariant with negation", () => {
     });
 });
 
-test.each(["true", "false"])("literal bool in predicate (%p)", v => {
-    testdznlint({
+test.each(["true", "false"])("literal bool in predicate (%p)", async v => {
+    await testdznlint({
         diagnostic: invariantNotABool.code,
         pass: `
         component C {
@@ -52,8 +52,8 @@ test.each(["true", "false"])("literal bool in predicate (%p)", v => {
     });
 });
 
-test("implies statement", () => {
-    testdznlint({
+test("implies statement", async () => {
+    await testdznlint({
         diagnostic: invariantNotABool.code,
         pass: `
         component C {
@@ -67,8 +67,8 @@ test("implies statement", () => {
     });
 });
 
-test("invariant calling a predicate function", () => {
-    testdznlint({
+test("invariant calling a predicate function", async () => {
+    await testdznlint({
         diagnostic: invariantNotABool.code,
         pass: `
         component C {
@@ -90,8 +90,8 @@ test("invariant calling a predicate function", () => {
     });
 });
 
-test("invariant forgetting to call a predicate function", () => {
-    testdznlint({
+test("invariant forgetting to call a predicate function", async () => {
+    await testdznlint({
         diagnostic: invariantNotABool.code,
         fail: `
         component C {
