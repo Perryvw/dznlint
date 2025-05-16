@@ -26,6 +26,7 @@ import no_bool_out_parameters from "./rules/no-bool-out-parameters";
 import no_duplicate_parameters from "./rules/no-duplicate-parameters";
 import no_duplicate_port_binding from "./rules/no-duplicate-port-binding";
 import no_empty_defer_capture from "./rules/no-empty-defer-capture";
+import no_interface_event_parameters from "./rules/no-interface-event-parameters";
 import no_mismatching_binding_types from "./rules/no-mismatching-binding-types";
 import no_unconnected_ports from "./rules/no-unconnected-ports";
 import no_unknown_imports from "./rules/no-unknown-imports";
@@ -54,6 +55,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         no_duplicate_parameters,
         no_duplicate_port_binding,
         no_empty_defer_capture,
+        no_interface_event_parameters,
         no_mismatching_binding_types,
         no_recursive_system,
         no_shadowing,

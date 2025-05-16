@@ -41,7 +41,7 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
                     );
                 }
             } else if (
-                functionType.kind === TypeKind.Function &&
+                functionType.kind === TypeKind.Event &&
                 functionType.declaration &&
                 isEvent(functionType.declaration)
             ) {

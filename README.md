@@ -173,6 +173,14 @@ Defer statements should capture one or more state variables to prevent unexpecte
 
 ---
 
+## no_interface_event_parameters
+
+In interface behaviors, events should not mention any parameters, this is invalid Dezyne code.
+
+**Possible values:** "hint" | "warning" | **"error"**
+
+---
+
 ## no_recursive_system
 
 Systems cannot contain instances of themself.

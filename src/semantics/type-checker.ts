@@ -17,6 +17,7 @@ import {
     assertNever,
     isKeyword,
     isChildOf,
+    isFunctionDefinition,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -110,10 +111,11 @@ export class TypeChecker {
             // Okay so this is definitely not true, but then again, we don't have to worry about everything else for now
             return BOOL_TYPE;
         } else if (isCallExpression(node)) {
-            const functionSymbol = this.symbolOfNode(node.expression);
-            if (!functionSymbol) return ERROR_TYPE;
-            const functionDefinition = functionSymbol.declaration as ast.FunctionDefinition;
-            return this.typeOfNode(functionDefinition.returnType);
+            const calledSymbol = this.symbolOfNode(node.expression);
+            if (!calledSymbol) return ERROR_TYPE;
+            if (!isFunctionDefinition(calledSymbol.declaration)) return ERROR_TYPE; // Only know how to get the call result of functions, not events
+
+            return this.typeOfNode(calledSymbol.declaration.returnType);
         }
         const symbol = this.symbolOfNode(node, typeReference);
         if (!symbol) return ERROR_TYPE;
@@ -315,7 +317,7 @@ export class TypeChecker {
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === ast.SyntaxKind.Event) {
             const definition = declaration as ast.Event;
-            return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
+            return { kind: TypeKind.Event, declaration: symbol.declaration, name: definition.name.text };
         } else if (symbol.declaration.kind === ast.SyntaxKind.ComponentDefinition) {
             const definition = declaration as ast.ComponentDefinition;
             return { kind: TypeKind.Component, name: definition.name.text, declaration: definition };
