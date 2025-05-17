@@ -22,7 +22,7 @@ export const on_parameters_must_match: RuleFactory = factoryContext => {
                 const triggerType = context.typeChecker.typeOfNode(trigger.name);
 
                 if (
-                    triggerType.kind === TypeKind.Function &&
+                    triggerType.kind === TypeKind.Event &&
                     triggerType.declaration &&
                     isEvent(triggerType.declaration)
                 ) {
