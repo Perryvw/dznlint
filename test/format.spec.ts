@@ -338,6 +338,18 @@ test("long lists of events in component", async () => {
     });
 });
 
+test("function call in component", async () => {
+    await testFormat({
+        input: `
+            component C {
+                behavior {
+                    on port.bla(): DoCall();
+                }
+            }
+        `,
+    });
+});
+
 test("return parenthesized expression", async () => {
     await testFormat({
         input: `

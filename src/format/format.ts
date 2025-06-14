@@ -1011,6 +1011,7 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
                 formatAssign(cursor.pos(), formatter);
                 break;
             case "call_statement":
+                formatter.requirePrecedingNewLine();
                 formatCallStatement(cursor.pos(), formatter);
                 break;
             case "blocking":
@@ -1046,7 +1047,6 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
             case "reply":
                 formatter.requirePrecedingNewLine();
                 formatReply(cursor.pos(), formatter);
-                break;
                 break;
             case "invariant":
                 formatInvariant(cursor.pos(), formatter);
@@ -2010,7 +2010,6 @@ function formatArguments(cursor: Grammar.CursorPosition<Grammar.arguments_Node>,
 
 function formatCallStatement(cursor: Grammar.CursorPosition<Grammar.call_statement_Node>, formatter: Formatter) {
     cursor.gotoFirstChild();
-    formatter.requirePrecedingNewLine();
     do {
         switch (cursor.nodeType) {
             case "call":

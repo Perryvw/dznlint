@@ -596,6 +596,17 @@ exports[`formatting configuration target width (120) 1`] = `
 "
 `;
 
+exports[`function call in component 1`] = `
+"component C
+{
+    behavior
+    {
+        on port.bla(): DoCall();
+    }
+}
+"
+`;
+
 exports[`guard missing ; 1`] = `
 "interface I
 {
