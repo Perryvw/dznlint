@@ -547,6 +547,43 @@ export class TypeChecker {
         return result;
     });
 
+    public findAllVariablesKnownInScope = memoize(this, (scope: ScopedBlock): Map<string, ast.AnyAstNode> => {
+        const result = new Map<string, ast.AnyAstNode>();
+
+        const collectVariablesInScope = (scope: ScopedBlock, namespaceStack: string[]) => {
+            const declaredVariables = this.findVariablesDeclaredInScope(scope);
+            for (const [name, declaration] of declaredVariables) {
+                result.set(name, declaration);
+            }
+
+            if (namespaceStack.length > 0) {
+                const nestedNamespace = declaredVariables.get(namespaceStack[0]);
+                if (nestedNamespace && isNamespace(nestedNamespace)) {
+                    collectVariablesInScope(nestedNamespace, namespaceStack.slice(1));
+                }
+            }
+        };
+
+        let currentScope: ScopedBlock | undefined = scope;
+        const namespaceStack: string[] = [];
+        while (currentScope) {
+            // Collect variables from current scope and nested known namespaces
+            collectVariablesInScope(currentScope, namespaceStack);
+
+            // If current scope is a namespace, add it to the known scope stack (at the beginning)
+            if (isNamespace(currentScope)) {
+                if (!isIdentifier(currentScope.name)) {
+                    throw `This namespace node has not corretly been desugared! Namespaces with compound names should be desugared into multiple nested namespaces with identifier names`;
+                }
+
+                namespaceStack.unshift(currentScope.name.text);
+            }
+            currentScope = currentScope.parent as ScopedBlock | undefined;
+        }
+
+        return result;
+    });
+
     private mergeNamespaces(ns1: ast.Namespace, ns2: ast.Namespace): ast.Namespace {
         return {
             kind: ast.SyntaxKind.Namespace,

@@ -132,6 +132,78 @@ test("resolving port in system", async () => {
     expect(ast.SyntaxKind[symbol!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
 });
 
+test("namespace merging", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const { leafAtPosition } = await findLeafAtCursor(
+        program,
+        `
+        namespace ns {
+            enum MyEnum { A, B };
+        }
+        namespace ns2 {
+            enum MyOtherEnum { C, D };
+        }
+        namespace ns {
+            component C {
+                behavior {
+                    <cursor>
+                }
+            }
+        }`
+    );
+
+    expect(leafAtPosition).toBeDefined();
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Behavior]);
+
+    const symbolsInScope = typeChecker.findAllVariablesKnownInScope(leafAtPosition as ast.Behavior);
+    // enum in the same namespace should be known
+    expect(symbolsInScope.get("MyEnum")).toBeDefined();
+    // this enum is in a different namespace so should not be known
+    expect(symbolsInScope.get("MyOtherEnum")).toBeUndefined();
+});
+
+test("nested namespace merging", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const { leafAtPosition } = await findLeafAtCursor(
+        program,
+        `
+        namespace ns.foo {
+            enum MyEnum { A, B };
+        }
+        namespace ns {
+            enum OtherKnownEnum { C, D };
+
+            namespace bla {
+                enum OtherUnknownEnum
+            }
+        }
+        namespace ns {
+            namespace foo {
+                component C {
+                    behavior {
+                        <cursor>
+                    }
+                }
+            }
+        }`
+    );
+
+    expect(leafAtPosition).toBeDefined();
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Behavior]);
+
+    const symbolsInScope = typeChecker.findAllVariablesKnownInScope(leafAtPosition as ast.Behavior);
+    // MyEnum is in ns.foo like C, so should be known
+    expect(symbolsInScope.get("MyEnum")).toBeDefined();
+    // OtherKnownEnum is in namespace ns, so should also be known in ns.foo
+    expect(symbolsInScope.get("OtherKnownEnum")).toBeDefined();
+    // OtherUnknownEnum is in ns.bla, so should not be known in ns.foo
+    expect(symbolsInScope.get("OtherUnknownEnum")).toBeUndefined();
+});
+
 describe("incomplete tree", () => {
     test("compound name in on", async () => {
         const program = await Program.Init();
