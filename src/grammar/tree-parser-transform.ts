@@ -625,6 +625,28 @@ type ExpressionsTypes =
     | parser.unary_expression_Node;
 
 function transformExpression(node: ExpressionsTypes): ast.Expression {
+    if (node.parent?.hasError) {
+        for (const child of node.parent.children) {
+            if (child.isError) {
+                if (child.endIndex === node.startIndex) {
+                    // Error is directly before this expression, combine and return an error node
+                    return {
+                        kind: ast.SyntaxKind.ERROR,
+                        position: combineSourceRanges(nodePosition(child), nodePosition(node)),
+                        text: child.text + node.text,
+                    };
+                } else if (child.startIndex === node.endIndex) {
+                    // Error is directly after this expression, combine and return an error node
+                    return {
+                        kind: ast.SyntaxKind.ERROR,
+                        position: combineSourceRanges(nodePosition(node), nodePosition(child)),
+                        text: node.text + child.text,
+                    };
+                }
+            }
+        }
+    }
+
     switch (node.type) {
         case "binary_expression":
             return transformBinaryExpression(node);

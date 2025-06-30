@@ -299,7 +299,7 @@ export interface VariableDefinition extends AstNode<SyntaxKind.VariableDefinitio
 
 // Expressions
 
-export type Expression = UnaryExpression | BinaryExpression;
+export type Expression = UnaryExpression | BinaryExpression | Error;
 export type UnaryExpression =
     | ParenthesizedExpression
     | CallExpression

@@ -1,7 +1,7 @@
 import * as ast from "../src/grammar/ast";
 import { Program } from "../src";
 import { TypeChecker } from "../src/semantics/type-checker";
-import { findLeafAtPosition, findNameAtLocationInErrorNode, findNameAtPosition } from "../src/util";
+import { findLeafAtPosition, findNameAtLocationInErrorNode, findNameAtPosition, isCompoundName } from "../src/util";
 
 test("find declaration of port", async () => {
     const program = await Program.Init();
@@ -162,6 +162,89 @@ test("namespace merging", async () => {
     expect(symbolsInScope.get("MyEnum")).toBeDefined();
     // this enum is in a different namespace so should not be known
     expect(symbolsInScope.get("MyOtherEnum")).toBeUndefined();
+});
+
+test("enum value in call", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const { leafAtPosition } = await findLeafAtCursor(
+        program,
+        `
+        enum MyEnum { Abc, Def };
+
+        component C {
+            behavior {
+                void foo() {
+                    bar(MyEnum.A<cursor>);
+                }
+            }
+        }`
+    );
+
+    expect(leafAtPosition).toBeDefined();
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Identifier]);
+
+    const completingCompound =
+        leafAtPosition?.parent &&
+        isCompoundName(leafAtPosition.parent) &&
+        leafAtPosition === leafAtPosition.parent.name;
+    expect(completingCompound).toBeTruthy();
+
+    const ownerType = typeChecker.typeOfNode((leafAtPosition?.parent as ast.CompoundName).compound!);
+    const members = typeChecker.getMembersOfType(ownerType);
+
+    expect(members.size).toBe(2);
+    expect(members.has("Abc")).toBeTruthy();
+    expect(members.has("Def")).toBeTruthy();
+});
+
+test("enum from transitive dependency file", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    program.parseFile(
+        "types/myenum.dzn",
+        `
+        namespace ns {
+            enum MyEnum { Abc, Def };
+        }    
+    `
+    );
+
+    program.parseFile("other/myotherfile.dzn", "import types/myenum.dzn;");
+
+    const { leafAtPosition } = await findLeafAtCursor(
+        program,
+        `
+        import other/myotherfile.dzn;
+
+        namespace ns {
+            component C {
+                behavior {
+                    void foo() {
+                        bar(MyEnum.A<cursor>);
+                    }
+                }
+            }
+        }`
+    );
+
+    expect(leafAtPosition).toBeDefined();
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Identifier]);
+
+    const completingCompound =
+        leafAtPosition?.parent &&
+        isCompoundName(leafAtPosition.parent) &&
+        leafAtPosition === leafAtPosition.parent.name;
+    expect(completingCompound).toBeTruthy();
+
+    const ownerType = typeChecker.typeOfNode((leafAtPosition?.parent as ast.CompoundName).compound!);
+    const members = typeChecker.getMembersOfType(ownerType);
+
+    expect(members.size).toBe(2);
+    expect(members.has("Abc")).toBeTruthy();
+    expect(members.has("Def")).toBeTruthy();
 });
 
 test("nested namespace merging", async () => {
@@ -370,6 +453,105 @@ describe("incomplete tree", () => {
         // The name is in the compound scope of bla()
         expect(scope.kind).toBe(ast.SyntaxKind.Compound);
         expect(scope.parent?.kind).toBe(ast.SyntaxKind.FunctionDefinition);
+    });
+
+    test("partial name in call", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            enum MyEnum { Abc, Def };
+
+            component C {
+                behavior {
+                    void foo() {
+                        bar(MyEnum.<cursor>);
+                    }
+                }
+            }`
+        );
+
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+
+        // The object owning the enum MyEnum
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.EnumDefinition]);
+        expect((owningObject?.declaration as ast.EnumDefinition).name.text).toBe("MyEnum");
+    });
+
+    test("partial name in variable", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            enum MyEnum { Abc, Def };
+
+            component C {
+                behavior {
+                    void foo() {
+                        MyEnum e = MyEnum.<cursor>;
+                    }
+                }
+            }`
+        );
+
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+
+        // The object owning the enum MyEnum
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.EnumDefinition]);
+        expect((owningObject?.declaration as ast.EnumDefinition).name.text).toBe("MyEnum");
+    });
+
+    test("partial name in call without ;", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            enum MyEnum { Abc, Def };
+
+            component C {
+                behavior {
+                    void foo() {
+                        bar(MyEnum.<cursor>)
+                    }
+                }
+            }`
+        );
+
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+
+        // The object owning the enum MyEnum
+        expect(owningObject?.declaration.kind).toBe(ast.SyntaxKind.EnumDefinition);
+        expect((owningObject?.declaration as ast.EnumDefinition).name.text).toBe("MyEnum");
     });
 
     test("partial name in function with prefix", async () => {
