@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic, DiagnosticSeverity } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isCompound, isIdentifier, isKeyword, isOnStatement } from "../util";
+import { isCompound, isErrorNode, isIdentifier, isKeyword, isOnStatement } from "../util";
 
 export const portMissingBlocking = createDiagnosticsFactory();
 export const portRedundantBlocking = createDiagnosticsFactory();
@@ -55,6 +55,7 @@ export const port_missing_redundant_blocking: RuleFactory = factoryContext => {
                         for (const trigger of subNode.triggers) {
                             if (
                                 !isKeyword(trigger) &&
+                                !isErrorNode(trigger) &&
                                 !isIdentifier(trigger.name) &&
                                 trigger.name.compound &&
                                 isIdentifier(trigger.name.compound)

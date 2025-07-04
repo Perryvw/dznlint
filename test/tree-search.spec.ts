@@ -713,6 +713,71 @@ describe("incomplete tree", () => {
 
         expect((leafAtPosition as ast.Reply).port?.text).toBe("i");
     });
+
+    test("incomplete binding expression in system", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component S {
+                system {
+                    C1 c1;
+                    C2 c2;
+
+                    c1.port <=> c2.<cursor>;
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+
+        // The object owning the name abc is the port i
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Instance]);
+        expect((owningObject?.declaration as ast.Instance).name.text).toBe("c2");
+    });
+
+    test("incomplete on trigger", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            interface I {
+                in void abc();
+            }
+            component S {
+                provides I port;
+                behavior {
+                    on port.<cursor>:
+                    {
+                    }
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+
+        // The object owning the name abc is the port i
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
+        expect((owningObject?.declaration as ast.Port).name.text).toBe("port");
+    });
 });
 
 async function findNameAtCursor(program: Program, text: string): Promise<ast.AnyAstNode | undefined> {

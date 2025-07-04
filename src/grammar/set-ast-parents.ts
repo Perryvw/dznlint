@@ -1,6 +1,6 @@
 import * as ast from "./ast";
 import { VisitorCallback } from "../visitor";
-import { isKeyword } from "../util";
+import { isErrorNode, isKeyword } from "../util";
 
 export const setParentVisitor: VisitorCallback = node => {
     setParentVisitors[node.kind]?.(node);
@@ -160,7 +160,7 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
         }
     },
     [ast.SyntaxKind.OnTrigger]: (node: ast.OnTrigger) => {
-        if (isKeyword(node)) return;
+        if (isKeyword(node) || isErrorNode(node)) return;
         setParent(node.name, node);
 
         if (node.parameterList?.parameters) {

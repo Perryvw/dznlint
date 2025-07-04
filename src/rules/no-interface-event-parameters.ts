@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isCallExpression, isCompound, isExpressionStatement, isKeyword, isOnStatement } from "../util";
+import { isCallExpression, isCompound, isErrorNode, isExpressionStatement, isKeyword, isOnStatement } from "../util";
 import { TypeKind } from "../semantics";
 
 export const invalidInterfaceOnTrigger = createDiagnosticsFactory();
@@ -22,7 +22,7 @@ export const no_interface_event_parameters: RuleFactory = factoryContext => {
                     if (isOnStatement(subNode)) {
                         // Check on triggers
                         for (const trigger of subNode.triggers) {
-                            if (!isKeyword(trigger) && trigger.parameterList) {
+                            if (!isKeyword(trigger) && !isErrorNode(trigger) && trigger.parameterList) {
                                 diagnostics.push(
                                     invalidInterfaceOnTrigger(
                                         config.severity,

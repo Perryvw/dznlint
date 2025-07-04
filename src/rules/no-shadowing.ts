@@ -8,6 +8,7 @@ import { InputSource } from "../semantics/program";
 import {
     findFirstParent,
     isCompoundName,
+    isErrorNode,
     isEvent,
     isExtern,
     isFunctionDefinition,
@@ -53,7 +54,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             for (const trigger of node.triggers) {
-                if (!isKeyword(trigger) && trigger.parameterList) {
+                if (!isKeyword(trigger) && !isErrorNode(trigger) && trigger.parameterList) {
                     for (const param of trigger.parameterList.parameters) {
                         const previousDefinition = findDeclarationInUpperScope(param.name.text, node, context);
                         if (previousDefinition) {

@@ -4,7 +4,14 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isIdentifier, isIllegalKeyword, isInevitableKeyword, isOnStatement, isOptionalKeyword } from "../util";
+import {
+    isErrorNode,
+    isIdentifier,
+    isIllegalKeyword,
+    isInevitableKeyword,
+    isOnStatement,
+    isOptionalKeyword,
+} from "../util";
 import { VisitResult } from "../visitor";
 
 export const neverLegalEvent = createDiagnosticsFactory();
@@ -26,7 +33,8 @@ export const never_legal_event: RuleFactory = factoryContext => {
                     if (isOnStatement(subNode) && !isIllegalKeyword(subNode.body)) {
                         // Remove all events from list of unseen events
                         for (const trigger of subNode.triggers) {
-                            if (isOptionalKeyword(trigger) || isInevitableKeyword(trigger)) continue;
+                            if (isOptionalKeyword(trigger) || isInevitableKeyword(trigger) || isErrorNode(trigger))
+                                continue;
 
                             if (isIdentifier(trigger.name) && unSeenEvents.has(trigger.name.text)) {
                                 unSeenEvents.delete(trigger.name.text);

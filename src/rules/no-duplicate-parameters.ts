@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, DiagnosticSeverity } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { isKeyword } from "../util";
+import { isErrorNode, isKeyword } from "../util";
 
 export const duplicateParameter = createDiagnosticsFactory();
 
@@ -56,7 +56,7 @@ export const no_duplicate_parameters: RuleFactory = factoryContext => {
             for (const trigger of node.triggers) {
                 const seenNames = new Map<string, ast.Identifier>();
 
-                if (!isKeyword(trigger) && trigger.parameterList) {
+                if (!isKeyword(trigger) && !isErrorNode(trigger) && trigger.parameterList) {
                     for (const param of trigger.parameterList.parameters) {
                         if (seenNames.has(param.name.text)) {
                             diagnostics.push(

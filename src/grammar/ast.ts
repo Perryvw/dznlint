@@ -173,7 +173,7 @@ export interface Binding extends AstNode<SyntaxKind.Binding> {
     right: BindingExpression;
 }
 
-export type BindingExpression = Identifier | BindingCompoundName | Keyword<"*">;
+export type BindingExpression = Identifier | BindingCompoundName | Keyword<"*"> | Error;
 export interface BindingCompoundName extends AstNode<SyntaxKind.BindingCompoundName> {
     compound: BindingExpression;
     name: Keyword<"*"> | Identifier;
@@ -227,7 +227,7 @@ export interface OnTriggerParameters extends AstNode<SyntaxKind.OnTriggerParamet
     parameters: OnParameter[];
 }
 
-export type OnTrigger = Keyword<"optional"> | Keyword<"inevitable"> | OnPortTrigger;
+export type OnTrigger = Keyword<"optional"> | Keyword<"inevitable"> | OnPortTrigger | Error;
 export interface OnPortTrigger extends AstNode<SyntaxKind.OnTrigger> {
     name: Name;
     parameterList?: OnTriggerParameters;
@@ -302,6 +302,7 @@ export interface VariableDefinition extends AstNode<SyntaxKind.VariableDefinitio
 export type Expression = UnaryExpression | BinaryExpression | Error;
 export type UnaryExpression =
     | ParenthesizedExpression
+    | BindingExpression
     | CallExpression
     | DollarsLiteral
     | Name

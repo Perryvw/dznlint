@@ -1,7 +1,7 @@
 import * as ast from "./grammar/ast";
 import { InputSource, Program } from "./semantics/program";
 import { TypeChecker } from "./semantics/type-checker";
-import { isKeyword } from "./util";
+import { isErrorNode, isKeyword } from "./util";
 
 const stopVisiting = () => {};
 
@@ -211,7 +211,7 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         }
     },
     [ast.SyntaxKind.OnTrigger]: (node: ast.OnTrigger, context: VisitorContext, cb: VisitorCallback) => {
-        if (isKeyword(node)) return;
+        if (isKeyword(node) || isErrorNode(node)) return;
 
         context.visit(node.name, cb);
 

@@ -59,7 +59,11 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             const diagnostics: Diagnostic[] = [];
 
             for (const trigger of node.triggers) {
-                if (!isKeyword(trigger) && context.typeChecker.symbolOfNode(trigger.name) === undefined) {
+                if (
+                    !isKeyword(trigger) &&
+                    !isErrorNode(trigger) &&
+                    context.typeChecker.symbolOfNode(trigger.name) === undefined
+                ) {
                     diagnostics.push(createUnknownCompoundNameDiagnostic(trigger.name, "port or event", context));
                 }
             }
@@ -69,7 +73,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             // First get all parameters not escaped with _ that are not shared by all triggers
             const occurrences: Record<string, ast.OnTrigger[]> = {};
             for (const trigger of node.triggers) {
-                if (!isKeyword(trigger) && trigger.parameterList) {
+                if (!isKeyword(trigger) && !isErrorNode(trigger) && trigger.parameterList) {
                     for (const param of trigger.parameterList.parameters) {
                         if (param.name.text.startsWith("_")) continue;
 
@@ -215,7 +219,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             typeForMessage: string,
             context: VisitorContext
         ): Diagnostic => {
-            if (isIdentifier(compoundName)) {
+            if (isIdentifier(compoundName) || isErrorNode(compoundName)) {
                 return unknownVariable(
                     config.severity,
                     `Undefined ${typeForMessage} ${compoundName.text}`,
@@ -298,7 +302,7 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
         };
 
         const stringifyTrigger = (trigger: ast.OnTrigger): string => {
-            if (isKeyword(trigger)) {
+            if (isKeyword(trigger) || isErrorNode(trigger)) {
                 return trigger.text;
             }
 

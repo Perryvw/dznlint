@@ -18,6 +18,7 @@ import {
     isKeyword,
     isChildOf,
     isFunctionDefinition,
+    isErrorNode,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -225,7 +226,7 @@ export class TypeChecker {
             return this.getOrCreateSymbol(node);
         } else if (node.kind === ast.SyntaxKind.OnTrigger) {
             const onTrigger = node as ast.OnTrigger;
-            if (isKeyword(onTrigger)) return SemanticSymbol.ErrorSymbol(); // Optional and inevitable don't have symbols
+            if (isKeyword(onTrigger) || isErrorNode(onTrigger)) return SemanticSymbol.ErrorSymbol(); // Optional and inevitable don't have symbols
             return this.symbolOfNode(onTrigger.name);
         } else {
             throw `I don't know how to find the symbol for node type ${ast.SyntaxKind[node.kind]} ${util.inspect(
@@ -342,7 +343,7 @@ export class TypeChecker {
         } else if (symbol.declaration.kind === ast.SyntaxKind.OnParameter) {
             const definition = symbol.declaration as ast.OnParameter;
             const parentDeclaration = symbol.declaration.parent as ast.OnTrigger;
-            if (isKeyword(parentDeclaration)) return ERROR_TYPE; // optional or inevitable don't have a type
+            if (isKeyword(parentDeclaration) || isErrorNode(parentDeclaration)) return ERROR_TYPE; // optional or inevitable don't have a type
             const parentSymbol = this.symbolOfNode(parentDeclaration);
             if (!parentSymbol) return ERROR_TYPE;
 
@@ -532,7 +533,7 @@ export class TypeChecker {
 
             const on = scope as ast.OnStatement;
             for (const trigger of on.triggers) {
-                if (!isKeyword(trigger) && trigger.parameterList?.parameters) {
+                if (!isKeyword(trigger) && !isErrorNode(trigger) && trigger.parameterList?.parameters) {
                     for (const parameter of trigger.parameterList.parameters) {
                         result.set(parameter.name.text, parameter);
                     }

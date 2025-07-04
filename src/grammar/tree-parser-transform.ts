@@ -62,57 +62,12 @@ function transformComponentBody(node: parser.behavior_Node | parser.system_Node)
     if (node.type === "behavior") {
         return transformBehavior(node);
     } else {
-        function transformBindingExpression(bindingExpression: parser.end_point_Node): ast.BindingExpression {
-            const name = bindingExpression.childForFieldName("name");
-            const asterisk = bindingExpression.childForFieldName("asterisk");
-
-            if (name) {
-                const compoundName = transformName(name);
-
-                function toBindingCompound(
-                    name: ast.Identifier | ast.CompoundName
-                ): ast.Identifier | ast.BindingCompoundName {
-                    if (name.kind === ast.SyntaxKind.Identifier) return name;
-
-                    return {
-                        kind: ast.SyntaxKind.BindingCompoundName,
-                        position: name.position,
-                        compound: toBindingCompound(name.compound!),
-                        name: name.name,
-                    };
-                }
-
-                if (asterisk) {
-                    return {
-                        kind: ast.SyntaxKind.BindingCompoundName,
-                        position: nodePosition(name),
-                        compound: toBindingCompound(compoundName),
-                        name: {
-                            kind: ast.SyntaxKind.Keyword,
-                            position: nodePosition(asterisk),
-                            text: "*",
-                        },
-                    };
-                } else {
-                    return toBindingCompound(compoundName);
-                }
-            } else if (asterisk) {
-                return {
-                    kind: ast.SyntaxKind.Keyword,
-                    position: nodePosition(asterisk),
-                    text: "*",
-                };
-            } else {
-                throw "invalid binding expression";
-            }
-        }
-
         function transformBinding(binding: parser.binding_Node): ast.Binding {
             return {
                 kind: ast.SyntaxKind.Binding,
                 position: nodePosition(binding),
-                left: transformBindingExpression(binding.childForFieldName("left")),
-                right: transformBindingExpression(binding.childForFieldName("right")),
+                left: transformExpression(binding.childForFieldName("left")) as ast.BindingExpression,
+                right: transformExpression(binding.childForFieldName("right")) as ast.BindingExpression,
             };
         }
 
@@ -138,6 +93,49 @@ function transformComponentBody(node: parser.behavior_Node | parser.system_Node)
                 }
             }),
         };
+    }
+}
+
+function transformBindingExpression(bindingExpression: parser.end_point_Node): ast.BindingExpression {
+    const name = bindingExpression.childForFieldName("name");
+    const asterisk = bindingExpression.childForFieldName("asterisk");
+
+    if (name) {
+        const compoundName = transformName(name);
+
+        function toBindingCompound(name: ast.Identifier | ast.CompoundName): ast.Identifier | ast.BindingCompoundName {
+            if (name.kind === ast.SyntaxKind.Identifier) return name;
+
+            return {
+                kind: ast.SyntaxKind.BindingCompoundName,
+                position: name.position,
+                compound: toBindingCompound(name.compound!),
+                name: name.name,
+            };
+        }
+
+        if (asterisk) {
+            return {
+                kind: ast.SyntaxKind.BindingCompoundName,
+                position: nodePosition(name),
+                compound: toBindingCompound(compoundName),
+                name: {
+                    kind: ast.SyntaxKind.Keyword,
+                    position: nodePosition(asterisk),
+                    text: "*",
+                },
+            };
+        } else {
+            return toBindingCompound(compoundName);
+        }
+    } else if (asterisk) {
+        return {
+            kind: ast.SyntaxKind.Keyword,
+            position: nodePosition(asterisk),
+            text: "*",
+        };
+    } else {
+        throw "invalid binding expression";
     }
 }
 
@@ -538,11 +536,30 @@ function transformOnStatement(node: parser.on_Node): ast.OnStatement {
         throw `unexpected kind of on trigger ${trigger}`;
     }
 
+    const triggers = node.childForFieldName("triggers").childrenForFieldName("trigger");
+    const transformedTriggers = triggers.map(transformTrigger);
+
+    // Try to merge errors into triggers
+    if (triggers.length > 0) {
+        const lastTrigger = triggers[triggers.length - 1];
+        for (const child of node.children) {
+            if (child.isError) {
+                if (child.startIndex === lastTrigger.endIndex) {
+                    transformedTriggers[transformedTriggers.length - 1] = {
+                        kind: ast.SyntaxKind.ERROR,
+                        position: combineSourceRanges(nodePosition(node), nodePosition(child)),
+                        text: node.text + child.text,
+                    };
+                }
+            }
+        }
+    }
+
     return {
         kind: ast.SyntaxKind.OnStatement,
         position: nodePosition(node),
         blocking: undefined,
-        triggers: node.childForFieldName("triggers").childrenForFieldName("trigger").map(transformTrigger),
+        triggers: transformedTriggers,
         body: transformCompoundStatement(node.childForFieldName("body")),
     };
 }
@@ -619,6 +636,7 @@ type ExpressionsTypes =
     | parser.call_Node
     | parser.compound_name_Node
     | parser.dollars_Node
+    | parser.end_point_Node
     | parser.group_Node
     | parser.literal_Node
     | parser.otherwise_Node
@@ -656,6 +674,8 @@ function transformExpression(node: ExpressionsTypes): ast.Expression {
             return transformName(node);
         case "dollars":
             return transformDollars(node);
+        case "end_point":
+            return transformBindingExpression(node);
         case "group":
             return transformParenthesizedExpression(node);
         case "literal":
