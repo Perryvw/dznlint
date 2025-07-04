@@ -152,6 +152,10 @@ export function isEvent(node: ast.AnyAstNode): node is ast.Event {
     return node.kind === ast.SyntaxKind.Event;
 }
 
+export function isEventParameter(node: ast.AnyAstNode): node is ast.EventParameter {
+    return node.kind === ast.SyntaxKind.EventParameter;
+}
+
 export function isComponentDefinition(statement: ast.AnyAstNode): statement is ast.ComponentDefinition {
     return statement.kind === ast.SyntaxKind.ComponentDefinition;
 }
