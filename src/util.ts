@@ -156,6 +156,10 @@ export function isComponentDefinition(statement: ast.AnyAstNode): statement is a
     return statement.kind === ast.SyntaxKind.ComponentDefinition;
 }
 
+export function isEnumDefinition(statement: ast.AnyAstNode): statement is ast.EnumDefinition {
+    return statement.kind === ast.SyntaxKind.EnumDefinition;
+}
+
 export function isFunctionDefinition(statement: ast.AnyAstNode): statement is ast.FunctionDefinition {
     return statement.kind === ast.SyntaxKind.FunctionDefinition;
 }
@@ -242,6 +246,10 @@ export function isInjected(port: ast.Port) {
 
 export function isExpressionStatement(node: ast.AnyAstNode): node is ast.ExpressionStatement {
     return node.kind === ast.SyntaxKind.ExpressionStatement;
+}
+
+export function isIntDefinition(node: ast.AnyAstNode): node is ast.IntDefinition {
+    return node.kind === ast.SyntaxKind.IntDefinition;
 }
 
 export function isInterfaceDefinition(node: ast.AnyAstNode): node is ast.InterfaceDefinition {
