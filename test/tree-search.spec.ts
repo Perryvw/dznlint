@@ -57,6 +57,22 @@ test("find declaration of event", async () => {
     expect((symbol?.declaration as ast.Event).name.text).toBe("Foo");
 });
 
+test("event parameter", async () => {
+    const program = await Program.Init();
+
+    const { leafAtPosition } = await findLeafAtCursor(
+        program,
+        `
+        interface I {
+            in void Foo(out Error error<cursor>);
+        }`
+    );
+    expect(leafAtPosition).toBeDefined();
+
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Identifier]);
+    expect(ast.SyntaxKind[leafAtPosition!.parent!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.EventParameter]);
+});
+
 test("find declaration of interface", async () => {
     const program = await Program.Init();
     const typeChecker = new TypeChecker(program);

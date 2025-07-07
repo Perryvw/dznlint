@@ -117,8 +117,12 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.name, cb);
 
         for (const param of node.parameters) {
-            context.visit(param.type, cb);
+            context.visit(param, cb);
         }
+    },
+    [ast.SyntaxKind.EventParameter]: (node: ast.EventParameter, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.type, cb);
+        context.visit(node.name, cb);
     },
     [ast.SyntaxKind.ExpressionStatement]: (
         node: ast.ExpressionStatement,
