@@ -565,21 +565,23 @@ export class TypeChecker {
             }
         };
 
-        let currentScope: ScopedBlock | undefined = scope;
+        let currentScope: ast.AnyAstNode | undefined = scope;
         const namespaceStack: string[] = [];
         while (currentScope) {
-            // Collect variables from current scope and nested known namespaces
-            collectVariablesInScope(currentScope, namespaceStack);
+            if (isScopedBlock(currentScope)) {
+                // Collect variables from current scope and nested known namespaces
+                collectVariablesInScope(currentScope, namespaceStack);
 
-            // If current scope is a namespace, add it to the known scope stack (at the beginning)
-            if (isNamespace(currentScope)) {
-                if (!isIdentifier(currentScope.name)) {
-                    throw `This namespace node has not corretly been desugared! Namespaces with compound names should be desugared into multiple nested namespaces with identifier names`;
+                // If current scope is a namespace, add it to the known scope stack (at the beginning)
+                if (isNamespace(currentScope)) {
+                    if (!isIdentifier(currentScope.name)) {
+                        throw `This namespace node has not corretly been desugared! Namespaces with compound names should be desugared into multiple nested namespaces with identifier names`;
+                    }
+
+                    namespaceStack.unshift(currentScope.name.text);
                 }
-
-                namespaceStack.unshift(currentScope.name.text);
             }
-            currentScope = currentScope.parent as ScopedBlock | undefined;
+            currentScope = currentScope.parent;
         }
 
         return result;

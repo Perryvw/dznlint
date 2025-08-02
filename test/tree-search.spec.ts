@@ -148,6 +148,32 @@ test("resolving port in system", async () => {
     expect(ast.SyntaxKind[symbol!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
 });
 
+test("find variables in defer", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const { leafAtPosition } = await findLeafAtCursor(
+        program,
+        `
+        component C {
+            provides I port;
+            behavior {
+                on abc.def: {
+                    defer {
+                        <cursor>
+                    }
+                }
+            }
+        }`
+    );
+
+    expect(leafAtPosition).toBeDefined();
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Compound]);
+
+    const symbolsInScope = typeChecker.findAllVariablesKnownInScope(leafAtPosition as ast.Compound);
+    expect(symbolsInScope.get("port")).toBeDefined();
+});
+
 test("namespace merging", async () => {
     const program = await Program.Init();
     const typeChecker = new TypeChecker(program);
