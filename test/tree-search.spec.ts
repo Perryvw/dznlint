@@ -787,6 +787,39 @@ describe("incomplete tree", () => {
         expect((leafAtPosition as ast.Reply).port?.text).toBe("i");
     });
 
+    test("compound name in incomplete if statement", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                requires I i;
+                behavior {
+                    MyEnum m = MyEnum.foo;
+                    on bla(): {
+                        if (a) {}
+                        else if (m.<cursor>
+                        else if (b) {}
+                    }
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+        // The object owning the name abc is the port i
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.VariableDefinition]);
+        expect((owningObject?.declaration as ast.VariableDefinition).name.text).toBe("m");
+    });
+
     test("incomplete binding expression in system", async () => {
         const program = await Program.Init();
         const typeChecker = new TypeChecker(program);

@@ -612,6 +612,7 @@ function transformIfStatement(node: parser.if_statement_Node): ast.IfStatement {
         condition: transformExpression(node.childForFieldName("expression")),
         statement: transformCompoundStatement(node.childForFieldName("statement")) as ast.ImperativeStatement,
         else: elseStatement && (transformCompoundStatement(elseStatement) as ast.ImperativeStatement),
+        errors: collectErrors(node),
     };
 }
 
