@@ -183,9 +183,7 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         }
 
         if (node.behavior) {
-            for (const statement of node.behavior.statements) {
-                context.visit(statement, cb);
-            }
+            context.visit(node.behavior, cb);
         }
     },
     [ast.SyntaxKind.InvariantStatement]: (

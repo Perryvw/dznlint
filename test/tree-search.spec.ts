@@ -596,6 +596,37 @@ describe("incomplete tree", () => {
         expect((owningObject?.declaration as ast.EnumDefinition).name.text).toBe("MyEnum");
     });
 
+    test("enum member in variable without ;", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            interface I {
+                enum MyEnum { Abc, Def };
+
+                behavior {
+                    MyEnum e = MyEnum.<cursor>
+                }
+            }`
+        );
+
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+
+        // The object owning the enum MyEnum
+        expect(owningObject?.declaration.kind).toBe(ast.SyntaxKind.EnumDefinition);
+        expect((owningObject?.declaration as ast.EnumDefinition).name.text).toBe("MyEnum");
+    });
+
     test("partial name in function with prefix", async () => {
         const program = await Program.Init();
         const typeChecker = new TypeChecker(program);
