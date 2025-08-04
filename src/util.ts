@@ -23,7 +23,7 @@ export function findLeafAtPosition(
                     for (const err of node.errors) {
                         if (isPositionInNode(err, line, column)) {
                             leaf = err;
-                            return VisitResult.StopVisiting;
+                            break;
                         }
                     }
                 }

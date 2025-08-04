@@ -542,16 +542,9 @@ function transformOnStatement(node: parser.on_Node): ast.OnStatement {
     // Try to merge errors into triggers
     if (triggers.length > 0) {
         const lastTrigger = triggers[triggers.length - 1];
-        for (const child of node.children) {
-            if (child.isError) {
-                if (child.startIndex === lastTrigger.endIndex) {
-                    transformedTriggers[transformedTriggers.length - 1] = {
-                        kind: ast.SyntaxKind.ERROR,
-                        position: combineSourceRanges(nodePosition(node), nodePosition(child)),
-                        text: node.text + child.text,
-                    };
-                }
-            }
+        const combinedErrorNode = canCombineNodeWithFollowingError(lastTrigger, node);
+        if (combinedErrorNode) {
+            transformedTriggers[transformedTriggers.length - 1] = combinedErrorNode;
         }
     }
 
@@ -605,11 +598,13 @@ function transformDeferStatement(node: parser.defer_Node): ast.DeferStatement {
 }
 
 function transformIfStatement(node: parser.if_statement_Node): ast.IfStatement {
+    const condition = node.childForFieldName("expression");
     const elseStatement = node.childForFieldName("else_statement");
+
     return {
         kind: ast.SyntaxKind.IfStatement,
         position: nodePosition(node),
-        condition: transformExpression(node.childForFieldName("expression")),
+        condition: canCombineNodeWithFollowingError(condition, node) ?? transformExpression(condition),
         statement: transformCompoundStatement(node.childForFieldName("statement")) as ast.ImperativeStatement,
         else: elseStatement && (transformCompoundStatement(elseStatement) as ast.ImperativeStatement),
         errors: collectErrors(node),
@@ -896,6 +891,22 @@ function wrapExpressionStatement(node: parser.AllNodes, expression: ast.Expressi
         position: nodePosition(node),
         expression: expression,
     };
+}
+
+function canCombineNodeWithFollowingError(node: parser.AllNodes, parentNode: parser.AllNodes): ast.Error | undefined {
+    if (!parentNode.hasError) return;
+
+    for (const child of parentNode.children) {
+        if (child.isError) {
+            if (child.startIndex === node.endIndex) {
+                return {
+                    kind: ast.SyntaxKind.ERROR,
+                    position: combineSourceRanges(nodePosition(node), nodePosition(child)),
+                    text: node.text + child.text,
+                };
+            }
+        }
+    }
 }
 
 export function nodePosition(node: parser.AllNodes | parser.SyntaxNode): ast.SourceRange {
