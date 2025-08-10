@@ -618,6 +618,20 @@ exports[`guard missing ; 1`] = `
 "
 `;
 
+exports[`interface formatting on shorthand 1`] = `
+"interface I
+{
+    out void C();
+
+    behavior
+    {
+        on optional: C;
+        on inevitable: { C; }
+    }
+}
+"
+`;
+
 exports[`invariant 1`] = `
 "component C
 {

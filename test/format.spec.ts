@@ -61,6 +61,21 @@ test("different interface formatting (component)", async () => {
     });
 });
 
+test("interface formatting on shorthand", async () => {
+    await testFormat({
+        input: `
+        interface I {
+            out void C();
+
+            behavior {
+                on optional: C;
+                on inevitable: { C; }
+            }
+        }
+    `,
+    });
+});
+
 test("enum missing ;", async () => {
     await testFormat({
         verifyTreeEquality: false,

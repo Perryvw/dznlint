@@ -1035,6 +1035,7 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
                 formatter.keyword("illegal");
                 break;
             case "interface_action_statement":
+                formatter.requirePrecedingNewLine();
                 formatInterfaceActionStatement(cursor.pos(), formatter);
                 break;
             case "skip_statement":
@@ -1049,6 +1050,7 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
                 formatReply(cursor.pos(), formatter);
                 break;
             case "invariant":
+                formatter.requirePrecedingNewLine();
                 formatInvariant(cursor.pos(), formatter);
                 break;
             case "compound":
@@ -2041,7 +2043,7 @@ function formatInterfaceActionStatement(
     formatter: Formatter
 ) {
     cursor.gotoFirstChild();
-    formatter.requirePrecedingNewLine();
+    formatter.requirePrecedingSpace();
     do {
         switch (cursor.nodeType) {
             case "interface_action":
