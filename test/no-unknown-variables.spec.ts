@@ -1194,6 +1194,29 @@ test("invariant using predicate function", async () => {
     });
 });
 
+test("variables in expression function", async () => {
+    await testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        component C {
+            behavior {
+                enum MyEnum {
+                    O,
+                    A
+                };
+                MyEnum m = MyEnum.A;
+                bool predicate() = m.O;
+            }
+        }`,
+        fail: `
+        component C {
+            behavior {
+                bool predicate() = m.O;
+            }
+        }`,
+    });
+});
+
 test("call global function", async () => {
     await testdznlint({
         diagnostic: unknownVariable.code,

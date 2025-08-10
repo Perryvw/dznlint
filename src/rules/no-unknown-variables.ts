@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { Diagnostic, createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isAsterisk, isErrorNode, isIdentifier, isIllegalKeyword, isKeyword, nameToString } from "../util";
+import { isAsterisk, isCompound, isErrorNode, isIdentifier, isIllegalKeyword, isKeyword, nameToString } from "../util";
 import { VisitorContext } from "../visitor";
 
 export const unknownVariable = createDiagnosticsFactory();
@@ -133,6 +133,11 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
                     diagnostics.push(createUnknownCompoundNameDiagnostic(parameter.type.typeName, "type", context));
                 }
             }
+
+            if (!isCompound(node.body)) {
+                diagnostics.push(...checkExpressionNames(node.body, "name", context));
+            }
+
             return diagnostics;
         });
 
