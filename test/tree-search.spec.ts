@@ -817,7 +817,35 @@ describe("incomplete tree", () => {
         expect((owningObject?.declaration as ast.VariableDefinition).name.text).toBe("i");
     });
 
-    test("compound name in incomplete else if conditoin", async () => {
+    test("compound name in incomplete on trigger", async () => {
+        const program = await Program.Init();
+        const typeChecker = new TypeChecker(program);
+
+        const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+            program,
+            `
+            component C {
+                requires I i;
+                behavior {
+                    on i.foo(): i.<cursor>;
+                }
+            }`
+        );
+        expect(leafAtPosition).toBeDefined();
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+        const { owningObject } = findNameAtLocationInErrorNode(
+            leafAtPosition as ast.Error,
+            cursorPos.line,
+            cursorPos.column,
+            typeChecker
+        );
+        // The object owning the name abc is the port i
+        expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Port]);
+        expect((owningObject?.declaration as ast.VariableDefinition).name.text).toBe("i");
+    });
+
+    test("compound name in incomplete else if condition", async () => {
         const program = await Program.Init();
         const typeChecker = new TypeChecker(program);
 

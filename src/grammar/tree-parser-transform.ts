@@ -430,6 +430,9 @@ function transformCompound(node: parser.compound_Node): ast.Compound {
 type CompoundStatements = ChildrenTypes<parser.compound_Node, "statement">;
 
 function transformCompoundStatement(node: CompoundStatements): ast.Statement {
+    const mergedErrorNode = canCombineNodeWithError(node);
+    if (mergedErrorNode) return wrapExpressionStatement(node, mergedErrorNode);
+
     switch (node.type) {
         case "call_statement":
             return wrapExpressionStatement(node, transformCallExpression(node.childForFieldName("call")));
@@ -542,7 +545,7 @@ function transformOnStatement(node: parser.on_Node): ast.OnStatement {
     // Try to merge errors into triggers
     if (triggers.length > 0) {
         const lastTrigger = triggers[triggers.length - 1];
-        const combinedErrorNode = canCombineNodeWithFollowingError(lastTrigger, node);
+        const combinedErrorNode = canCombineNodeWithError(lastTrigger, node);
         if (combinedErrorNode) {
             transformedTriggers[transformedTriggers.length - 1] = combinedErrorNode;
         }
@@ -604,7 +607,7 @@ function transformIfStatement(node: parser.if_statement_Node): ast.IfStatement {
     return {
         kind: ast.SyntaxKind.IfStatement,
         position: nodePosition(node),
-        condition: canCombineNodeWithFollowingError(condition, node) ?? transformExpression(condition),
+        condition: transformExpression(condition),
         statement: transformCompoundStatement(node.childForFieldName("statement")) as ast.ImperativeStatement,
         else: elseStatement && (transformCompoundStatement(elseStatement) as ast.ImperativeStatement),
         errors: collectErrors(node),
@@ -639,27 +642,8 @@ type ExpressionsTypes =
     | parser.unary_expression_Node;
 
 function transformExpression(node: ExpressionsTypes): ast.Expression {
-    if (node.parent?.hasError) {
-        for (const child of node.parent.children) {
-            if (child.isError) {
-                if (child.endIndex === node.startIndex) {
-                    // Error is directly before this expression, combine and return an error node
-                    return {
-                        kind: ast.SyntaxKind.ERROR,
-                        position: combineSourceRanges(nodePosition(child), nodePosition(node)),
-                        text: child.text + node.text,
-                    };
-                } else if (child.startIndex === node.endIndex) {
-                    // Error is directly after this expression, combine and return an error node
-                    return {
-                        kind: ast.SyntaxKind.ERROR,
-                        position: combineSourceRanges(nodePosition(node), nodePosition(child)),
-                        text: node.text + child.text,
-                    };
-                }
-            }
-        }
-    }
+    const mergedErrorNode = canCombineNodeWithError(node);
+    if (mergedErrorNode) return mergedErrorNode;
 
     switch (node.type) {
         case "binary_expression":
@@ -893,17 +877,31 @@ function wrapExpressionStatement(node: parser.AllNodes, expression: ast.Expressi
     };
 }
 
-function canCombineNodeWithFollowingError(node: parser.AllNodes, parentNode: parser.AllNodes): ast.Error | undefined {
-    if (!parentNode.hasError) return;
+function canCombineNodeWithError(node: parser.AllNodes, parent?: parser.AllNodes): ast.Error | undefined {
+    if (node.nextSibling?.isError) {
+        return {
+            kind: ast.SyntaxKind.ERROR,
+            position: combineSourceRanges(nodePosition(node), nodePosition(node.nextSibling)),
+            text: node.text + node.nextSibling.text,
+        };
+    } else if (node.previousSibling?.isError) {
+        return {
+            kind: ast.SyntaxKind.ERROR,
+            position: combineSourceRanges(nodePosition(node.previousSibling), nodePosition(node)),
+            text: node.previousSibling.text + node.text,
+        };
+    }
 
-    for (const child of parentNode.children) {
-        if (child.isError) {
-            if (child.startIndex === node.endIndex) {
-                return {
-                    kind: ast.SyntaxKind.ERROR,
-                    position: combineSourceRanges(nodePosition(node), nodePosition(child)),
-                    text: node.text + child.text,
-                };
+    if (parent?.hasError) {
+        for (const child of parent.children) {
+            if (child.isError) {
+                if (child.startIndex === node.endIndex) {
+                    return {
+                        kind: ast.SyntaxKind.ERROR,
+                        position: combineSourceRanges(nodePosition(node), nodePosition(child)),
+                        text: node.text + child.text,
+                    };
+                }
             }
         }
     }
