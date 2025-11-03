@@ -6,7 +6,7 @@ import { Program } from "../src/semantics/program";
 describe("AST contains error node for malformed syntax", () => {
     test("malformed interface", async () => {
         const program = await Program.Init();
-        const { ast, diagnostics } = parseDznSource(
+        const { ast } = parseDznSource(
             {
                 fileContent: `
             interface I {
@@ -29,7 +29,7 @@ describe("AST contains error node for malformed syntax", () => {
 
     test("malformed component", async () => {
         const program = await Program.Init();
-        const { ast, diagnostics } = parseDznSource(
+        const { ast } = parseDznSource(
             {
                 fileContent: `
             interface I {}
@@ -58,7 +58,7 @@ describe("AST contains error node for malformed syntax", () => {
 
     test("malformed system", async () => {
         const program = await Program.Init();
-        const { ast, diagnostics } = parseDznSource(
+        const { ast } = parseDznSource(
             {
                 fileContent: `
             component C {
