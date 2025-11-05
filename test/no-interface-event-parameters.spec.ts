@@ -54,7 +54,6 @@ test("component on should have a parameter list", async () => {
 test("interface event calls should not have arguments", async () => {
     await testdznlint({
         diagnostic: invalidInterfaceEventCall.code,
-        debug: true,
         fail: `
             interface I {
                 in void foo();

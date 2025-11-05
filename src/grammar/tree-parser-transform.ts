@@ -1,4 +1,4 @@
-import { assertNever, combineSourceRanges, isIdentifier } from "../util";
+import { assertNever, combineSourceRanges, isErrorNode, isIdentifier } from "../util";
 import * as ast from "./ast";
 import * as parser from "./tree-sitter-types";
 
@@ -55,6 +55,7 @@ function transformComponent(component: parser.component_Node): ast.ComponentDefi
         name: transformIdentifier(component.childForFieldName("name")),
         ports: component.childrenForFieldName("port")!.map(transformPort),
         body: body && transformComponentBody(body),
+        errors: collectErrors(component),
     };
 }
 
@@ -62,37 +63,62 @@ function transformComponentBody(node: parser.behavior_Node | parser.system_Node)
     if (node.type === "behavior") {
         return transformBehavior(node);
     } else {
-        function transformBinding(binding: parser.binding_Node): ast.Binding {
+        function transformBinding(binding: parser.binding_Node): ast.Binding | ast.Error {
+            if (binding.hasError) return errorOfNode(binding);
+
             return {
                 kind: ast.SyntaxKind.Binding,
                 position: nodePosition(binding),
                 left: transformExpression(binding.childForFieldName("left")) as ast.BindingExpression,
                 right: transformExpression(binding.childForFieldName("right")) as ast.BindingExpression,
+                errors: collectErrors(binding),
             };
         }
 
-        function transformInstance(system: parser.instance_Node): ast.Instance {
+        function transformInstance(instance: parser.instance_Node): ast.Instance | ast.Error {
+            if (instance.hasError) return errorOfNode(instance);
+
             return {
                 kind: ast.SyntaxKind.Instance,
-                position: nodePosition(system),
-                type: transformTypeReference(system.childForFieldName("type")),
-                name: transformIdentifier(system.childForFieldName("name")),
+                position: nodePosition(instance),
+                type: transformTypeReference(instance.childForFieldName("type")),
+                name: transformIdentifier(instance.childForFieldName("name")),
+                errors: collectErrors(instance),
             };
         }
 
-        return {
+        const body = node.childForFieldName("body");
+        const errors = collectErrors(body) ?? [];
+
+        const system: ast.System = {
             kind: ast.SyntaxKind.System,
             position: nodePosition(node),
-            instancesAndBindings: (
-                node.childForFieldName("body").childrenForFieldName("instance_or_binding") ?? []
-            ).map(c => {
-                if (c.type === "binding") {
-                    return transformBinding(c);
-                } else {
-                    return transformInstance(c);
-                }
-            }),
+            instancesAndBindings: [],
         };
+
+        for (const c of body.childrenForFieldName("instance_or_binding") ?? []) {
+            if (c.type === "binding") {
+                const b = transformBinding(c);
+                if (isErrorNode(b)) {
+                    errors.push(b);
+                } else {
+                    system.instancesAndBindings.push(b);
+                }
+            } else {
+                const i = transformInstance(c);
+                if (isErrorNode(i)) {
+                    errors.push(i);
+                } else {
+                    system.instancesAndBindings.push(i);
+                }
+            }
+        }
+
+        if (errors.length > 0) {
+            system.errors = errors;
+        }
+
+        return system;
     }
 }
 
@@ -328,6 +354,7 @@ function transformInterfaceDefinition(node: parser.interface_Node): ast.Interfac
             }
         }),
         behavior: behavior && transformBehavior(behavior),
+        errors: collectErrors(body),
     };
 }
 
@@ -936,4 +963,12 @@ function collectErrors(node: parser.AllNodes): ast.Error[] | undefined {
         }
     }
     return errors.length > 0 ? errors : undefined;
+}
+
+function errorOfNode(node: parser.AllNodes): ast.Error {
+    return {
+        kind: ast.SyntaxKind.ERROR,
+        position: nodePosition(node),
+        text: node.text,
+    };
 }
