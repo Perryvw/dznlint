@@ -174,6 +174,40 @@ test("find variables in defer", async () => {
     expect(symbolsInScope.get("port")).toBeDefined();
 });
 
+// https://github.com/Perryvw/dznlint/issues/49
+test("find component in namespace (#49)", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const { leafAtPosition, cursorPos } = await findLeafAtCursor(
+        program,
+        `
+        component S {
+            system {
+                NS.<cursor>
+            }
+        }
+            
+        namespace NS {
+            component C {}
+        }`
+    );
+
+    expect(leafAtPosition).toBeDefined();
+    expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.ERROR]);
+
+    const { owningObject } = findNameAtLocationInErrorNode(
+        leafAtPosition as ast.Error,
+        cursorPos.line,
+        cursorPos.column,
+        typeChecker
+    );
+    expect(owningObject).toBeDefined();
+    expect(ast.SyntaxKind[owningObject!.declaration.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Namespace]);
+    const symbolsInScope = typeChecker.findAllVariablesKnownInScope(owningObject?.declaration as ast.Namespace);
+    expect(symbolsInScope.get("C")).toBeDefined();
+});
+
 test("namespace merging", async () => {
     const program = await Program.Init();
     const typeChecker = new TypeChecker(program);
