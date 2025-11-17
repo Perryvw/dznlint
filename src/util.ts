@@ -148,6 +148,10 @@ export function isCompound(node: ast.AnyAstNode): node is ast.Compound {
     return node.kind === ast.SyntaxKind.Compound;
 }
 
+export function isDollarsLiteral(node: ast.AnyAstNode): node is ast.DollarsLiteral {
+    return node.kind === ast.SyntaxKind.DollarLiteral;
+}
+
 export function isEvent(node: ast.AnyAstNode): node is ast.Event {
     return node.kind === ast.SyntaxKind.Event;
 }

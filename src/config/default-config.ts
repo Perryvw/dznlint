@@ -35,6 +35,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     port_missing_redundant_blocking: false,
     port_parameter_direction: "error",
     trailing_assignments: false,
+    type_check: false,
 };
 
 export const DEFAULT_DZNLINT_FORMAT_CONFIG: DznLintFormatConfiguration = {

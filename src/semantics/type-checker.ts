@@ -216,8 +216,10 @@ export class TypeChecker {
         } else if (
             node.kind === ast.SyntaxKind.Port ||
             node.kind === ast.SyntaxKind.Event ||
+            node.kind === ast.SyntaxKind.EventParameter ||
             node.kind === ast.SyntaxKind.ExternDeclaration ||
             node.kind === ast.SyntaxKind.EnumDefinition ||
+            node.kind === ast.SyntaxKind.FunctionParameter ||
             node.kind === ast.SyntaxKind.Namespace ||
             node.kind === ast.SyntaxKind.Instance ||
             node.kind === ast.SyntaxKind.VariableDefinition ||
@@ -305,6 +307,11 @@ export class TypeChecker {
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === ast.SyntaxKind.FunctionParameter) {
             const definition = declaration as ast.FunctionParameter;
+            const typeSymbol = this.symbolOfNode(definition.type);
+            if (!typeSymbol) return ERROR_TYPE;
+            return this.typeOfSymbol(typeSymbol);
+        } else if (declaration.kind === ast.SyntaxKind.EventParameter) {
+            const definition = declaration as ast.EventParameter;
             const typeSymbol = this.symbolOfNode(definition.type);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);

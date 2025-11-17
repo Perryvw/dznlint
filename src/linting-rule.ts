@@ -40,6 +40,7 @@ import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
 import port_parameter_direction from "./rules/port-parameter-direction";
 import trailing_assignments from "./rules/trailing-assignments";
+import type_check from "./rules/type-check";
 
 export function loadLinters(config: DznLintUserConfiguration) {
     const factories = [
@@ -71,6 +72,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         port_missing_redundant_blocking,
         port_parameter_direction,
         trailing_assignments,
+        type_check,
     ];
 
     const linters = new Map<ast.SyntaxKind, Linter<ast.AnyAstNode>[]>();
