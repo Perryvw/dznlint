@@ -19,6 +19,7 @@ import {
     isChildOf,
     isFunctionDefinition,
     isErrorNode,
+    isEvent,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -114,9 +115,13 @@ export class TypeChecker {
         } else if (isCallExpression(node)) {
             const calledSymbol = this.symbolOfNode(node.expression);
             if (!calledSymbol) return ERROR_TYPE;
-            if (!isFunctionDefinition(calledSymbol.declaration)) return ERROR_TYPE; // Only know how to get the call result of functions, not events
 
-            return this.typeOfNode(calledSymbol.declaration.returnType);
+            if (isFunctionDefinition(calledSymbol.declaration)) {
+                return this.typeOfNode(calledSymbol.declaration.returnType);
+            } else if (isEvent(calledSymbol.declaration)) {
+                return this.typeOfNode(calledSymbol.declaration.type);
+            }
+            return ERROR_TYPE;
         }
         const symbol = this.symbolOfNode(node, typeReference);
         if (!symbol) return ERROR_TYPE;
@@ -193,12 +198,14 @@ export class TypeChecker {
             if (!scope) return undefined;
             return this.resolveNameInScopeTree(node.text, scope, typeReference);
         } else if (isCompoundName(node) && node.compound !== undefined) {
+            const ownerSymbol = this.symbolOfNode(node.compound);
             const ownerType = this.typeOfNode(node.compound, typeReference);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
             const ownerMembers = this.getMembersOfType(ownerType);
             const memberSymbol = ownerMembers.get(node.name.text);
             if (!memberSymbol) return undefined;
-            if (ownerType.kind === TypeKind.Enum && node.name.text !== ownerType.name) return BOOL_SYMBOL; // enum to bool coersion
+            if (ownerSymbol?.declaration.kind === ast.SyntaxKind.EnumDefinition) return ownerSymbol;
+            else if (ownerType.kind === TypeKind.Enum) return BOOL_SYMBOL; // enum to bool coersion
             return memberSymbol;
         } else if (isCompoundBindingExpression(node)) {
             const ownerType = this.typeOfNode(node.compound);

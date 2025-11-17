@@ -45,6 +45,46 @@ test("variable definition with function return", async () => {
     });
 });
 
+test("variable definition with event return", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        config: { type_check: "error" },
+        pass: `
+            interface I {
+                in bool ev();
+            }
+
+            component C {
+                requires I i;
+                behavior {
+                    void foo() {
+                        bool bla = i.ev();
+                    }
+                }
+            }`,
+    });
+});
+
+test("variable definition with enum", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        config: { type_check: "error" },
+        pass: `
+            enum MyEnum {A,B};
+
+            component C {
+                behavior {
+                    MyEnum e = MyEnum.A;
+
+                    void foo() {
+                        e = MyEnum.B;
+                        bool enumToBool = e.A;
+                    }
+                }
+            }`,
+    });
+});
+
 test("function return must match return type", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
