@@ -21,6 +21,7 @@ export const DEFAULT_DZNLINT_CONFIG: DefaultDznLintConfig = {
     no_empty_defer_capture: "warning",
     no_interface_event_parameters: "error",
     no_mismatching_binding_types: "error",
+    no_out_params_in_out_events: "error",
     no_recursive_system: "error",
     no_shadowing: "warning",
     no_unconnected_ports: "error",
