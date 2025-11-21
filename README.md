@@ -183,7 +183,7 @@ In interface behaviors, events should not mention any parameters, this is invali
 
 ## no_out_params_in_out_events
 
-For `out` events, parameters cannot be `out`, this will be rejected by Dezyne. Instead, the parameter should be marked `in`.
+For `out` events, parameters cannot be `out` or `inout`, this will be rejected by Dezyne. Instead, the parameter should be marked `in`.
 
 **Possible values:** "hint" | "warning" | **"error"**
 
