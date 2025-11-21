@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isCallExpression, isIdentifier } from "../util";
+import { isCallExpression, isIdentifier, isOutEvent } from "../util";
 
 export const neverFiredEvent = createDiagnosticsFactory();
 
@@ -51,7 +51,3 @@ export const never_fired_event: RuleFactory = factoryContext => {
         });
     }
 };
-
-function isOutEvent(node: ast.Event | ast.TypeDefinition): node is ast.Event {
-    return node.kind === ast.SyntaxKind.Event && node.direction.text === "out";
-}

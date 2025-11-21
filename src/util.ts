@@ -211,6 +211,18 @@ export function isReplyKeyword(node: ast.AnyAstNode): node is ast.Keyword<"reply
     return isKeyword(node) && node.text === "reply";
 }
 
+export function isInKeyword(node: ast.AnyAstNode): node is ast.Keyword<"in"> {
+    return isKeyword(node) && node.text === "in";
+}
+
+export function isOutKeyword(node: ast.AnyAstNode): node is ast.Keyword<"out"> {
+    return isKeyword(node) && node.text === "out";
+}
+
+export function isInOutKeyword(node: ast.AnyAstNode): node is ast.Keyword<"inout"> {
+    return isKeyword(node) && node.text === "inout";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;
@@ -270,6 +282,10 @@ export function isImportStatement(node: ast.AnyAstNode): node is ast.ImportState
 
 export function isErrorNode(node: ast.AnyAstNode): node is ast.Error {
     return node.kind === ast.SyntaxKind.ERROR;
+}
+
+export function isOutEvent(node: ast.AnyAstNode): node is ast.Event {
+    return isEvent(node) && isOutKeyword(node.direction);
 }
 
 export type ScopedBlock = ast.AnyAstNode &

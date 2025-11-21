@@ -32,6 +32,7 @@ export interface DznLintConfiguration {
     no_empty_defer_capture: ConfigValue;
     no_interface_event_parameters: ConfigValue;
     no_mismatching_binding_types: ConfigValue;
+    no_out_params_in_out_events: ConfigValue;
     no_recursive_system: ConfigValue;
     no_shadowing: ConfigValue;
     no_unconnected_ports: ConfigValue;

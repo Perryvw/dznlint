@@ -207,7 +207,7 @@ export interface FunctionDefinition extends AstNode<SyntaxKind.FunctionDefinitio
     body: Compound | Expression;
 }
 
-export type ParameterDirection = Keyword<"in"> | Keyword<"out">;
+export type ParameterDirection = Keyword<"in"> | Keyword<"out"> | Keyword<"inout">;
 export interface FunctionParameter extends AstNode<SyntaxKind.FunctionParameter> {
     direction?: ParameterDirection;
     type: TypeReference;
