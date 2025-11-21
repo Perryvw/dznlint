@@ -20,6 +20,11 @@ import {
     isFunctionDefinition,
     isErrorNode,
     isEvent,
+    isUnaryOperatorExpression,
+    isBinaryExpression,
+    isParenthesizedExpression,
+    isVoidKeyword,
+    isSourceFile,
 } from "../util";
 import { memoize } from "./memoize";
 import { Program } from "./program";
@@ -43,6 +48,7 @@ const EMPTY_POSITION: SourceRange = {
 
 export enum TypeKind {
     Invalid,
+    Void,
     Bool,
     External,
     Enum,
@@ -54,6 +60,7 @@ export enum TypeKind {
     Namespace,
     Function,
     IntegerRange,
+    Integer,
 }
 
 export interface Type {
@@ -68,9 +75,19 @@ export const ERROR_TYPE = {
     declaration: null!,
 } satisfies Type;
 
+const VOID_TYPE = {
+    kind: TypeKind.Void,
+    name: "void",
+} satisfies Type;
+
 const BOOL_TYPE = {
     kind: TypeKind.Bool,
     name: "bool",
+} satisfies Type;
+
+const INTEGER_TYPE = {
+    kind: TypeKind.Integer,
+    name: "integer",
 } satisfies Type;
 
 const VOID_DECLARATION: ast.Keyword<"void"> = { kind: ast.SyntaxKind.Keyword, position: EMPTY_POSITION, text: "void" };
@@ -101,6 +118,7 @@ const INEVITABLE_DECLARATION: ast.Keyword<"inevitable"> = {
     text: "inevitable",
 };
 
+const VOID_SYMBOL = new SemanticSymbol(VOID_DECLARATION);
 const BOOL_SYMBOL = new SemanticSymbol(BOOL_DECLARATION);
 const TRUE_SYMBOL = new SemanticSymbol(TRUE_DECLARATION);
 const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
@@ -109,9 +127,14 @@ export class TypeChecker {
     public constructor(private program: Program) {}
 
     public typeOfNode(node: ast.AnyAstNode, typeReference = false): Type {
-        if (node.kind === ast.SyntaxKind.BinaryExpression || node.kind === ast.SyntaxKind.UnaryOperatorExpression) {
-            // Okay so this is definitely not true, but then again, we don't have to worry about everything else for now
-            return BOOL_TYPE;
+        if (isParenthesizedExpression(node)) return this.typeOfNode(node.expression);
+
+        if (isBinaryExpression(node)) {
+            // Assume the binary expression results in the same type as the type of the first operand
+            return this.typeOfNode(node.left);
+        } else if (isUnaryOperatorExpression(node)) {
+            // Assume the unary expression results in the same type as the type of the operand
+            return this.typeOfNode(node.expression);
         } else if (isCallExpression(node)) {
             const calledSymbol = this.symbolOfNode(node.expression);
             if (!calledSymbol) return ERROR_TYPE;
@@ -122,6 +145,10 @@ export class TypeChecker {
                 return this.typeOfNode(calledSymbol.declaration.type);
             }
             return ERROR_TYPE;
+        } else if (isVoidKeyword(node)) {
+            return VOID_TYPE;
+        } else if (node.kind === ast.SyntaxKind.NumericLiteral) {
+            return INTEGER_TYPE;
         }
         const symbol = this.symbolOfNode(node, typeReference);
         if (!symbol) return ERROR_TYPE;
@@ -131,7 +158,7 @@ export class TypeChecker {
     private symbols = new Map<ast.AnyAstNode, SemanticSymbol>();
 
     private builtInSymbols = new Map<string, SemanticSymbol>([
-        ["void", new SemanticSymbol(VOID_DECLARATION)],
+        ["void", VOID_SYMBOL],
         ["bool", BOOL_SYMBOL],
         ["reply", new SemanticSymbol(REPLY_DECLARATION)],
         ["optional", new SemanticSymbol(OPTIONAL_DECLARATION)],
@@ -166,10 +193,11 @@ export class TypeChecker {
 
         // First check if this is a built-in type
         if (
-            node.parent &&
-            node.parent.kind !== ast.SyntaxKind.BindingCompoundName &&
-            node.parent.kind !== ast.SyntaxKind.CompoundName &&
-            isIdentifier(node)
+            (node.parent &&
+                node.parent.kind !== ast.SyntaxKind.BindingCompoundName &&
+                node.parent.kind !== ast.SyntaxKind.CompoundName &&
+                isIdentifier(node)) ||
+            isKeyword(node)
         ) {
             const builtInType = this.builtInSymbols.get(node.text);
             if (builtInType) return builtInType;
@@ -197,16 +225,25 @@ export class TypeChecker {
             }
             if (!scope) return undefined;
             return this.resolveNameInScopeTree(node.text, scope, typeReference);
-        } else if (isCompoundName(node) && node.compound !== undefined) {
-            const ownerSymbol = this.symbolOfNode(node.compound);
-            const ownerType = this.typeOfNode(node.compound, typeReference);
-            if (ownerType.kind === TypeKind.Invalid) return undefined;
-            const ownerMembers = this.getMembersOfType(ownerType);
-            const memberSymbol = ownerMembers.get(node.name.text);
-            if (!memberSymbol) return undefined;
-            if (ownerSymbol?.declaration.kind === ast.SyntaxKind.EnumDefinition) return ownerSymbol;
-            else if (ownerType.kind === TypeKind.Enum) return BOOL_SYMBOL; // enum to bool coersion
-            return memberSymbol;
+        } else if (isCompoundName(node)) {
+            if (node.compound !== undefined) {
+                const ownerSymbol = this.symbolOfNode(node.compound);
+                const ownerType = this.typeOfNode(node.compound, typeReference);
+                if (ownerType.kind === TypeKind.Invalid) return undefined;
+                const ownerMembers = this.getMembersOfType(ownerType);
+                const memberSymbol = ownerMembers.get(node.name.text);
+                if (!memberSymbol) return undefined;
+                if (ownerSymbol?.declaration.kind === ast.SyntaxKind.EnumDefinition) return ownerSymbol;
+                else if (ownerType.kind === TypeKind.Enum) return BOOL_SYMBOL; // enum to bool coersion
+                return memberSymbol;
+            } else {
+                // .<name>, look up name in global scope
+                const sourceFile = findFirstParent(node, isSourceFile);
+                if (!sourceFile) throw `Unexpectedly found a node without SourceFile parent`;
+                return this.resolveNameInScopeTree(node.name.text, sourceFile, typeReference);
+            }
+        } else if (isParenthesizedExpression(node)) {
+            return this.symbolOfNode(node.expression);
         } else if (isCompoundBindingExpression(node)) {
             const ownerType = this.typeOfNode(node.compound);
             if (ownerType.kind === TypeKind.Invalid) return undefined;
@@ -230,6 +267,7 @@ export class TypeChecker {
             node.kind === ast.SyntaxKind.Namespace ||
             node.kind === ast.SyntaxKind.Instance ||
             node.kind === ast.SyntaxKind.VariableDefinition ||
+            node.kind === ast.SyntaxKind.NumericLiteral ||
             isAsterisk(node)
         ) {
             return this.getOrCreateSymbol(node);
@@ -295,6 +333,7 @@ export class TypeChecker {
 
     public typeOfSymbol = memoize(this, (symbol: SemanticSymbol): Type => {
         if (symbol === BOOL_SYMBOL) return BOOL_TYPE;
+        if (symbol === VOID_SYMBOL) return VOID_TYPE;
         if (symbol.declaration === null) return ERROR_TYPE;
 
         const declaration = symbol.declaration;

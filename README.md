@@ -306,3 +306,11 @@ Function parameters that are ports must be annotated with `provides` or `require
 Will find trailing assignments used in interfaces. Trailing assignments can have unexpected effects when using using shared state, so it might be useful to be aware of where trailing assignments are used, or to disallow them completely.
 
 **Possible values:** "hint" | "warning" | "error" (default: off)
+
+---
+
+## type_check
+
+Check if assigned types are of the expected type. This checks variable definitions, assignment statements, returns tatements and function/event calls. Extern types are assignable to all other extern types without error.
+
+**Possible values:** "hint" | "warning" | **"error"**
