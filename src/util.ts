@@ -219,6 +219,10 @@ export function isOutKeyword(node: ast.AnyAstNode): node is ast.Keyword<"out"> {
     return isKeyword(node) && node.text === "out";
 }
 
+export function isInOutKeyword(node: ast.AnyAstNode): node is ast.Keyword<"inout"> {
+    return isKeyword(node) && node.text === "inout";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isKeyword(node: ast.AnyAstNode): node is ast.Keyword<any> {
     return node.kind === ast.SyntaxKind.Keyword;

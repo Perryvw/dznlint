@@ -16,3 +16,14 @@ test("not allowed to have out params in out events", async () => {
             }`,
     });
 });
+
+test("not allowed to have inout params in out events", async () => {
+    await testdznlint({
+        diagnostic: outParamInOutEvent.code,
+        fail: `
+            extern MyExternType $$;
+            interface I {
+                out void ev(inout MyExternType a);
+            }`,
+    });
+});

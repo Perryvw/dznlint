@@ -5,7 +5,7 @@ import { Diagnostic } from "..";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isOutEvent, isOutKeyword } from "../util";
+import { isInOutKeyword, isOutEvent, isOutKeyword } from "../util";
 
 export const outParamInOutEvent = createDiagnosticsFactory();
 
@@ -23,6 +23,16 @@ export const no_out_params_in_out_events: RuleFactory = factoryContext => {
                             outParamInOutEvent(
                                 config.severity,
                                 "Not allowed to use 'out' parameters in out events, use 'in' instead",
+                                context.source,
+                                param.direction.position
+                            )
+                        );
+                    }
+                    if (param.direction && isInOutKeyword(param.direction)) {
+                        diagnostics.push(
+                            outParamInOutEvent(
+                                config.severity,
+                                "Not allowed to use 'inout' parameters in out events, use 'in' instead",
                                 context.source,
                                 param.direction.position
                             )
