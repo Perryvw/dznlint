@@ -132,6 +132,14 @@ export function isIdentifier(node: ast.AnyAstNode): node is ast.Identifier {
     return node.kind === ast.SyntaxKind.Identifier;
 }
 
+export function isUnaryOperatorExpression(node: ast.AnyAstNode): node is ast.UnaryOperatorExpression {
+    return node.kind === ast.SyntaxKind.UnaryOperatorExpression;
+}
+
+export function isBinaryExpression(node: ast.AnyAstNode): node is ast.BinaryExpression {
+    return node.kind === ast.SyntaxKind.BinaryExpression;
+}
+
 export function isCompoundName(node: ast.AnyAstNode): node is ast.CompoundName {
     return node.kind === ast.SyntaxKind.CompoundName;
 }
@@ -184,6 +192,10 @@ export function isOnParameter(expression: ast.AnyAstNode): expression is ast.OnP
     return expression.kind === ast.SyntaxKind.OnParameter;
 }
 
+export function isParenthesizedExpression(expression: ast.AnyAstNode): expression is ast.ParenthesizedExpression {
+    return expression.kind === ast.SyntaxKind.ParenthesizedExpression;
+}
+
 export function isVariableDefinition(statement: ast.AnyAstNode): statement is ast.VariableDefinition {
     return statement.kind === ast.SyntaxKind.VariableDefinition;
 }
@@ -221,6 +233,10 @@ export function isOutKeyword(node: ast.AnyAstNode): node is ast.Keyword<"out"> {
 
 export function isInOutKeyword(node: ast.AnyAstNode): node is ast.Keyword<"inout"> {
     return isKeyword(node) && node.text === "inout";
+}
+
+export function isVoidKeyword(node: ast.AnyAstNode): node is ast.Keyword<"void"> {
+    return isKeyword(node) && node.text === "void";
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

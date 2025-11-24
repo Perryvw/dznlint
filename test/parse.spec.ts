@@ -6,6 +6,7 @@ import { emptyDeferCapture } from "../src/rules/no-empty-defer-capture";
 import { expectNoDiagnostics } from "./util";
 import { neverLegalEvent } from "../src/rules/never-legal-event";
 import { failedToFullyParseFile } from "../src/parse";
+import { typeMismatch } from "../src/rules/type-check";
 
 const parseOnlyConfiguration: DznLintUserConfiguration = {
     naming_convention: false,
@@ -40,6 +41,7 @@ test("extern statement", async () => {
 
 test("dollars variable declaration expression", async () => {
     await expectCanParseWithoutDiagnostics(`
+        extern int $$;
         component c {
             behavior {
                 int myInt = $123$;
@@ -80,6 +82,7 @@ test("blocking on with assignment", async () => {
 
 test("comment inside statement", async () => {
     await expectCanParseWithoutDiagnostics(`
+        extern int $$;
         component MyComponent /* a */ /* b */ // c
         {
             behavior // d
@@ -105,7 +108,8 @@ test("multiline comment", async () => {
 });
 
 test("parenthesized expression", async () => {
-    await expectCanParseWithoutDiagnostics(`
+    await expectCanParseWithoutDiagnostics(
+        `
         component MyComponent
         {
             behavior
@@ -117,7 +121,9 @@ test("parenthesized expression", async () => {
                 }
             }
         }
-    `);
+    `,
+        [typeMismatch.code]
+    );
 });
 
 test.each(["component", "interface"])("empty %s", async type => {
@@ -440,6 +446,8 @@ test("invariant", async () => {
     await expectCanParseWithoutDiagnostics(`
         component c {
             behavior {
+                bool foo;
+                bool bar;
                 invariant foo == bar;
             }
         } 
@@ -450,6 +458,9 @@ test("implies statement", async () => {
     await expectCanParseWithoutDiagnostics(`
         component c {
             behavior {
+                bool foo;
+                bool bar;
+
                 invariant foo => bar;
             }
         } 
@@ -460,6 +471,9 @@ test("invariant inside guard", async () => {
     await expectCanParseWithoutDiagnostics(`
         component c {
             behavior {
+                bool foo;
+                bool bar;
+
                 [true]
                 {
                     invariant foo == bar;

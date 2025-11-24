@@ -4,24 +4,23 @@ import { testdznlint } from "./util";
 test("variable definition", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
-            extern ExternType1 $$;
+            enum Enum1 {A,B};
 
             component C {
                 behavior {
-                    ExternType1 a = $$;
-                    ExternType1 b = a;
+                    Enum1 a = Enum1.A;
+                    Enum1 b = a;
                 }
             }`,
         fail: `
-            extern ExternType1 $$;
-            extern ExternType2 $$;
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
 
             component C {
                 behavior {
-                    ExternType1 a = $$;
-                    ExternType2 b = a;
+                    Enum1 a = Enum1.A;
+                    Enum2 b = a;
                 }
             }`,
     });
@@ -30,16 +29,29 @@ test("variable definition", async () => {
 test("variable definition with function return", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         fail: `
-            extern ExternType1 $$;
-            extern ExternType2 $$;
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
 
             component C {
                 behavior {
-                    ExternType1 a = foo();
+                    Enum1 a = foo();
 
-                    ExternType2 foo() { return $$; }
+                    Enum2 foo() { return Enum2.D; }
+                }
+            }`,
+    });
+});
+
+test("not allowed to assign enum to bool", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            enum Enum1 {A,B};
+
+            component C {
+                behavior {
+                    bool a = Enum1.B;
                 }
             }`,
     });
@@ -48,7 +60,6 @@ test("variable definition with function return", async () => {
 test("variable definition with event return", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
             interface I {
                 in bool ev();
@@ -68,7 +79,6 @@ test("variable definition with event return", async () => {
 test("variable definition with enum", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
             enum MyEnum {A,B};
 
@@ -88,15 +98,14 @@ test("variable definition with enum", async () => {
 test("function return must match return type", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         fail: `
-            extern ExternType1 $$;
-            extern ExternType2 $$;
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
 
             component C {
                 behavior {                    
-                    ExternType2 foo() { 
-                        ExternType1 a = $$;
+                    Enum2 foo() { 
+                        Enum1 a = Enum1.A;
                         return a;
                     }
                 }
@@ -107,14 +116,13 @@ test("function return must match return type", async () => {
 test("variable assignment", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
-            extern ExternType1 $$;
+            enum Enum1 {A,B};
 
             component C {
                 behavior {
-                    ExternType1 a = $$;
-                    ExternType1 b;
+                    Enum1 a = Enum1.A;
+                    Enum1 b;
 
                     void foo() {
                         b = a;
@@ -122,13 +130,13 @@ test("variable assignment", async () => {
                 }
             }`,
         fail: `
-            extern ExternType1 $$;
-            extern ExternType2 $$;
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
 
             component C {
                 behavior {
-                    ExternType1 a = $$;
-                    ExternType2 b = $$;
+                    Enum1 a = Enum1.A;
+                    Enum2 b = Enum2.C;
 
                     void foo() {
                         b = a;
@@ -138,10 +146,9 @@ test("variable assignment", async () => {
     });
 });
 
-test("variable assignment with dollars is allowed", async () => {
+test("variable assignment to extern with dollars is allowed", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
             extern ExternType1 $$;
 
@@ -157,33 +164,74 @@ test("variable assignment with dollars is allowed", async () => {
     });
 });
 
-test("function call parameters", async () => {
+test("variable assignment to bool with dollars is not allowed", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
-        pass: `
-            extern ExternType1 $$;
+        fail: `
+            component C {
+                behavior {
+                    bool a = $123$;
+                }
+            }`,
+    });
+});
+
+test("variable assignment to enum with dollars is not allowed", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            enum Enum1 {A,B};
 
             component C {
                 behavior {
-                    void foo(ExternType1 a) {}
+                    bool a = Enum1.A;
+                }
+            }`,
+    });
+});
+
+test("Different externs are assignable to each other", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            extern Extern1 $$;
+            extern Extern2 $$;
+
+            component C {
+                behavior {
+                    Extern1 a = $$;
+                    Extern2 b = a;
+                }
+            }`,
+    });
+});
+
+test("function call parameters", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            enum Enum1 {A,B};
+
+            component C {
+                behavior {
+                    void foo(Enum1 a) {}
 
                     void bar() {
-                        ExternType1 bla = $$;
+                        Enum1 bla = Enum1.A;
                         foo(bla);
                     }
                 }
             }`,
         fail: `
-            extern ExternType1 $$;
-            extern ExternType2 $$;
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
 
             component C {
                 behavior {
-                    void foo(ExternType1 a) {}
+                    void foo(Enum1 a) {}
 
                     void bar() {
-                        ExternType2 bla = $$;
+                        Enum2 bla = Enum2.C;
                         foo(bla);
                     }
                 }
@@ -194,7 +242,6 @@ test("function call parameters", async () => {
 test("function call parameters dollars are always allowed", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
             extern ExternType1 $$;
 
@@ -213,12 +260,11 @@ test("function call parameters dollars are always allowed", async () => {
 test("event call parameters", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
-            extern ExternType1 $$;
+            enum Enum1 {A,B};
 
             interface I {
-                in void ev(in ExternType1 p);
+                in void ev(in Enum1 p);
             }
 
             component C {
@@ -226,17 +272,17 @@ test("event call parameters", async () => {
 
                 behavior {
                     void foo() {
-                        ExternType1 bla = $$;
+                        Enum1 bla = Enum1.A;
                         i.ev(bla);
                     }
                 }
             }`,
         fail: `
-            extern ExternType1 $$;
-            extern ExternType2 $$;
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
 
             interface I {
-                in void ev(in ExternType1 p);
+                in void ev(in Enum1 p);
             }
 
             component C {
@@ -244,7 +290,7 @@ test("event call parameters", async () => {
 
                 behavior {
                     void foo() {
-                        ExternType2 bla = $$;
+                        Enum2 bla = Enum2.C;
                         i.ev(bla);
                     }
                 }
@@ -255,7 +301,6 @@ test("event call parameters", async () => {
 test("event call parameters dollars are always allowed", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,
-        config: { type_check: "error" },
         pass: `
             extern ExternType1 $$;
 
@@ -269,6 +314,113 @@ test("event call parameters dollars are always allowed", async () => {
                 behavior {
                     void foo() {
                         i.ev($$);
+                    }
+                }
+            }`,
+    });
+});
+
+test("void return in function with non-void return type", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            component C {
+                behavior {
+                    bool foo() {
+                        return;
+                    }
+                }
+            }`,
+    });
+});
+
+test("non-void return in function with void return type", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        return true;
+                    }
+                }
+            }`,
+    });
+});
+
+test("subint types are assignable to each other", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            subint Int1 {1..5};
+            subint Int2 {1..2};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i1 = 1;
+                        Int2 i2 = i1; 
+                    }
+                }
+            }`,
+    });
+});
+
+test("subint is not assignable to bool", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            subint Int1 {1..5};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i1 = 1;
+                        bool b = i1;
+                    }
+                }
+            }`,
+    });
+});
+
+test("integer is not assignable to bool", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        bool b = 1;
+                    }
+                }
+            }`,
+    });
+});
+
+test("integer binary expression is not assignable to bool", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            subint Int1 {1..5};
+            subint Int2 {1..5};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i1 = 1;
+                        Int2 i2 = i1 + 2;
+                    }
+                }
+            }
+        `,
+        fail: `
+            subint Int1 {1..5};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i1 = 1;
+                        bool b = i1 + 2;
                     }
                 }
             }`,
