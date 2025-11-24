@@ -2,11 +2,12 @@
 
 import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
-import { createDiagnosticsFactory } from "../diagnostic";
+import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { findFirstParent, isDollarsLiteral, isEvent, isFunctionDefinition } from "../util";
-import { Type } from "../semantics";
+import { findFirstParent, isDollarsLiteral, isEvent, isExtern, isFunctionDefinition } from "../util";
+import { Type, TypeKind, VOID_TYPE } from "../semantics";
+import { VisitorContext } from "../visitor";
 
 export const typeMismatch = createDiagnosticsFactory();
 
@@ -27,44 +28,38 @@ export const type_check: RuleFactory = factoryContext => {
                 position
             );
         };
+        const createNotAllowedDollarAssignmentDiagnostic = (
+            expectedType: Type,
+            node: ast.DollarsLiteral,
+            source: InputSource
+        ) => {
+            return typeMismatch(
+                config.severity,
+                `Type mismatch: Cannot assign dollars literal to variable of type '${expectedType.name}'`,
+                source,
+                node.position
+            );
+        };
 
         factoryContext.registerRule<ast.VariableDefinition>(ast.SyntaxKind.VariableDefinition, (node, context) => {
             // initializer type must match lhs type
-            if (node.initializer && !isDollarsLiteral(node.initializer)) {
-                const initializerType = context.typeChecker.typeOfNode(node.initializer);
-                const variableType = context.typeChecker.typeOfNode(node.type);
-
-                if (initializerType !== variableType) {
-                    return [
-                        createTypeMismatchDiagnostic(
-                            variableType,
-                            initializerType,
-                            context.source,
-                            node.initializer.position
-                        ),
-                    ];
-                }
+            if (node.initializer) {
+                const diagnostics: Diagnostic[] = [];
+                checkValidTypeAssignment(context, node.initializer, node.type, diagnostics);
+                return diagnostics;
             }
 
             return [];
         });
 
         factoryContext.registerRule<ast.AssignmentStatement>(ast.SyntaxKind.AssignmentStatement, (node, context) => {
-            // rhs type must match lhs type
-            if (!isDollarsLiteral(node.right)) {
-                const rhsType = context.typeChecker.typeOfNode(node.right);
-                const lhsType = context.typeChecker.typeOfNode(node.left);
-
-                if (rhsType !== lhsType) {
-                    return [createTypeMismatchDiagnostic(lhsType, rhsType, context.source, node.right.position)];
-                }
-            }
-
-            return [];
+            const diagnostics: Diagnostic[] = [];
+            checkValidTypeAssignment(context, node.right, node.left, diagnostics);
+            return diagnostics;
         });
 
         factoryContext.registerRule<ast.CallExpression>(ast.SyntaxKind.CallExpression, (node, context) => {
-            const diagnostics = [];
+            const diagnostics: Diagnostic[] = [];
 
             const functionSymbol = context.typeChecker.symbolOfNode(node.expression);
             let parameters: Array<ast.EventParameter | ast.FunctionParameter> = [];
@@ -78,15 +73,8 @@ export const type_check: RuleFactory = factoryContext => {
             // rhs type must match lhs type
             let parameterIndex = 0;
             for (const argument of node.arguments.arguments) {
-                if (!isDollarsLiteral(argument) && parameterIndex < parameters.length) {
-                    const argumentType = context.typeChecker.typeOfNode(argument);
-                    const parameterType = context.typeChecker.typeOfNode(parameters[parameterIndex]);
-
-                    if (argumentType !== parameterType) {
-                        diagnostics.push(
-                            createTypeMismatchDiagnostic(parameterType, argumentType, context.source, argument.position)
-                        );
-                    }
+                if (parameterIndex < parameters.length) {
+                    checkValidTypeAssignment(context, argument, parameters[parameterIndex], diagnostics);
                 }
                 parameterIndex++;
             }
@@ -95,24 +83,66 @@ export const type_check: RuleFactory = factoryContext => {
         });
 
         factoryContext.registerRule<ast.ReturnStatement>(ast.SyntaxKind.ReturnStatement, (node, context) => {
-            if (!node.returnValue || isDollarsLiteral(node.returnValue)) return [];
-
             const parentFunc = findFirstParent(node, isFunctionDefinition);
 
             if (!parentFunc) return []; // Would be weird to have a return not in a parent
 
-            const returnType = context.typeChecker.typeOfNode(parentFunc.returnType);
-            const returendType = context.typeChecker.typeOfNode(node.returnValue);
+            if (!node.returnValue) {
+                // void return, check if function is void otherwise error
+                const returnType = context.typeChecker.typeOfNode(parentFunc.returnType);
+                if (returnType.kind !== TypeKind.Void) {
+                    return [createTypeMismatchDiagnostic(returnType, VOID_TYPE, context.source, node.position)];
+                }
+                return [];
+            } else {
+                const diagnostics: Diagnostic[] = [];
+                checkValidTypeAssignment(context, node.returnValue, parentFunc.returnType, diagnostics);
+                return diagnostics;
+            }
+        });
 
-            if (returendType != returnType) {
-                return [
-                    createTypeMismatchDiagnostic(returnType, returendType, context.source, node.returnValue.position),
-                ];
+        function checkValidTypeAssignment(
+            context: VisitorContext,
+            value: ast.AnyAstNode,
+            target: ast.AnyAstNode,
+            diagnostics: Diagnostic[]
+        ): void {
+            const targetType = context.typeChecker.typeOfNode(target);
+
+            //if (targetType === ERROR_TYPE) return;
+
+            // Can always assign dollars to extern types
+            if (isDollarsLiteral(value)) {
+                if (targetType.declaration && isExtern(targetType.declaration)) return;
+                else diagnostics.push(createNotAllowedDollarAssignmentDiagnostic(targetType, value, context.source));
+                return;
             }
 
-            return [];
-        });
+            // Look up type
+            const type = context.typeChecker.typeOfNode(value);
+
+            //if (type === ERROR_TYPE) return;
+
+            if (!isAssignableTo(type, targetType)) {
+                diagnostics.push(createTypeMismatchDiagnostic(targetType, type, context.source, value.position));
+            }
+        }
     }
 };
+
+function isAssignableTo(type: Type, target: Type): boolean {
+    if (type === target) return true;
+
+    if (type.declaration && target.declaration && isExtern(type.declaration) && isExtern(target.declaration))
+        return true;
+
+    if (
+        target.kind === TypeKind.IntegerRange &&
+        (type.kind === TypeKind.Integer || type.kind === TypeKind.IntegerRange)
+    )
+        return true;
+
+    return false;
+}
 
 export default type_check;

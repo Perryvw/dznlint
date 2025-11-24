@@ -170,7 +170,7 @@ test("variable assignment to bool with dollars is not allowed", async () => {
         fail: `
             component C {
                 behavior {
-                    bool a = $$;
+                    bool a = $123$;
                 }
             }`,
     });

@@ -41,6 +41,7 @@ test("extern statement", async () => {
 
 test("dollars variable declaration expression", async () => {
     await expectCanParseWithoutDiagnostics(`
+        extern int $$;
         component c {
             behavior {
                 int myInt = $123$;
@@ -81,6 +82,7 @@ test("blocking on with assignment", async () => {
 
 test("comment inside statement", async () => {
     await expectCanParseWithoutDiagnostics(`
+        extern int $$;
         component MyComponent /* a */ /* b */ // c
         {
             behavior // d
@@ -161,7 +163,7 @@ test("namespaced enum", async () => {
     );
 });
 
-test.only("namespaced global", async () => {
+test("namespaced global", async () => {
     await expectCanParseWithoutDiagnostics(`
         component {
             behavior {

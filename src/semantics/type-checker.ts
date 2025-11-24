@@ -75,17 +75,17 @@ export const ERROR_TYPE = {
     declaration: null!,
 } satisfies Type;
 
-const VOID_TYPE = {
+export const VOID_TYPE = {
     kind: TypeKind.Void,
     name: "void",
 } satisfies Type;
 
-const BOOL_TYPE = {
+export const BOOL_TYPE = {
     kind: TypeKind.Bool,
     name: "bool",
 } satisfies Type;
 
-const INTEGER_TYPE = {
+export const INTEGER_TYPE = {
     kind: TypeKind.Integer,
     name: "integer",
 } satisfies Type;
@@ -190,6 +190,7 @@ export class TypeChecker {
             typeReference = true;
             node = node.typeName;
         }
+        if (isErrorNode(node)) return undefined;
 
         // First check if this is a built-in type
         if (
