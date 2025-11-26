@@ -426,3 +426,114 @@ test("integer binary expression is not assignable to bool", async () => {
             }`,
     });
 });
+
+test("boolean check on enum values is assignable to bool", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            enum MyEnum {A,B};
+
+            component C {
+                behavior {
+                    void foo() {
+                        bool b = MyEnum.A == MyEnum.B;
+                    }
+                }
+            }`,
+    });
+});
+
+test("using number in boolean binary operator is not allowed", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            component C {
+                behavior {
+                    void foo() {
+                        bool b = true || false;
+                    }
+                }
+            }`,
+        fail: `
+            component C {
+                behavior {
+                    void foo() {
+                        bool b = 3 || false;
+                    }
+                }
+            }`,
+    });
+});
+
+test("using enum in integer binary operator is not allowed", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            subint Int1 {1..5};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i = 5 + 3;
+                    }
+                }
+            }`,
+        fail: `
+            enum MyEnum {A,B};
+            subint Int1 {1..5};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i = 5 + MyEnum.B;
+                    }
+                }
+            }`,
+    });
+});
+
+test("not allowed to compare two different enums", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            enum MyEnum {A,B};
+
+            component C {
+                behavior {
+                    void foo() {
+                        bool b = MyEnum.A == MyEnum.B;
+                    }
+                }
+            }`,
+        fail: `
+            enum MyEnum {A,B};
+            enum MyEnum2 {C,D};
+
+            component C {
+                behavior {
+                    void foo() {
+                        bool b = MyEnum.A == MyEnum2.C;
+                    }
+                }
+            }`,
+    });
+});
+
+test("allowed to compare two different subints", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            subint Int1 {1..5};
+            subint Int2 {1..8};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Int1 i1 = 3;
+                        Int2 i2 = 5;
+                        bool b = i1 == i2;
+                    }
+                }
+            }`,
+    });
+});

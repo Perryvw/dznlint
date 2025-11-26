@@ -174,13 +174,16 @@ test("namespaced global", async () => {
 });
 
 test.each(["&&", "||", "==", "!=", "<="])("binary expression guard", async comparison => {
-    await expectCanParseWithoutDiagnostics(`
+    await expectCanParseWithoutDiagnostics(
+        `
         interface MyInterface {
             behavior {
                 [a ${comparison} b] on event: {}
             }
         }
-    `);
+    `,
+        [typeMismatch.code]
+    );
 });
 
 test("if statement", async () => {
@@ -233,17 +236,21 @@ test("if-elseif-else statement", async () => {
 });
 
 test.each(["+", "-", "&&", "||"])("binary statement (%p)", async operator => {
-    await expectCanParseWithoutDiagnostics(`component MyComponent {
+    await expectCanParseWithoutDiagnostics(
+        `component MyComponent {
         behavior {
             on event(mydata): {
                 a = b ${operator} c;
             }
         }
-    }`);
+    }`,
+        [typeMismatch.code]
+    );
 });
 
 test("complex if statement", async () => {
-    await expectCanParseWithoutDiagnostics(`
+    await expectCanParseWithoutDiagnostics(
+        `
         component MyComponent {
             behavior {
                 on event(mydata): {
@@ -253,7 +260,9 @@ test("complex if statement", async () => {
                 }
             }
         }
-    `);
+    `,
+        [typeMismatch.code]
+    );
 });
 
 test("2.15 blocking ports", async () => {

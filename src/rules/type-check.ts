@@ -5,8 +5,8 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { findFirstParent, isDollarsLiteral, isEvent, isExtern, isFunctionDefinition } from "../util";
-import { Type, TypeKind, VOID_TYPE } from "../semantics";
+import { assertNever, findFirstParent, isDollarsLiteral, isEvent, isExtern, isFunctionDefinition } from "../util";
+import { BOOL_TYPE, INTEGER_TYPE, Type, TypeKind, VOID_TYPE } from "../semantics";
 import { VisitorContext } from "../visitor";
 
 export const typeMismatch = createDiagnosticsFactory();
@@ -101,6 +101,63 @@ export const type_check: RuleFactory = factoryContext => {
             }
         });
 
+        factoryContext.registerRule<ast.BinaryExpression>(ast.SyntaxKind.BinaryExpression, (node, context) => {
+            const diagnostics = [];
+
+            const lhsType = context.typeChecker.typeOfNode(node.left);
+            const rhsType = context.typeChecker.typeOfNode(node.right);
+
+            switch (node.operator.text) {
+                case "==":
+                case "!=": {
+                    // For comparisons, expecting lhs type to be equal to rhs type
+                    if (!isAssignableTo(rhsType, lhsType)) {
+                        diagnostics.push(
+                            createTypeMismatchDiagnostic(lhsType, rhsType, context.source, node.right.position)
+                        );
+                    }
+                    break;
+                }
+                case "&&":
+                case "||":
+                case "=>": {
+                    if (!isAssignableTo(lhsType, BOOL_TYPE)) {
+                        diagnostics.push(
+                            createTypeMismatchDiagnostic(BOOL_TYPE, lhsType, context.source, node.left.position)
+                        );
+                    }
+                    if (!isAssignableTo(rhsType, BOOL_TYPE)) {
+                        diagnostics.push(
+                            createTypeMismatchDiagnostic(BOOL_TYPE, rhsType, context.source, node.right.position)
+                        );
+                    }
+                    break;
+                }
+                case "<":
+                case "<=":
+                case ">":
+                case ">=":
+                case "+":
+                case "-": {
+                    if (!isAssignableTo(lhsType, INTEGER_TYPE)) {
+                        diagnostics.push(
+                            createTypeMismatchDiagnostic(INTEGER_TYPE, lhsType, context.source, node.left.position)
+                        );
+                    }
+                    if (!isAssignableTo(rhsType, INTEGER_TYPE)) {
+                        diagnostics.push(
+                            createTypeMismatchDiagnostic(INTEGER_TYPE, rhsType, context.source, node.right.position)
+                        );
+                    }
+                    break;
+                }
+                default:
+                    assertNever(node.operator, `Unknown operator type ${node.operator}`);
+            }
+
+            return diagnostics;
+        });
+
         function checkValidTypeAssignment(
             context: VisitorContext,
             value: ast.AnyAstNode,
@@ -137,7 +194,7 @@ function isAssignableTo(type: Type, target: Type): boolean {
         return true;
 
     if (
-        target.kind === TypeKind.IntegerRange &&
+        (target.kind === TypeKind.Integer || target.kind === TypeKind.IntegerRange) &&
         (type.kind === TypeKind.Integer || type.kind === TypeKind.IntegerRange)
     )
         return true;

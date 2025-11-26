@@ -130,8 +130,23 @@ export class TypeChecker {
         if (isParenthesizedExpression(node)) return this.typeOfNode(node.expression);
 
         if (isBinaryExpression(node)) {
-            // Assume the binary expression results in the same type as the type of the first operand
-            return this.typeOfNode(node.left);
+            switch (node.operator.text) {
+                case "==":
+                case "!=":
+                case "&&":
+                case "||":
+                case "=>":
+                case "<":
+                case "<=":
+                case ">":
+                case ">=":
+                    return BOOL_TYPE;
+                case "+":
+                case "-":
+                    return INTEGER_TYPE;
+                default:
+                    assertNever(node.operator, `Unknown operator type ${node.operator}`);
+            }
         } else if (isUnaryOperatorExpression(node)) {
             // Assume the unary expression results in the same type as the type of the operand
             return this.typeOfNode(node.expression);
