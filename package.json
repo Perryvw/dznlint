@@ -1,6 +1,6 @@
 {
     "name": "dznlint",
-    "version": "2.6.1",
+    "version": "2.6.2",
     "description": "A linter for Dezyne .dzn files. Providing extra warnings and coding style analysis.",
     "repository": "https://github.com/Perryvw/dznlint",
     "files": [
