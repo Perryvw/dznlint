@@ -537,3 +537,23 @@ test("allowed to compare two different subints", async () => {
             }`,
     });
 });
+
+test("correct type with operator precedence taken into account", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
+
+            component C {
+                behavior {
+                    void foo() {
+                        Enum1 a = Enum1.A;
+                        Enum2 d = Enum2.D;
+
+                        bool mybool = !a.B && a == Enum1.A || d == Enum2.D;
+                    }
+                }
+            }`,
+    });
+});

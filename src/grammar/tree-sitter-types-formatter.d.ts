@@ -1106,17 +1106,17 @@ interface binary_expression_Node extends BaseNode {
         | compound_name_Node
         | call_Node
         | binary_expression_Node
-        | UnnamedNode<"||", 183>
-        | UnnamedNode<"&&", 184>
-        | UnnamedNode<"<", 185>
-        | UnnamedNode<"<=", 186>
-        | UnnamedNode<"==", 187>
-        | UnnamedNode<"!=", 188>
-        | UnnamedNode<">=", 189>
-        | UnnamedNode<">", 190>
-        | UnnamedNode<"+", 191>
-        | UnnamedNode<"-", 192>
-        | UnnamedNode<"=>", 193>
+        | UnnamedNode<"=>", 183>
+        | UnnamedNode<"||", 184>
+        | UnnamedNode<"&&", 185>
+        | UnnamedNode<"==", 186>
+        | UnnamedNode<"!=", 187>
+        | UnnamedNode<"<", 188>
+        | UnnamedNode<"<=", 189>
+        | UnnamedNode<">=", 190>
+        | UnnamedNode<">", 191>
+        | UnnamedNode<"+", 192>
+        | UnnamedNode<"-", 193>
         | comment_Node
         | whiteline_Node
         | ERROR_Node
@@ -1427,17 +1427,17 @@ export type AllNodes =
     | UnnamedNode<"false", 178>
     | UnnamedNode<"!", 180>
     | UnnamedNode<"-", 181>
-    | UnnamedNode<"||", 183>
-    | UnnamedNode<"&&", 184>
-    | UnnamedNode<"<", 185>
-    | UnnamedNode<"<=", 186>
-    | UnnamedNode<"==", 187>
-    | UnnamedNode<"!=", 188>
-    | UnnamedNode<">=", 189>
-    | UnnamedNode<">", 190>
-    | UnnamedNode<"+", 191>
-    | UnnamedNode<"-", 192>
-    | UnnamedNode<"=>", 193>
+    | UnnamedNode<"=>", 183>
+    | UnnamedNode<"||", 184>
+    | UnnamedNode<"&&", 185>
+    | UnnamedNode<"==", 186>
+    | UnnamedNode<"!=", 187>
+    | UnnamedNode<"<", 188>
+    | UnnamedNode<"<=", 189>
+    | UnnamedNode<">=", 190>
+    | UnnamedNode<">", 191>
+    | UnnamedNode<"+", 192>
+    | UnnamedNode<"-", 193>
     | UnnamedNode<".", 195>
     | UnnamedNode<".", 196>
     | UnnamedNode<"//", 203>
