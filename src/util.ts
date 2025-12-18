@@ -176,6 +176,10 @@ export function isEnumDefinition(statement: ast.AnyAstNode): statement is ast.En
     return statement.kind === ast.SyntaxKind.EnumDefinition;
 }
 
+export function isForeignFunctionDeclaration(statement: ast.AnyAstNode): statement is ast.ForeignFunctionDeclaration {
+    return statement.kind === ast.SyntaxKind.ForeignFunctionDeclaration;
+}
+
 export function isFunctionDefinition(statement: ast.AnyAstNode): statement is ast.FunctionDefinition {
     return statement.kind === ast.SyntaxKind.FunctionDefinition;
 }

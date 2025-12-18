@@ -36,7 +36,7 @@ export enum VisitResult {
 export type VisitorCallback = (node: ast.AnyAstNode, context: VisitorContext) => VisitResult | void;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorContext, cb: VisitorCallback) => void>> = {
+const visitors: Record<ast.SyntaxKind, (node: any, context: VisitorContext, cb: VisitorCallback) => void> = {
     // Root node
     [ast.SyntaxKind.File]: (node: ast.File, context: VisitorContext, cb: VisitorCallback) => {
         for (const statement of node.statements) {
@@ -73,6 +73,11 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         context.visit(node.compound, cb);
         context.visit(node.name, cb);
     },
+    [ast.SyntaxKind.CallArguments]: (node: ast.CallArguments, context: VisitorContext, cb: VisitorCallback) => {
+        for (const arg of node.arguments) {
+            context.visit(arg, cb);
+        }
+    },
     [ast.SyntaxKind.CallExpression]: (node: ast.CallExpression, context: VisitorContext, cb: VisitorCallback) => {
         context.visit(node.expression, cb);
         for (const expression of node.arguments.arguments) {
@@ -103,6 +108,11 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         if (node.compound) context.visit(node.compound, cb);
         context.visit(node.name, cb);
     },
+    [ast.SyntaxKind.DeferArguments]: (node: ast.DeferArguments, context: VisitorContext, cb: VisitorCallback) => {
+        for (const arg of node.arguments) {
+            context.visit(arg, cb);
+        }
+    },
     [ast.SyntaxKind.DeferStatement]: (node: ast.DeferStatement, context: VisitorContext, cb: VisitorCallback) => {
         if (node.arguments) {
             for (const argument of node.arguments.arguments) {
@@ -130,6 +140,18 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
         cb: VisitorCallback
     ) => {
         context.visit(node.expression, cb);
+    },
+    [ast.SyntaxKind.ForeignFunctionDeclaration]: (
+        node: ast.ForeignFunctionDeclaration,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        context.visit(node.returnType, cb);
+        context.visit(node.name, cb);
+
+        for (const parameter of node.parameters) {
+            context.visit(parameter, cb);
+        }
     },
     [ast.SyntaxKind.FunctionDefinition]: (
         node: ast.FunctionDefinition,
@@ -221,6 +243,15 @@ const visitors: Partial<Record<ast.SyntaxKind, (node: any, context: VisitorConte
             for (const parameter of node.parameterList.parameters) {
                 context.visit(parameter, cb);
             }
+        }
+    },
+    [ast.SyntaxKind.OnTriggerParameters]: (
+        node: ast.OnTriggerParameters,
+        context: VisitorContext,
+        cb: VisitorCallback
+    ) => {
+        for (const param of node.parameters) {
+            context.visit(param, cb);
         }
     },
     [ast.SyntaxKind.ParenthesizedExpression]: (

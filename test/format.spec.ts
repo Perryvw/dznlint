@@ -481,6 +481,17 @@ test("one-line function", async () => {
     });
 });
 
+test("foreign function", async () => {
+    await testFormat({
+        input: `
+            namespace ns { a.b   foo ( bool a ) ; }
+        `,
+        config: {
+            indent_components_interfaces: true,
+        },
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",

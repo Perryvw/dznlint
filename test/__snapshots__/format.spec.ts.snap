@@ -112,6 +112,13 @@ exports[`error 1`] = `
 "
 `;
 
+exports[`foreign function 1`] = `
+"namespace ns {
+a.b foo(bool a);
+}
+"
+`;
+
 exports[`format file files/component.dzn 1`] = `
 "import interface.dzn;
 

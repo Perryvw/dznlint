@@ -501,6 +501,15 @@ test("global functions", async () => {
     `);
 });
 
+test("foreign functions", async () => {
+    await expectCanParseWithoutDiagnostics(`
+        bool foo(bool inp1, int inp2);
+        namespace ns {
+            ns2.sometime bar();
+        }
+    `);
+});
+
 test("one line function syntax", async () => {
     await expectCanParseWithoutDiagnostics(`
         bool foo() = true;

@@ -21,6 +21,7 @@ export enum SyntaxKind {
     ExpressionStatement,
     ExternDeclaration,
     FunctionDefinition,
+    ForeignFunctionDeclaration,
     GuardStatement,
     IfStatement,
     ImportStatement,
@@ -89,6 +90,7 @@ export type RootStatement =
     | InterfaceDefinition
     | ComponentDefinition
     | FunctionDefinition
+    | ForeignFunctionDeclaration
     | Statement;
 
 export type Statement = DeclarativeStatement | ImperativeStatement;
@@ -127,7 +129,8 @@ export type NamespaceStatement =
     | Namespace
     | InterfaceDefinition
     | ComponentDefinition
-    | FunctionDefinition;
+    | FunctionDefinition
+    | ForeignFunctionDeclaration;
 
 export interface Namespace extends AstNode<SyntaxKind.Namespace> {
     name: Name;
@@ -205,6 +208,12 @@ export interface FunctionDefinition extends AstNode<SyntaxKind.FunctionDefinitio
     name: Identifier;
     parameters: FunctionParameter[];
     body: Compound | Expression;
+}
+
+export interface ForeignFunctionDeclaration extends AstNode<SyntaxKind.ForeignFunctionDeclaration> {
+    returnType: TypeReference;
+    name: Identifier;
+    parameters: FunctionParameter[];
 }
 
 export type ParameterDirection = Keyword<"in"> | Keyword<"out"> | Keyword<"inout">;

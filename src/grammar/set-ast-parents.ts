@@ -12,7 +12,7 @@ export const setParentVisitor: VisitorCallback = node => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = {
+const setParentVisitors: Record<ast.SyntaxKind, ((node: any) => void) | undefined> = {
     // Root node
     [ast.SyntaxKind.File]: (node: ast.File) => {
         for (const statement of node.statements) {
@@ -41,6 +41,11 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
         setParent(node.compound, node);
         setParent(node.name, node);
     },
+    [ast.SyntaxKind.CallArguments]: (node: ast.CallArguments) => {
+        for (const arg of node.arguments) {
+            setParent(arg, node);
+        }
+    },
     [ast.SyntaxKind.CallExpression]: (node: ast.CallExpression) => {
         setParent(node.expression, node);
         for (const expression of node.arguments.arguments) {
@@ -64,6 +69,11 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
     [ast.SyntaxKind.CompoundName]: (node: ast.CompoundName) => {
         if (node.compound) setParent(node.compound, node);
         setParent(node.name, node);
+    },
+    [ast.SyntaxKind.DeferArguments]: (node: ast.DeferArguments) => {
+        for (const arg of node.arguments) {
+            setParent(arg, node);
+        }
     },
     [ast.SyntaxKind.DeferStatement]: (node: ast.DeferStatement) => {
         if (node.arguments) {
@@ -89,8 +99,20 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
             setParent(param.type, param);
         }
     },
+    [ast.SyntaxKind.EventParameter]: (node: ast.EventParameter) => {
+        setParent(node.type, node);
+        setParent(node.name, node);
+    },
     [ast.SyntaxKind.ExpressionStatement]: (node: ast.ExpressionStatement) => {
         setParent(node.expression, node);
+    },
+    [ast.SyntaxKind.ForeignFunctionDeclaration]: (node: ast.FunctionDefinition) => {
+        setParent(node.returnType, node);
+        setParent(node.name, node);
+
+        for (const parameter of node.parameters) {
+            setParent(parameter, node);
+        }
     },
     [ast.SyntaxKind.FunctionDefinition]: (node: ast.FunctionDefinition) => {
         setParent(node.body, node);
@@ -169,6 +191,11 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
             }
         }
     },
+    [ast.SyntaxKind.OnTriggerParameters]: (node: ast.OnTriggerParameters) => {
+        for (const arg of node.parameters) {
+            setParent(arg, node);
+        }
+    },
     [ast.SyntaxKind.ParenthesizedExpression]: (node: ast.ParenthesizedExpression) => {
         setParent(node.expression, node);
     },
@@ -202,6 +229,17 @@ const setParentVisitors: Partial<Record<ast.SyntaxKind, (node: any) => void>> = 
     [ast.SyntaxKind.UnaryOperatorExpression]: (node: ast.UnaryOperatorExpression) => {
         setParent(node.expression, node);
     },
+    // Nodes without children:
+    [ast.SyntaxKind.BooleanLiteral]: undefined,
+    [ast.SyntaxKind.DollarLiteral]: undefined,
+    [ast.SyntaxKind.EmptyStatement]: undefined,
+    [ast.SyntaxKind.ExternDeclaration]: undefined,
+    [ast.SyntaxKind.Identifier]: undefined,
+    [ast.SyntaxKind.ImportStatement]: undefined,
+    [ast.SyntaxKind.IntDefinition]: undefined,
+    [ast.SyntaxKind.Keyword]: undefined,
+    [ast.SyntaxKind.NumericLiteral]: undefined,
+    [ast.SyntaxKind.ERROR]: undefined,
 };
 
 function setParent(node: ast.AnyAstNode, parent: ast.AnyAstNode) {

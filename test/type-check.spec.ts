@@ -557,3 +557,46 @@ test("correct type with operator precedence taken into account", async () => {
             }`,
     });
 });
+
+test("correct type from foreign function", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            bool foo();
+
+            component C {
+                behavior {
+                    bool bar = foo();
+                }
+            }`,
+        fail: `
+            enum MyEnum{A,B};
+            MyEnum foo();
+
+            component C {
+                behavior {
+                    bool bar = foo();
+                }
+            }`,
+    });
+});
+
+test("correct type from foreign function with namespaces", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            namespace NS {
+                enum MyEnum{A,B};
+            }
+            namespace NS2 {
+                NS.MyEnum foo();
+            }
+            namespace NS3 {
+                component C {
+                    behavior {
+                        NS.MyEnum bar = NS2.foo();
+                    }
+                }
+            }`,
+    });
+});

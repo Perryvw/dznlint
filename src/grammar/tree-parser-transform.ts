@@ -41,6 +41,8 @@ function transformRootStatement(node: RootStatements): ast.RootStatement {
             return transformInterfaceDefinition(node);
         case "namespace":
             return transformNamespace(node);
+        case "foreign_function":
+            return transformForeignFunctionDeclaration(node);
         default:
             throw assertNever(node, "unknown root statement kind");
     }
@@ -223,22 +225,22 @@ function transformImportStatement(node: parser.import_Node): ast.ImportStatement
     };
 }
 
-function transformFunction(node: parser.function_Node): ast.FunctionDefinition {
-    function transformFunctionParameters(formals: parser.formals_Node): ast.FunctionParameter[] {
-        return (
-            formals.childrenForFieldName("formal")?.map(formal => {
-                const direction = formal.childForFieldName("direction");
-                return {
-                    kind: ast.SyntaxKind.FunctionParameter,
-                    position: nodePosition(formal),
-                    direction: direction && transformDirection<ast.ParameterDirection>(direction),
-                    type: transformTypeReference(formal.childForFieldName("type")),
-                    name: transformIdentifier(formal.childForFieldName("name")),
-                };
-            }) ?? []
-        );
-    }
+function transformFunctionParameters(formals: parser.formals_Node): ast.FunctionParameter[] {
+    return (
+        formals.childrenForFieldName("formal")?.map(formal => {
+            const direction = formal.childForFieldName("direction");
+            return {
+                kind: ast.SyntaxKind.FunctionParameter,
+                position: nodePosition(formal),
+                direction: direction && transformDirection<ast.ParameterDirection>(direction),
+                type: transformTypeReference(formal.childForFieldName("type")),
+                name: transformIdentifier(formal.childForFieldName("name")),
+            };
+        }) ?? []
+    );
+}
 
+function transformFunction(node: parser.function_Node): ast.FunctionDefinition {
     const compound = node.childForFieldName("compound");
     const expressionBody = node.childForFieldName("expression");
 
@@ -255,6 +257,16 @@ function transformFunction(node: parser.function_Node): ast.FunctionDefinition {
         name: transformIdentifier(node.childForFieldName("name")),
         parameters: transformFunctionParameters(node.childForFieldName("formals")),
         body,
+    };
+}
+
+function transformForeignFunctionDeclaration(node: parser.foreign_function_Node): ast.ForeignFunctionDeclaration {
+    return {
+        kind: ast.SyntaxKind.ForeignFunctionDeclaration,
+        position: nodePosition(node),
+        returnType: transformTypeReference(node.childForFieldName("return_type")),
+        name: transformIdentifier(node.childForFieldName("name")),
+        parameters: transformFunctionParameters(node.childForFieldName("formals")),
     };
 }
 
@@ -298,6 +310,8 @@ function transformNamespaceStatement(node: NamespaceStatements): ast.NamespaceSt
             return transformInterfaceDefinition(node);
         case "namespace":
             return transformNamespace(node);
+        case "foreign_function":
+            return transformForeignFunctionDeclaration(node);
         default:
             throw assertNever(node, "unknown namespace statement kind");
     }

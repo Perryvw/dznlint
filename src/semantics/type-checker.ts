@@ -17,6 +17,7 @@ import {
     assertNever,
     isKeyword,
     isChildOf,
+    isForeignFunctionDeclaration,
     isFunctionDefinition,
     isErrorNode,
     isEvent,
@@ -154,7 +155,10 @@ export class TypeChecker {
             const calledSymbol = this.symbolOfNode(node.expression);
             if (!calledSymbol) return ERROR_TYPE;
 
-            if (isFunctionDefinition(calledSymbol.declaration)) {
+            if (
+                isFunctionDefinition(calledSymbol.declaration) ||
+                isForeignFunctionDeclaration(calledSymbol.declaration)
+            ) {
                 return this.typeOfNode(calledSymbol.declaration.returnType);
             } else if (isEvent(calledSymbol.declaration)) {
                 return this.typeOfNode(calledSymbol.declaration.type);
@@ -401,7 +405,10 @@ export class TypeChecker {
             } else {
                 return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.name.text };
             }
-        } else if (symbol.declaration.kind === ast.SyntaxKind.FunctionDefinition) {
+        } else if (
+            symbol.declaration.kind === ast.SyntaxKind.ForeignFunctionDeclaration ||
+            symbol.declaration.kind === ast.SyntaxKind.FunctionDefinition
+        ) {
             const definition = declaration as ast.FunctionDefinition;
             return { kind: TypeKind.Function, declaration: symbol.declaration, name: definition.name.text };
         } else if (symbol.declaration.kind === ast.SyntaxKind.BooleanLiteral) {
@@ -513,6 +520,7 @@ export class TypeChecker {
                     statement.kind === ast.SyntaxKind.InterfaceDefinition ||
                     statement.kind === ast.SyntaxKind.ExternDeclaration ||
                     statement.kind === ast.SyntaxKind.IntDefinition ||
+                    statement.kind === ast.SyntaxKind.ForeignFunctionDeclaration ||
                     statement.kind === ast.SyntaxKind.FunctionDefinition
                 ) {
                     result.set(statement.name.text, statement);
@@ -564,6 +572,7 @@ export class TypeChecker {
                     statement.kind === ast.SyntaxKind.InterfaceDefinition ||
                     statement.kind === ast.SyntaxKind.ExternDeclaration ||
                     statement.kind === ast.SyntaxKind.IntDefinition ||
+                    statement.kind === ast.SyntaxKind.ForeignFunctionDeclaration ||
                     statement.kind === ast.SyntaxKind.FunctionDefinition
                 ) {
                     result.set(statement.name.text, statement);

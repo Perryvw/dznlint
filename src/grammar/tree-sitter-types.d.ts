@@ -317,6 +317,16 @@ export interface fields_Node
     type: "fields";
     childrenForFieldName(kind: "name"): Array<member_name_Node>;
 }
+export interface foreign_function_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "foreign_function";
+    childForFieldName(kind: "formals"): formals_Node;
+    childForFieldName(kind: "name"): name_Node;
+    childForFieldName(kind: "return_type"): type_name_Node;
+}
 export interface formal_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -594,7 +604,16 @@ export interface namespace_Node
     childrenForFieldName(
         kind: "body_statement"
     ):
-        | Array<component_Node | enum_Node | extern_Node | function_Node | int_Node | interface_Node | namespace_Node>
+        | Array<
+              | component_Node
+              | enum_Node
+              | extern_Node
+              | foreign_function_Node
+              | function_Node
+              | int_Node
+              | interface_Node
+              | namespace_Node
+          >
         | undefined;
     childForFieldName(kind: "name"): compound_name_Node;
 }
@@ -709,6 +728,7 @@ export interface root_Node
               | dollars_Node
               | enum_Node
               | extern_Node
+              | foreign_function_Node
               | function_Node
               | import_Node
               | int_Node
@@ -915,6 +935,7 @@ export type AllNodes =
     | event_name_Node
     | extern_Node
     | fields_Node
+    | foreign_function_Node
     | formal_Node
     | formal_direction_Node
     | formals_Node

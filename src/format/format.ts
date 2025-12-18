@@ -59,6 +59,9 @@ function formatRoot(cursor: Grammar.CursorPosition<Grammar.root_Node>, formatter
                 case "function":
                     formatFunction(cursor.pos(), formatter);
                     break;
+                case "foreign_function":
+                    formatForeignFunctionDeclaration(cursor.pos(), formatter);
+                    break;
                 case "int":
                     formatter.requirePrecedingNewLine();
                     formatInt(cursor.pos(), formatter);
@@ -138,6 +141,9 @@ function formatNamespace(cursor: Grammar.CursorPosition<Grammar.namespace_Node>,
                 break;
             case "function":
                 formatFunction(cursor.pos(), formatter);
+                break;
+            case "foreign_function":
+                formatForeignFunctionDeclaration(cursor.pos(), formatter);
                 break;
             case "int":
                 formatInt(cursor.pos(), formatter);
@@ -850,6 +856,44 @@ function formatFunction(cursor: Grammar.CursorPosition<Grammar.function_Node>, f
                 break;
             case "function_body_one_line":
                 formatOneLineFunction(cursor.pos(), formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(cursor.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(cursor.nodeText);
+                break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
+            default:
+                assertNever(cursor);
+                throw `cannot format function child ${cursor}`;
+        }
+    } while (cursor.gotoNextSibling());
+    cursor.gotoParent();
+}
+
+function formatForeignFunctionDeclaration(
+    cursor: Grammar.CursorPosition<Grammar.foreign_function_Node>,
+    formatter: Formatter
+) {
+    formatter.requirePrecedingNewLine();
+    cursor.gotoFirstChild();
+    do {
+        switch (cursor.nodeType) {
+            case "type_name":
+                formatter.type(cursor.nodeText);
+                break;
+            case "name":
+                formatter.name(cursor.nodeText);
+                break;
+            case "formals":
+                formatFormals(cursor.pos(), formatter);
+                break;
+            case ";":
+                formatter.semicolon();
                 break;
             // generics
             case "comment":
