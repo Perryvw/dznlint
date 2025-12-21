@@ -5,7 +5,15 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory, Diagnostic } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { InputSource } from "../semantics/program";
-import { assertNever, findFirstParent, isDollarsLiteral, isEvent, isExtern, isFunctionDefinition } from "../util";
+import {
+    assertNever,
+    findFirstParent,
+    isDollarsLiteral,
+    isEvent,
+    isExtern,
+    isForeignFunctionDeclaration,
+    isFunctionDefinition,
+} from "../util";
 import { BOOL_TYPE, INTEGER_TYPE, Type, TypeKind, VOID_TYPE } from "../semantics";
 import { VisitorContext } from "../visitor";
 
@@ -65,7 +73,9 @@ export const type_check: RuleFactory = factoryContext => {
             let parameters: Array<ast.EventParameter | ast.FunctionParameter> = [];
             if (
                 functionSymbol?.declaration &&
-                (isEvent(functionSymbol.declaration) || isFunctionDefinition(functionSymbol.declaration))
+                (isEvent(functionSymbol.declaration) ||
+                    isFunctionDefinition(functionSymbol.declaration) ||
+                    isForeignFunctionDeclaration(functionSymbol.declaration))
             ) {
                 parameters = functionSymbol.declaration.parameters;
             }

@@ -239,6 +239,39 @@ test("function call parameters", async () => {
     });
 });
 
+test("foreign function call parameters", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            enum Enum1 {A,B};
+
+            void foo(Enum1 a);
+
+            component C {
+                behavior {
+                    void bar() {
+                        Enum1 bla = Enum1.A;
+                        foo(bla);
+                    }
+                }
+            }`,
+        fail: `
+            enum Enum1 {A,B};
+            enum Enum2 {C,D};
+
+            void foo(Enum1 a);
+
+            component C {
+                behavior {
+                    void bar() {
+                        Enum2 bla = Enum2.C;
+                        foo(bla);
+                    }
+                }
+            }`,
+    });
+});
+
 test("function call parameters dollars are always allowed", async () => {
     await testdznlint({
         diagnostic: typeMismatch.code,

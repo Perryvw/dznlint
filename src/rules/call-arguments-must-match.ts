@@ -5,7 +5,7 @@ import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
 import { TypeKind } from "../semantics/type-checker";
-import { isEvent, isFunctionDefinition, nameToString } from "../util";
+import { isEvent, isForeignFunctionDeclaration, isFunctionDefinition, nameToString } from "../util";
 
 export const incorrectArgumentCount = createDiagnosticsFactory();
 
@@ -21,7 +21,8 @@ export const call_arguments_must_match: RuleFactory = factoryContext => {
             if (
                 functionType.kind === TypeKind.Function &&
                 functionType.declaration &&
-                isFunctionDefinition(functionType.declaration)
+                (isFunctionDefinition(functionType.declaration) ||
+                    isForeignFunctionDeclaration(functionType.declaration))
             ) {
                 const functionParameters = functionType.declaration.parameters;
                 const argumentCount = node.arguments.arguments.length;

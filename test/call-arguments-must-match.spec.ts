@@ -29,6 +29,36 @@ test("function call argument count must match function parameters", async () => 
     });
 });
 
+test("foreign function call argument count must match function parameters", async () => {
+    await testdznlint({
+        diagnostic: incorrectArgumentCount.code,
+        pass: `
+            extern ExtType $$;
+
+            void bar(in bool a, in bool b, ExtType c);
+
+            component C {
+                behavior {
+                    void foo() {
+                        bar(true, false, $hi$);
+                    }
+                }
+            }`,
+        fail: `
+            extern ExtType $$;
+
+            void bar(in bool a, in bool b, ExtType c);
+
+            component C {
+                behavior {
+                    void foo() {
+                        bar(true, false);
+                    }
+                }
+            }`,
+    });
+});
+
 test("too many arguments is also an error", async () => {
     await testdznlint({
         diagnostic: incorrectArgumentCount.code,
