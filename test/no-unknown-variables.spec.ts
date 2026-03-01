@@ -1336,3 +1336,27 @@ test("trying to call an action on function parameter", async () => {
         }`,
     });
 });
+
+// https://github.com/Perryvw/dznlint/issues/56
+test("can handle component/namespace naming collision (#56)", async () => {
+    await testdznlint({
+        diagnostic: unknownVariable.code,
+        pass: `
+        namespace Foo.Bar {
+            interface IPort {}
+            component Foo {
+                provides IPort somePort;
+            }
+        }
+
+        namespace Foo.Bar {
+            component S {
+                requires IPort somePort;
+                system {
+                    Foo bla;
+                    bla.somePort <=> somePort;
+                }
+            }
+        }`,
+    });
+});

@@ -64,6 +64,12 @@ export enum TypeKind {
     Integer,
 }
 
+export enum SymbolKind {
+    Any,
+    Type,
+    ConcreteType,
+}
+
 export interface Type {
     kind: TypeKind;
     name: string;
@@ -127,7 +133,7 @@ const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
 export class TypeChecker {
     public constructor(private program: Program) {}
 
-    public typeOfNode(node: ast.AnyAstNode, typeReference = false): Type {
+    public typeOfNode(node: ast.AnyAstNode): Type {
         if (isParenthesizedExpression(node)) return this.typeOfNode(node.expression);
 
         if (isBinaryExpression(node)) {
@@ -169,7 +175,7 @@ export class TypeChecker {
         } else if (node.kind === ast.SyntaxKind.NumericLiteral) {
             return INTEGER_TYPE;
         }
-        const symbol = this.symbolOfNode(node, typeReference);
+        const symbol = this.symbolOfNode(node);
         if (!symbol) return ERROR_TYPE;
         return this.typeOfSymbol(symbol);
     }
@@ -187,13 +193,13 @@ export class TypeChecker {
     private resolveNameInScopeTree(
         name: string,
         leafScope: ScopedBlock,
-        typeReference: boolean
+        symbolKind: SymbolKind
     ): SemanticSymbol | undefined {
         let scope: ScopedBlock | undefined = leafScope;
         const scopeNamespaces = [];
         while (scope) {
-            const symbol = this.findVariableInScope(name, scope, scopeNamespaces);
-            if (symbol && (!typeReference || this.isTypeSymbol(symbol))) return symbol;
+            const symbol = this.findVariableInScope(name, scope, symbolKind, scopeNamespaces);
+            if (symbol) return symbol;
 
             if (isNamespace(scope)) {
                 scopeNamespaces.push(nameToString(scope.name));
@@ -203,10 +209,10 @@ export class TypeChecker {
         return undefined;
     }
 
-    public symbolOfNode(node: ast.AnyAstNode, typeReference = false): SemanticSymbol | undefined {
+    public symbolOfNode(node: ast.AnyAstNode, symbolKind = SymbolKind.Any): SemanticSymbol | undefined {
         if (this.symbols.has(node)) return this.symbols.get(node);
         if (isTypeReference(node)) {
-            typeReference = true;
+            symbolKind = SymbolKind.ConcreteType;
             node = node.typeName;
         }
         if (isErrorNode(node)) return undefined;
@@ -223,15 +229,13 @@ export class TypeChecker {
             if (builtInType) return builtInType;
         }
 
-        if (
-            node.parent &&
-            (isCompoundName(node.parent) || isCompoundBindingExpression(node.parent)) &&
-            node.parent.name === node
-        ) {
-            if (!node.parent.compound) return undefined;
+        if (node.parent && (isCompoundName(node.parent) || isCompoundBindingExpression(node.parent))) {
+            if (node.parent.name === node) {
+                if (!node.parent.compound) return undefined;
 
-            const parentType = this.typeOfNode(node.parent.compound);
-            return this.getMembersOfType(parentType).get(node.parent.name.text);
+                const parentType = this.typeOfNode(node.parent.compound);
+                return this.getMembersOfType(parentType).get(node.parent.name.text);
+            }
         }
 
         // Try to resolve type the hard way
@@ -244,11 +248,15 @@ export class TypeChecker {
                 scope = findFirstParent(scope, isScopedBlock);
             }
             if (!scope) return undefined;
-            return this.resolveNameInScopeTree(node.text, scope, typeReference);
+            return this.resolveNameInScopeTree(node.text, scope, symbolKind);
         } else if (isCompoundName(node)) {
             if (node.compound !== undefined) {
-                const ownerSymbol = this.symbolOfNode(node.compound);
-                const ownerType = this.typeOfNode(node.compound, typeReference);
+                const ownerSymbol = this.symbolOfNode(
+                    node.compound,
+                    symbolKind === SymbolKind.ConcreteType ? SymbolKind.Type : symbolKind
+                );
+                if (!ownerSymbol) return undefined;
+                const ownerType = this.typeOfSymbol(ownerSymbol);
                 if (ownerType.kind === TypeKind.Invalid) return undefined;
                 const ownerMembers = this.getMembersOfType(ownerType);
                 const memberSymbol = ownerMembers.get(node.name.text);
@@ -260,7 +268,7 @@ export class TypeChecker {
                 // .<name>, look up name in global scope
                 const sourceFile = findFirstParent(node, isSourceFile);
                 if (!sourceFile) throw `Unexpectedly found a node without SourceFile parent`;
-                return this.resolveNameInScopeTree(node.name.text, sourceFile, typeReference);
+                return this.resolveNameInScopeTree(node.name.text, sourceFile, symbolKind);
             }
         } else if (isParenthesizedExpression(node)) {
             return this.symbolOfNode(node.expression);
@@ -302,36 +310,46 @@ export class TypeChecker {
         }
     }
 
-    private isTypeSymbol(symbol: SemanticSymbol) {
+    private isType(node: ast.AnyAstNode) {
+        return this.isConcreteType(node) || node.kind === ast.SyntaxKind.Namespace;
+    }
+
+    private isConcreteType(node: ast.AnyAstNode) {
         return (
-            symbol.declaration.kind === ast.SyntaxKind.ComponentDefinition ||
-            symbol.declaration.kind === ast.SyntaxKind.EnumDefinition ||
-            symbol.declaration.kind === ast.SyntaxKind.ExternDeclaration ||
-            symbol.declaration.kind === ast.SyntaxKind.InterfaceDefinition ||
-            symbol.declaration.kind === ast.SyntaxKind.IntDefinition ||
-            symbol.declaration.kind === ast.SyntaxKind.Namespace
+            node.kind === ast.SyntaxKind.ComponentDefinition ||
+            node.kind === ast.SyntaxKind.EnumDefinition ||
+            node.kind === ast.SyntaxKind.ExternDeclaration ||
+            node.kind === ast.SyntaxKind.InterfaceDefinition ||
+            node.kind === ast.SyntaxKind.IntDefinition
         );
     }
 
     private findVariableInScope(
         name: string,
         scope: ScopedBlock,
+        symbolKind: SymbolKind,
         scopeNamespaces: string[]
     ): SemanticSymbol | undefined {
         const declaredVariables = this.findVariablesDeclaredInScope(scope);
         const variableDeclaration = declaredVariables.get(name);
         if (variableDeclaration) {
-            const existingSymbol = this.symbols.get(variableDeclaration);
-            if (existingSymbol) {
-                return existingSymbol;
-            } else {
-                return this.getOrCreateSymbol(variableDeclaration);
+            const isRightType =
+                symbolKind === SymbolKind.Any ||
+                (symbolKind === SymbolKind.Type && this.isType(variableDeclaration)) ||
+                (symbolKind === SymbolKind.ConcreteType && this.isConcreteType(variableDeclaration));
+            if (isRightType) {
+                const existingSymbol = this.symbols.get(variableDeclaration);
+                if (existingSymbol) {
+                    return existingSymbol;
+                } else {
+                    return this.getOrCreateSymbol(variableDeclaration);
+                }
             }
         }
         if (scopeNamespaces.length > 0) {
             const ns = declaredVariables.get(scopeNamespaces[scopeNamespaces.length - 1]);
             if (ns && isNamespace(ns)) {
-                const symbol = this.findVariableInScope(name, ns, scopeNamespaces.slice(0, -1));
+                const symbol = this.findVariableInScope(name, ns, symbolKind, scopeNamespaces.slice(0, -1));
                 if (symbol) return symbol;
             }
         }
@@ -339,7 +357,7 @@ export class TypeChecker {
 
     public resolveNameInScope(name: string, scope: ScopedBlock): SemanticSymbol | undefined {
         const parts = name.split(".");
-        let symbol = this.resolveNameInScopeTree(parts[0], scope, false);
+        let symbol = this.resolveNameInScopeTree(parts[0], scope, SymbolKind.Any);
         let i = 1;
         while (symbol && i < parts.length) {
             const ownerType = this.typeOfSymbol(symbol);
@@ -363,22 +381,22 @@ export class TypeChecker {
             return { kind: TypeKind.External, declaration: definition, name: definition.name.text };
         } else if (declaration.kind === ast.SyntaxKind.Instance) {
             const instance = declaration as ast.Instance;
-            const typeSymbol = this.symbolOfNode(instance.type);
+            const typeSymbol = this.symbolOfNode(instance.type, SymbolKind.ConcreteType);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === ast.SyntaxKind.VariableDefinition) {
             const definition = declaration as ast.VariableDefinition;
-            const typeSymbol = this.symbolOfNode(definition.type);
+            const typeSymbol = this.symbolOfNode(definition.type, SymbolKind.ConcreteType);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === ast.SyntaxKind.FunctionParameter) {
             const definition = declaration as ast.FunctionParameter;
-            const typeSymbol = this.symbolOfNode(definition.type);
+            const typeSymbol = this.symbolOfNode(definition.type, SymbolKind.ConcreteType);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === ast.SyntaxKind.EventParameter) {
             const definition = declaration as ast.EventParameter;
-            const typeSymbol = this.symbolOfNode(definition.type);
+            const typeSymbol = this.symbolOfNode(definition.type, SymbolKind.ConcreteType);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (declaration.kind === ast.SyntaxKind.EnumDefinition) {
@@ -386,7 +404,7 @@ export class TypeChecker {
             return { kind: TypeKind.Enum, declaration: definition, name: definition.name.text };
         } else if (symbol.declaration.kind === ast.SyntaxKind.Port) {
             const definition = declaration as ast.Port;
-            const typeSymbol = this.symbolOfNode(definition.type);
+            const typeSymbol = this.symbolOfNode(definition.type, SymbolKind.ConcreteType);
             if (!typeSymbol) return ERROR_TYPE;
             return this.typeOfSymbol(typeSymbol);
         } else if (symbol.declaration.kind === ast.SyntaxKind.Event) {
