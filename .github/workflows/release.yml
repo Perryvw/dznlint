@@ -4,13 +4,17 @@ on:
     push:
         tags: "*"
 
+permissions:
+  id-token: write  # Required for trusted publishing
+  contents: read
+
 jobs:
     release:
         name: Release
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - name: Use Node.js 22.14.0
               uses: actions/setup-node@v1
               with:
@@ -19,5 +23,3 @@ jobs:
             - run: npm ci
             - run: npm run build
             - run: npm publish
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
