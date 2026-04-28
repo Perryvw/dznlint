@@ -46,6 +46,7 @@ export interface DznLintConfiguration {
     parameter_direction: ConfigValue;
     port_missing_redundant_blocking: ConfigValue;
     port_parameter_direction: ConfigValue;
+    required_port_shared_state_guard: ConfigValue;
     trailing_assignments: ConfigValue;
     type_check: ConfigValue;
 }

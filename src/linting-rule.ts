@@ -40,6 +40,7 @@ import parameter_direction from "./rules/parameter-direction";
 import no_unused_instances from "./rules/no-unused-instances";
 import { port_missing_redundant_blocking } from "./rules/port-missing-redundant-blocking";
 import port_parameter_direction from "./rules/port-parameter-direction";
+import required_port_shared_state_guard from "./rules/required-port-shared-state-guard";
 import trailing_assignments from "./rules/trailing-assignments";
 import type_check from "./rules/type-check";
 
@@ -73,6 +74,7 @@ export function loadLinters(config: DznLintUserConfiguration) {
         parameter_direction,
         port_missing_redundant_blocking,
         port_parameter_direction,
+        required_port_shared_state_guard,
         trailing_assignments,
         type_check,
     ];
