@@ -4,7 +4,7 @@ import * as ast from "../grammar/ast";
 import { getRuleConfig } from "../config/util";
 import { createDiagnosticsFactory } from "../diagnostic";
 import { RuleFactory } from "../linting-rule";
-import { isCompoundName, isPort } from "../util";
+import { isCompoundName, isEvent, isInterfaceDefinition, isPort } from "../util";
 
 export const requiredPortSharedStateInGuard = createDiagnosticsFactory();
 
@@ -24,14 +24,26 @@ export const required_port_shared_state_guard: RuleFactory = factoryContext => {
                     isPort(baseSymbol.declaration) &&
                     baseSymbol.declaration.direction.text === "requires"
                 ) {
-                    diagnostics.push(
-                        requiredPortSharedStateInGuard(
-                            config.severity,
-                            "Using required port shared state in guard statements leads to unexpected component behavior and is better avoided",
-                            context.source,
-                            node.condition.position
-                        )
-                    );
+                    // We have a guard that is using state from a required port. Check if that port has out events:
+                    const interfaceDefinition = context.typeChecker.symbolOfNode(
+                        baseSymbol.declaration.type
+                    )?.declaration;
+
+                    if (interfaceDefinition && isInterfaceDefinition(interfaceDefinition)) {
+                        const hasOutEvents = interfaceDefinition.body.some(
+                            node => isEvent(node) && node.direction.text === "out"
+                        );
+                        if (hasOutEvents) {
+                            diagnostics.push(
+                                requiredPortSharedStateInGuard(
+                                    config.severity,
+                                    "Using required port shared state in guard statements leads to unexpected component behavior with the port's out events and is better avoided",
+                                    context.source,
+                                    node.condition.position
+                                )
+                            );
+                        }
+                    }
                 }
             }
 

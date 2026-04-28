@@ -6,6 +6,7 @@ test("no unused parameters in event trigger", async () => {
         interface I {
 
             in void Foo();
+            out void Bar();
 
             behavior {
                 enum State {
@@ -34,6 +35,34 @@ test("no unused parameters in event trigger", async () => {
             ${itf}
             component A {
                 requires I itf;
+
+                behavior {
+                    [itf.state.A] {
+                        on itf.Foo(): {}
+                    }
+                }
+            }`,
+    });
+});
+
+test("required ports that contain no out parameters are allowed", async () => {
+    await testdznlint({
+        diagnostic: requiredPortSharedStateInGuard.code,
+        pass: `
+            interface I {
+                in void Foo();
+
+                behavior {
+                    enum State {
+                        A,
+                        B
+                    };
+                    State state = State.A;
+                    [state.A] on Foo: {}
+                }
+            }
+            component A {
+                provides I itf;
 
                 behavior {
                     [itf.state.A] {

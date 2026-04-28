@@ -301,6 +301,14 @@ Function parameters that are ports must be annotated with `provides` or `require
 
 ---
 
+## required_port_shared_state_guard
+
+Using shared state of a required port in a component guard (i.e. `[myRequiredPort.state.Bla] {`) will commonly result in unexpected behavior, as the events will only arrive in the component after the required port's state has already changed. Therefore it is discouraged to use shared state of required ports with out events in guards.
+
+**Possible values:** "hint" | **"warning"** | "error"
+
+---
+
 ## trailing_assignments
 
 Will find trailing assignments used in interfaces. Trailing assignments can have unexpected effects when using using shared state, so it might be useful to be aware of where trailing assignments are used, or to disallow them completely.
