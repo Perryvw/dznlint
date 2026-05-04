@@ -219,6 +219,15 @@ export const no_unknown_variables: RuleFactory = factoryContext => {
             return checkExpressionNames(node.expression, "name", context);
         });
 
+        factoryContext.registerRule<ast.DeferStatement>(ast.SyntaxKind.DeferStatement, (node, context) => {
+            const result = [];
+            const deferCapture = node.arguments?.arguments ?? [];
+            for (const capture of deferCapture) {
+                result.push(...checkExpressionNames(capture, "variable", context));
+            }
+            return result;
+        });
+
         const createUnknownCompoundNameDiagnostic = (
             compoundName: ast.CompoundName | ast.BindingExpression,
             typeForMessage: string,

@@ -986,6 +986,34 @@ describe("in components", () => {
             },
         });
     });
+
+    // https://github.com/Perryvw/dznlint/issues/57
+    test("variables in defer capture clause (#57)", async () => {
+        await testdznlint({
+            diagnostic: unknownVariable.code,
+            pass: `
+                component C {
+                    behavior {
+                        bool does_exist = true;
+                        void bla() {
+                            defer(does_exist) {
+                            
+                            }
+                        }
+                    }
+                }`,
+            fail: `
+                component C {
+                    behavior {
+                        void bla() {
+                            defer(doesnt_exist) {
+                            
+                            }
+                        }
+                    }
+                }`,
+        });
+    });
 });
 
 // https://github.com/Perryvw/dznlint/issues/23
