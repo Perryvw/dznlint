@@ -13,6 +13,7 @@ import {
     isExtern,
     isForeignFunctionDeclaration,
     isFunctionDefinition,
+    isOnStatement,
 } from "../util";
 import { BOOL_TYPE, INTEGER_TYPE, Type, TypeKind, VOID_TYPE } from "../semantics";
 import { VisitorContext } from "../visitor";
@@ -87,6 +88,37 @@ export const type_check: RuleFactory = factoryContext => {
                     checkValidTypeAssignment(context, argument, parameters[parameterIndex], diagnostics);
                 }
                 parameterIndex++;
+            }
+
+            return diagnostics;
+        });
+
+        factoryContext.registerRule<ast.Reply>(ast.SyntaxKind.Reply, (node, context) => {
+            const diagnostics: Diagnostic[] = [];
+
+            const onStatement = findFirstParent(node, isOnStatement);
+            if (onStatement) {
+                const eventSymbol = context.typeChecker.typeOfNode(onStatement.triggers[0])?.declaration;
+                if (eventSymbol && isEvent(eventSymbol)) {
+                    const returnType = context.typeChecker.typeOfNode(eventSymbol.type);
+                    if (node.value) {
+                        const returnedType = context.typeChecker.typeOfNode(node.value);
+                        if (returnType != returnedType) {
+                            diagnostics.push(
+                                createTypeMismatchDiagnostic(
+                                    returnType,
+                                    returnedType,
+                                    context.source,
+                                    node.value.position
+                                )
+                            );
+                        }
+                    } else {
+                        if (returnType != VOID_TYPE) {
+                            return [createTypeMismatchDiagnostic(returnType, VOID_TYPE, context.source, node.position)];
+                        }
+                    }
+                }
             }
 
             return diagnostics;
