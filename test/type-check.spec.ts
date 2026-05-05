@@ -633,3 +633,51 @@ test("correct type from foreign function with namespaces", async () => {
             }`,
     });
 });
+
+// https://github.com/Perryvw/dznlint/issues/60
+test("type check in reply (#60)", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            enum AB { A, B };
+            enum CD { C, D };
+
+            interface I {
+                in AB foo();
+            }
+
+            component C {
+                provides I i;
+
+                behavior {
+                    on i.foo(): {
+                        reply(CD.D);
+                    }
+                }
+            }
+        `,
+    });
+});
+
+test("type check in void reply", async () => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        fail: `
+            enum AB { A, B };
+
+            interface I {
+                in AB foo();
+            }
+
+            component C {
+                provides I i;
+
+                behavior {
+                    on i.foo(): {
+                        reply();
+                    }
+                }
+            }
+        `,
+    });
+});
