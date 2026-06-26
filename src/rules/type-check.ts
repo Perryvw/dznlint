@@ -8,12 +8,16 @@ import { InputSource } from "../semantics/program";
 import {
     assertNever,
     findFirstParent,
+    isComponentDefinition,
+    isCompoundName,
     isDollarsLiteral,
     isEvent,
     isExtern,
     isForeignFunctionDeclaration,
     isFunctionDefinition,
+    isOnPortTrigger,
     isOnStatement,
+    isPort,
 } from "../util";
 import { BOOL_TYPE, INTEGER_TYPE, Type, TypeKind, VOID_TYPE } from "../semantics";
 import { VisitorContext } from "../visitor";
@@ -96,9 +100,28 @@ export const type_check: RuleFactory = factoryContext => {
         factoryContext.registerRule<ast.Reply>(ast.SyntaxKind.Reply, (node, context) => {
             const diagnostics: Diagnostic[] = [];
 
+            if (node.port) {
+                const portDefinition = context.typeChecker.symbolOfNode(node.port)?.declaration;
+                if (
+                    portDefinition &&
+                    isPort(portDefinition) &&
+                    portDefinition.qualifiers.some(q => q.text === "blocking")
+                ) {
+                    // Do not check reply types on blocking ports because reply could be in another handler
+                    return [];
+                }
+            } else {
+                // If no port given and blocking ports in the component, also do not check reply type
+                const component = findFirstParent(node, isComponentDefinition);
+                if (component && component.ports.some(p => p.qualifiers.some(q => q.text === "blocking"))) {
+                    return [];
+                }
+            }
+
             const onStatement = findFirstParent(node, isOnStatement);
             if (onStatement) {
-                const eventSymbol = context.typeChecker.typeOfNode(onStatement.triggers[0])?.declaration;
+                const firstTrigger = onStatement.triggers[0];
+                const eventSymbol = context.typeChecker.typeOfNode(firstTrigger)?.declaration;
                 if (eventSymbol && isEvent(eventSymbol)) {
                     const returnType = context.typeChecker.typeOfNode(eventSymbol.type);
                     if (node.value) {

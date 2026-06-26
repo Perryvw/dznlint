@@ -681,3 +681,34 @@ test("type check in void reply", async () => {
         `,
     });
 });
+
+// https://github.com/Perryvw/dznlint/issues/63
+test.each(["reply", "i.reply"])("no type check on blocking ports (%s) (#63)", async reply => {
+    await testdznlint({
+        diagnostic: typeMismatch.code,
+        pass: `
+            enum AB { A, B };
+
+            interface I {
+                in AB foo();
+            }
+            interface I2 {
+                in void start();
+                out void finish();
+            }
+
+            component C {
+                provides blocking I i;
+                requires I2 i2;
+
+                behavior {
+                    on i.foo(): blocking {
+                        i2.start();
+                    }
+
+                    on i2.finish(): ${reply}(AB.A);
+                }
+            }
+        `,
+    });
+});
