@@ -9,13 +9,11 @@ import {
     assertNever,
     findFirstParent,
     isComponentDefinition,
-    isCompoundName,
     isDollarsLiteral,
     isEvent,
     isExtern,
     isForeignFunctionDeclaration,
     isFunctionDefinition,
-    isOnPortTrigger,
     isOnStatement,
     isPort,
 } from "../util";
