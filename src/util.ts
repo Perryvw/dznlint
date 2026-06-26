@@ -344,6 +344,10 @@ export function isOnStatement(node: ast.AnyAstNode): node is ast.OnStatement {
     return node.kind === ast.SyntaxKind.OnStatement;
 }
 
+export function isOnPortTrigger(node: ast.AnyAstNode): node is ast.OnPortTrigger {
+    return node.kind === ast.SyntaxKind.OnTrigger;
+}
+
 export function systemInstances(system: ast.System): ast.Instance[] {
     return system.instancesAndBindings.filter(e => e.kind === ast.SyntaxKind.Instance);
 }
