@@ -625,6 +625,23 @@ exports[`guard missing ; 1`] = `
 "
 `;
 
+exports[`illegal statement (#65) 1`] = `
+"component C
+{
+    behavior
+    {
+        void abc()
+        {
+            if (def)
+            {
+                illegal;
+            }
+        }
+    }
+}
+"
+`;
+
 exports[`interface formatting on shorthand 1`] = `
 "interface I
 {

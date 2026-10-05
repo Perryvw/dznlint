@@ -1077,6 +1077,7 @@ function formatCompound(cursor: Grammar.CursorPosition<Grammar.compound_Node>, f
             case "illegal":
                 formatter.requirePrecedingNewLine();
                 formatter.keyword("illegal");
+                formatter.semicolon();
                 break;
             case "interface_action_statement":
                 formatter.requirePrecedingNewLine();

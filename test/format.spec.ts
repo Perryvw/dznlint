@@ -492,6 +492,23 @@ test("foreign function", async () => {
     });
 });
 
+// https://github.com/Perryvw/dznlint/issues/65
+test("illegal statement (#65)", async () => {
+    await testFormat({
+        input: `
+            component C {
+                behavior {
+                    void abc() {
+                        if (def) {
+                            illegal;
+                        }
+                    }
+                }
+            }
+        `,
+    });
+});
+
 test.each([
     "files/component.dzn",
     "files/demo.dzn",
