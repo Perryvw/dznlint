@@ -402,6 +402,8 @@ export interface TypeReference extends AstNode<SyntaxKind.TypeReference> {
 }
 
 // Assure
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Assure {
     export interface Contract extends AstNode<SyntaxKind.AssureContract> {
         name: Identifier;

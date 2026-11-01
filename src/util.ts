@@ -1,7 +1,7 @@
 import * as ast from "./grammar/ast";
 import { Program, SourceFile } from "./semantics/program";
 import { SemanticSymbol, TypeChecker } from "./semantics/type-checker";
-import { visitFile, VisitorContext, VisitResult } from "./visitor";
+import { visitFile, VisitResult } from "./visitor";
 
 export function findLeafAtPosition(
     file: SourceFile,
