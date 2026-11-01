@@ -49,6 +49,196 @@ export interface assign_Node
         | literal_Node
         | unary_expression_Node;
 }
+export interface assure_after_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_after_statement";
+    childForFieldName(
+        kind: "event"
+    ):
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+    childForFieldName(kind: "expression"): assure_illegal_statement_Node | assure_on_eventually_statement_Node;
+}
+export interface assure_before_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_before_statement";
+    childForFieldName(
+        kind: "event"
+    ):
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+    childForFieldName(kind: "expression"): assure_illegal_statement_Node | assure_on_eventually_statement_Node;
+}
+export interface assure_call_expression_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_call_expression";
+    childForFieldName(kind: "call"): call_Node;
+    childForFieldName(
+        kind: "result"
+    ):
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+}
+export interface assure_during_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_during_statement";
+    childForFieldName(
+        kind: "end"
+    ):
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+    childForFieldName(kind: "expression"): assure_illegal_statement_Node | assure_on_eventually_statement_Node;
+    childForFieldName(
+        kind: "start"
+    ):
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+}
+export interface assure_group_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_group";
+    childForFieldName(
+        kind: "expression"
+    ):
+        | assure_call_expression_Node
+        | assure_group_Node
+        | binary_assure_expression_Node
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+}
+export interface assure_illegal_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_illegal_statement";
+    childForFieldName(
+        kind: "expression"
+    ):
+        | assure_call_expression_Node
+        | assure_group_Node
+        | binary_assure_expression_Node
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+}
+export interface assure_on_eventually_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_on_eventually_statement";
+    childForFieldName(
+        kind: "eventually_expression"
+    ):
+        | assure_call_expression_Node
+        | assure_group_Node
+        | binary_assure_expression_Node
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+    childForFieldName(
+        kind: "on_expression"
+    ):
+        | assure_call_expression_Node
+        | assure_group_Node
+        | binary_assure_expression_Node
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+}
+export interface assure_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_statement";
+    childForFieldName(
+        kind: "body"
+    ):
+        | assure_after_statement_Node
+        | assure_before_statement_Node
+        | assure_during_statement_Node
+        | assure_illegal_statement_Node
+        | assure_on_eventually_statement_Node
+        | assure_when_statement_Node;
+    childForFieldName(kind: "name"): name_Node;
+}
+export interface assure_when_statement_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "assure_when_statement";
+    childForFieldName(
+        kind: "condition"
+    ):
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+    childForFieldName(kind: "expression"): assure_illegal_statement_Node | assure_on_eventually_statement_Node;
+}
 export interface behavior_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -80,6 +270,40 @@ export interface behavior_body_Node
               | variable_Node
           >
         | undefined;
+}
+export interface binary_assure_expression_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "binary_assure_expression";
+    childForFieldName(
+        kind: "left"
+    ):
+        | assure_call_expression_Node
+        | assure_group_Node
+        | binary_assure_expression_Node
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
+    childForFieldName(kind: "operator"): UnnamedNode<"and"> | UnnamedNode<"or">;
+    childForFieldName(
+        kind: "right"
+    ):
+        | assure_call_expression_Node
+        | assure_group_Node
+        | binary_assure_expression_Node
+        | binary_expression_Node
+        | call_Node
+        | compound_name_Node
+        | dollars_Node
+        | group_Node
+        | literal_Node
+        | unary_expression_Node;
 }
 export interface binary_expression_Node
     extends Omit<
@@ -187,6 +411,7 @@ export interface component_Node
     > {
     type: "component";
     childForFieldName(kind: "body"): behavior_Node | system_Node | undefined;
+    childForFieldName(kind: "implements"): implements_clause_Node | undefined;
     childForFieldName(kind: "name"): scoped_name_Node;
     childrenForFieldName(kind: "port"): Array<port_Node> | undefined;
 }
@@ -226,6 +451,15 @@ export interface compound_name_Node
     type: "compound_name";
     childForFieldName(kind: "global"): UnnamedNode<"."> | undefined;
     childrenForFieldName(kind: "part"): Array<identifier_Node>;
+}
+export interface contract_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "contract";
+    childrenForFieldName(kind: "contract_statement"): Array<assure_statement_Node | port_Node> | undefined;
+    childForFieldName(kind: "name"): name_Node;
 }
 export interface defer_Node
     extends Omit<
@@ -502,6 +736,14 @@ export interface illegal_Node
     > {
     type: "illegal";
 }
+export interface implements_clause_Node
+    extends Omit<
+        Parser.SyntaxNode,
+        "childForFieldName" | "childrenForFieldName" | "child" | "firstNamedChild" | "namedChildren"
+    > {
+    type: "implements_clause";
+    childrenForFieldName(kind: "name"): Array<scoped_name_Node>;
+}
 export interface import_Node
     extends Omit<
         Parser.SyntaxNode,
@@ -606,6 +848,7 @@ export interface namespace_Node
     ):
         | Array<
               | component_Node
+              | contract_Node
               | enum_Node
               | extern_Node
               | foreign_function_Node
@@ -725,6 +968,7 @@ export interface root_Node
     ):
         | Array<
               | component_Node
+              | contract_Node
               | dollars_Node
               | enum_Node
               | extern_Node
@@ -915,8 +1159,18 @@ export interface otherwise_Node
 export type AllNodes =
     | arguments_Node
     | assign_Node
+    | assure_after_statement_Node
+    | assure_before_statement_Node
+    | assure_call_expression_Node
+    | assure_during_statement_Node
+    | assure_group_Node
+    | assure_illegal_statement_Node
+    | assure_on_eventually_statement_Node
+    | assure_statement_Node
+    | assure_when_statement_Node
     | behavior_Node
     | behavior_body_Node
+    | binary_assure_expression_Node
     | binary_expression_Node
     | binding_Node
     | blocking_Node
@@ -926,6 +1180,7 @@ export type AllNodes =
     | component_Node
     | compound_Node
     | compound_name_Node
+    | contract_Node
     | defer_Node
     | direction_Node
     | dollars_Node
@@ -947,6 +1202,7 @@ export type AllNodes =
     | identifier_Node
     | if_statement_Node
     | illegal_Node
+    | implements_clause_Node
     | import_Node
     | instance_Node
     | int_Node

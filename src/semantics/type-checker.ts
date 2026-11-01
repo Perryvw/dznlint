@@ -62,6 +62,7 @@ export enum TypeKind {
     Function,
     IntegerRange,
     Integer,
+    Reply,
 }
 
 export enum SymbolKind {
@@ -130,6 +131,8 @@ const BOOL_SYMBOL = new SemanticSymbol(BOOL_DECLARATION);
 const TRUE_SYMBOL = new SemanticSymbol(TRUE_DECLARATION);
 const FALSE_SYMBOL = new SemanticSymbol(FALSE_DECLARATION);
 
+const REPLY_SYMBOL = new SemanticSymbol(REPLY_DECLARATION);
+
 export class TypeChecker {
     public constructor(private program: Program) {}
 
@@ -185,7 +188,7 @@ export class TypeChecker {
     private builtInSymbols = new Map<string, SemanticSymbol>([
         ["void", VOID_SYMBOL],
         ["bool", BOOL_SYMBOL],
-        ["reply", new SemanticSymbol(REPLY_DECLARATION)],
+        ["reply", REPLY_SYMBOL],
         ["optional", new SemanticSymbol(OPTIONAL_DECLARATION)],
         ["inevitable", new SemanticSymbol(INEVITABLE_DECLARATION)],
     ]);
@@ -374,6 +377,10 @@ export class TypeChecker {
         if (symbol === VOID_SYMBOL) return VOID_TYPE;
         if (symbol.declaration === null) return ERROR_TYPE;
 
+        if (symbol == REPLY_SYMBOL) {
+            return { kind: TypeKind.Reply, name: "reply" };
+        }
+
         const declaration = symbol.declaration;
 
         if (declaration.kind === ast.SyntaxKind.ExternDeclaration) {
@@ -418,11 +425,7 @@ export class TypeChecker {
             return { kind: TypeKind.Interface, name: definition.name.text, declaration: definition };
         } else if (symbol.declaration.kind === ast.SyntaxKind.Namespace) {
             const definition = declaration as ast.Namespace;
-            if (definition.name.kind === ast.SyntaxKind.Identifier) {
-                return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.text };
-            } else {
-                return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: definition.name.name.text };
-            }
+            return { kind: TypeKind.Namespace, declaration: symbol.declaration, name: nameToString(definition.name) };
         } else if (
             symbol.declaration.kind === ast.SyntaxKind.ForeignFunctionDeclaration ||
             symbol.declaration.kind === ast.SyntaxKind.FunctionDefinition
@@ -539,7 +542,8 @@ export class TypeChecker {
                     statement.kind === ast.SyntaxKind.ExternDeclaration ||
                     statement.kind === ast.SyntaxKind.IntDefinition ||
                     statement.kind === ast.SyntaxKind.ForeignFunctionDeclaration ||
-                    statement.kind === ast.SyntaxKind.FunctionDefinition
+                    statement.kind === ast.SyntaxKind.FunctionDefinition ||
+                    statement.kind === ast.SyntaxKind.AssureContract
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === ast.SyntaxKind.Namespace) {
@@ -591,7 +595,8 @@ export class TypeChecker {
                     statement.kind === ast.SyntaxKind.ExternDeclaration ||
                     statement.kind === ast.SyntaxKind.IntDefinition ||
                     statement.kind === ast.SyntaxKind.ForeignFunctionDeclaration ||
-                    statement.kind === ast.SyntaxKind.FunctionDefinition
+                    statement.kind === ast.SyntaxKind.FunctionDefinition ||
+                    statement.kind === ast.SyntaxKind.AssureContract
                 ) {
                     result.set(statement.name.text, statement);
                 } else if (statement.kind === ast.SyntaxKind.Namespace) {

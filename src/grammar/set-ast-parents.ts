@@ -53,6 +53,10 @@ const setParentVisitors: Record<ast.SyntaxKind, ((node: any) => void) | undefine
         }
     },
     [ast.SyntaxKind.ComponentDefinition]: (node: ast.ComponentDefinition) => {
+        for (const i of node.implements) {
+            setParent(i, node);
+        }
+
         for (const port of node.ports) {
             setParent(port, node);
         }
@@ -228,6 +232,9 @@ const setParentVisitors: Record<ast.SyntaxKind, ((node: any) => void) | undefine
     },
     [ast.SyntaxKind.UnaryOperatorExpression]: (node: ast.UnaryOperatorExpression) => {
         setParent(node.expression, node);
+    },
+    [ast.SyntaxKind.AssureContract]: (node: ast.Assure.Contract) => {
+        setParent(node.name, node);
     },
     // Nodes without children:
     [ast.SyntaxKind.BooleanLiteral]: undefined,

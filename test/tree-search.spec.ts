@@ -363,6 +363,27 @@ test("nested namespace merging", async () => {
     expect(symbolsInScope.get("OtherUnknownEnum")).toBeUndefined();
 });
 
+test("component implements", async () => {
+    const program = await Program.Init();
+    const typeChecker = new TypeChecker(program);
+
+    const nameAtPosition = await findNameAtCursor(
+        program,
+        `
+        contract MyContract {}
+        component MyComponent implements MyCon<cursor>tract {}
+        `
+    );
+
+    expect(nameAtPosition).toBeDefined();
+
+    const symbol = typeChecker.symbolOfNode(nameAtPosition!);
+    expect(symbol).toBeDefined();
+
+    expect(symbol?.declaration.kind).toBe(ast.SyntaxKind.AssureContract);
+    expect((symbol?.declaration as ast.Assure.Contract).name.text).toBe("MyContract");
+});
+
 describe("incomplete tree", () => {
     test("compound name in on", async () => {
         const program = await Program.Init();
@@ -816,9 +837,9 @@ describe("incomplete tree", () => {
             }`
         );
         expect(leafAtPosition).toBeDefined();
-        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.Reply]);
+        expect(ast.SyntaxKind[leafAtPosition!.kind]).toBe(ast.SyntaxKind[ast.SyntaxKind.CompoundName]);
 
-        expect((leafAtPosition as ast.Reply).port?.text).toBe("i");
+        expect(((leafAtPosition as ast.CompoundName).compound as ast.Identifier).text).toBe("i");
     });
 
     test("compound name in incomplete if statement", async () => {

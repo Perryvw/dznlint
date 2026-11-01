@@ -70,6 +70,10 @@ function formatRoot(cursor: Grammar.CursorPosition<Grammar.root_Node>, formatter
                     formatter.requirePrecedingNewLine();
                     formatNamespace(cursor, formatter);
                     break;
+                case "contract":
+                    formatter.requirePrecedingNewLine();
+                    Assure.formatContract(cursor.pos(), formatter);
+                    break;
                 // generics
                 case "comment":
                     formatComment(cursor.currentNode, formatter);
@@ -132,6 +136,9 @@ function formatNamespace(cursor: Grammar.CursorPosition<Grammar.namespace_Node>,
                 break;
             case "component":
                 formatComponent(cursor.pos(), formatter);
+                break;
+            case "contract":
+                Assure.formatContract(cursor.pos(), formatter);
                 break;
             case "enum":
                 formatEnum(cursor.pos(), formatter);
@@ -370,6 +377,9 @@ function formatComponent(cursor: Grammar.CursorPosition<Grammar.component_Node>,
                 break;
             case "system":
                 formatSystem(cursor.pos(), formatter);
+                break;
+            case "implements_clause":
+                Assure.formatImplementsClause(cursor.pos(), formatter);
                 break;
             // generics
             case "comment":
@@ -2223,3 +2233,438 @@ function compoundContainsGuards(compound: Grammar.CursorPosition<Grammar.compoun
     }
     return false;
 }
+
+const Assure = {
+    formatImplementsClause(cursor: Grammar.CursorPosition<Grammar.implements_clause_Node>, formatter: Formatter) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "implements":
+                    formatter.keyword("implements");
+                    break;
+                case ",":
+                    formatter.comma();
+                    break;
+                case "scoped_name":
+                    formatter.requirePrecedingSpace();
+                    formatter.name(cursor.nodeText);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatContract(cursor: Grammar.CursorPosition<Grammar.contract_Node>, formatter: Formatter) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "contract":
+                    formatter.startContract();
+                    break;
+                case "{":
+                    formatter.openScopedBlock();
+                    break;
+                case "}":
+                    formatter.endContract();
+                    break;
+                case "port":
+                    formatPort(cursor.pos(), formatter);
+                    break;
+                case "name":
+                    formatter.name(cursor.nodeText);
+                    break;
+                case "assure_statement":
+                    this.formatAssureStatement(cursor.pos(), formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format contract child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatAssureStatement(cursor: Grammar.CursorPosition<Grammar.assure_statement_Node>, formatter: Formatter) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "assure":
+                    formatter.keyword("assure");
+                    break;
+                case "name":
+                    formatter.name(cursor.nodeText);
+                    break;
+                case "{":
+                    formatter.requirePrecedingSpace();
+                    formatter.openBrace();
+                    break;
+                case "}":
+                    formatter.requirePrecedingSpace();
+                    formatter.closeBrace();
+                    break;
+                case "assure_after_statement":
+                case "assure_before_statement":
+                case "assure_during_statement":
+                case "assure_when_statement":
+                    this.formatAssureInnerStatement(cursor.pos(), formatter);
+                    break;
+                case "assure_illegal_statement":
+                    this.formatIllegalStatement(cursor.pos(), formatter);
+                    break;
+                case "assure_on_eventually_statement":
+                    this.formatOnEventuallyStatement(cursor.pos(), formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatAssureInnerStatement(
+        cursor:
+            | Grammar.CursorPosition<Grammar.assure_after_statement_Node>
+            | Grammar.CursorPosition<Grammar.assure_before_statement_Node>
+            | Grammar.CursorPosition<Grammar.assure_during_statement_Node>
+            | Grammar.CursorPosition<Grammar.assure_when_statement_Node>,
+        formatter: Formatter
+    ) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "after":
+                    formatter.keyword("after");
+                    break;
+                case "before":
+                    formatter.keyword("before");
+                    break;
+                case "during":
+                    formatter.keyword("during");
+                    break;
+                case "when":
+                    formatter.keyword("when");
+                    break;
+                case "(":
+                    formatter.openParen();
+                    break;
+                case ")":
+                    formatter.closeParen();
+                    break;
+                case "{":
+                    formatter.requirePrecedingSpace();
+                    formatter.openBrace();
+                    break;
+                case "}":
+                    formatter.requirePrecedingSpace();
+                    formatter.closeBrace();
+                    break;
+                case ",":
+                    formatter.comma();
+                    break;
+                case "assure_illegal_statement":
+                    this.formatIllegalStatement(cursor.pos(), formatter);
+                    break;
+                case "assure_on_eventually_statement":
+                    this.formatOnEventuallyStatement(cursor.pos(), formatter);
+                    break;
+                case "binary_expression":
+                case "call":
+                case "compound_name":
+                case "dollars":
+                case "group":
+                case "literal":
+                case "unary_expression":
+                    this.formatAssureExpression(cursor, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatIllegalStatement(
+        cursor: Grammar.CursorPosition<Grammar.assure_illegal_statement_Node>,
+        formatter: Formatter
+    ) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "illegal":
+                    formatter.keyword("illegal");
+                    break;
+                case "assure_call_expression":
+                case "assure_group":
+                case "binary_assure_expression":
+                case "binary_expression":
+                case "call":
+                case "compound_name":
+                case "dollars":
+                case "group":
+                case "literal":
+                case "unary_expression":
+                    this.formatAssureExpression(cursor, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatOnEventuallyStatement(
+        cursor: Grammar.CursorPosition<Grammar.assure_on_eventually_statement_Node>,
+        formatter: Formatter
+    ) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "on":
+                    formatter.keyword("on");
+                    break;
+                case "eventually":
+                    formatter.keyword("eventually");
+                    formatter.requirePrecedingSpace();
+                    break;
+                case "assure_call_expression":
+                case "assure_group":
+                case "binary_assure_expression":
+                case "binary_expression":
+                case "call":
+                case "compound_name":
+                case "dollars":
+                case "group":
+                case "literal":
+                case "unary_expression":
+                    this.formatAssureExpression(cursor, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatAssureExpression(cursor: Grammar.CursorPosition<Grammar._assure_expression_Node>, formatter: Formatter) {
+        switch (cursor.nodeType) {
+            case "assure_call_expression":
+                this.formatCallExpression(cursor.pos(), formatter);
+                break;
+            case "assure_group":
+                this.formatGroup(cursor.pos(), formatter);
+                break;
+            case "binary_assure_expression":
+                this.formatBinaryExpression(cursor.pos(), formatter);
+                break;
+            case "binary_expression":
+                formatBinaryExpression(cursor, formatter);
+                break;
+            case "call":
+                formatCall(cursor.pos(), formatter);
+                break;
+            case "compound_name":
+                formatCompoundName(cursor.currentNode, formatter);
+                break;
+            case "dollars":
+                formatDollars(cursor.pos(), formatter);
+                break;
+            case "group":
+                formatGroup(cursor, formatter);
+                break;
+            case "literal":
+                formatter.literal(cursor.nodeText);
+                break;
+            case "unary_expression":
+                formatUnaryExpression(cursor, formatter);
+                break;
+            // generics
+            case "comment":
+                formatComment(cursor.currentNode, formatter);
+                break;
+            case "ERROR":
+                formatter.verbatim(cursor.nodeText);
+                break;
+            case "whiteline":
+                formatter.whiteline();
+                break;
+            default:
+                assertNever(cursor);
+                throw `cannot format implement clause child ${cursor}`;
+        }
+    },
+    formatBinaryExpression(
+        cursor: Grammar.CursorPosition<Grammar.binary_assure_expression_Node>,
+        formatter: Formatter
+    ) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "and":
+                    formatter.keyword("and");
+                    break;
+                case "or":
+                    formatter.keyword("or");
+                    break;
+                case "assure_call_expression":
+                case "assure_group":
+                case "binary_assure_expression":
+                case "binary_expression":
+                case "call":
+                case "compound_name":
+                case "dollars":
+                case "group":
+                case "literal":
+                case "unary_expression":
+                    this.formatAssureExpression(cursor, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatCallExpression(cursor: Grammar.CursorPosition<Grammar.assure_call_expression_Node>, formatter: Formatter) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "->":
+                    formatter.binaryOperator("->");
+                    break;
+                case "binary_expression":
+                case "call":
+                case "compound_name":
+                case "dollars":
+                case "group":
+                case "literal":
+                case "unary_expression":
+                    this.formatAssureExpression(cursor, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+    formatGroup(cursor: Grammar.CursorPosition<Grammar.assure_group_Node>, formatter: Formatter) {
+        cursor.gotoFirstChild();
+        do {
+            switch (cursor.nodeType) {
+                case "(":
+                    formatter.openParen();
+                    break;
+                case ")":
+                    formatter.closeParen();
+                    break;
+                case "assure_call_expression":
+                case "assure_group":
+                case "binary_assure_expression":
+                case "binary_expression":
+                case "call":
+                case "compound_name":
+                case "dollars":
+                case "group":
+                case "literal":
+                case "unary_expression":
+                    this.formatAssureExpression(cursor, formatter);
+                    break;
+                // generics
+                case "comment":
+                    formatComment(cursor.currentNode, formatter);
+                    break;
+                case "ERROR":
+                    formatter.verbatim(cursor.nodeText);
+                    break;
+                case "whiteline":
+                    formatter.whiteline();
+                    break;
+                default:
+                    assertNever(cursor);
+                    throw `cannot format implement clause child ${cursor}`;
+            }
+        } while (cursor.gotoNextSibling());
+        cursor.gotoParent();
+    },
+};
