@@ -15,6 +15,7 @@ enum PrintingType {
     On,
     Compound,
     OneLineCompound,
+    Contract,
 }
 
 enum Token {
@@ -335,6 +336,19 @@ export class Formatter {
         }
         this.closeBrace();
         this.previousToken = Token.NamespaceBrace;
+    }
+
+    // Contract
+
+    public startContract() {
+        this.requirePrecedingNewLine();
+        this.keyword("contract");
+        this.currentType.push(PrintingType.Contract);
+    }
+
+    public endContract() {
+        this.closeScopedBlock();
+        this.popCurrentType(PrintingType.Contract);
     }
 
     // Misc

@@ -520,6 +520,40 @@ test.each([
     await testFormat({ input: fileContent });
 });
 
+test("assure contract", () =>
+    testFormat({
+        input: `
+        contract MyContract {
+            provides I provided;
+            requires I required;
+
+            // Simple on eventually
+            assure Assurance1 { on required.foo() -> true eventually provided.bar() }
+
+            // Simple illegal
+            assure Assurance2 { illegal required.foo(_) }
+            assure Assurance2b { illegal required.foo(_) -> false }
+
+            // When assurance
+            assure Assurance3 { when(provided.state.Active) { on required.foo() eventually provided.bar() } }
+            assure Assurance3b { when(provided.state==true) { on required.foo() eventually provided.bar() } }
+
+            // During assurance
+            assure Assurance4 { during(provided.foo(), provided.bar()) { illegal required.bla() } }
+
+            // After
+            assure Assurance5 { after(provided.foo()) { illegal required.foo() } }
+
+            // Before
+            assure Assurance6 { before(provided.foo()) { illegal required.foo() } }
+
+            /* Binary */
+            assure Assurance7 { on provided.start() eventually port.done() or port.fail(_) }
+            // Binary with brackets
+            assure Assurance8 { on provided.start() eventually (port.done() or port.fail(_)) }
+        }`,
+    }));
+
 describe("formatting configuration", () => {
     const unformatted = `
         interface I {

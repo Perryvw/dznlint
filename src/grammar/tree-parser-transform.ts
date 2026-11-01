@@ -1,4 +1,4 @@
-import { assertNever, combineSourceRanges, isErrorNode, isIdentifier } from "../util";
+import { assertNever, combineSourceRanges, isCompoundName, isErrorNode, isIdentifier } from "../util";
 import * as ast from "./ast";
 import * as parser from "./tree-sitter-types";
 
@@ -43,18 +43,22 @@ function transformRootStatement(node: RootStatements): ast.RootStatement {
             return transformNamespace(node);
         case "foreign_function":
             return transformForeignFunctionDeclaration(node);
+        case "contract":
+            return transformAssureContract(node);
         default:
             throw assertNever(node, "unknown root statement kind");
     }
 }
 
 function transformComponent(component: parser.component_Node): ast.ComponentDefinition {
+    const implements_clause = component.childForFieldName("implements");
     const body = component.childForFieldName("body");
 
     return {
         kind: ast.SyntaxKind.ComponentDefinition,
         position: nodePosition(component),
         name: transformIdentifier(component.childForFieldName("name")),
+        implements: implements_clause?.childrenForFieldName("name").map(transformName) ?? [],
         ports: component.childrenForFieldName("port")!.map(transformPort),
         body: body && transformComponentBody(body),
         errors: collectErrors(component),
@@ -131,7 +135,8 @@ function transformBindingExpression(bindingExpression: parser.end_point_Node): a
     if (name) {
         const compoundName = transformName(name);
 
-        function toBindingCompound(name: ast.Identifier | ast.CompoundName): ast.Identifier | ast.BindingCompoundName {
+        function toBindingCompound(name: ast.Name): ast.Identifier | ast.BindingCompoundName | ast.Error {
+            if (isErrorNode(name)) return name;
             if (name.kind === ast.SyntaxKind.Identifier) return name;
 
             return {
@@ -276,11 +281,11 @@ function transformNamespace(node: parser.namespace_Node): ast.Namespace {
         kind: ast.SyntaxKind.Namespace,
         position: nodePosition(node),
         errors: collectErrors(node),
-        name: isIdentifier(name) ? name : name.name,
+        name: isCompoundName(name) ? name.name : name,
         statements: (node.childrenForFieldName("body_statement") ?? []).map(transformNamespaceStatement),
     };
     // Desugar namespace a.b.c {} into namespace a { namsepace b { namespace c {}}}
-    while (name.kind !== ast.SyntaxKind.Identifier && name.compound) {
+    while (isCompoundName(name) && name.compound) {
         name = name.compound;
         namespace = {
             kind: ast.SyntaxKind.Namespace,
@@ -300,6 +305,8 @@ function transformNamespaceStatement(node: NamespaceStatements): ast.NamespaceSt
             return transformFunction(node);
         case "component":
             return transformComponent(node);
+        case "contract":
+            return transformAssureContract(node);
         case "enum":
             return transformEnumDefinition(node);
         case "extern":
@@ -671,6 +678,14 @@ function transformEmptyStatement(node: parser.skip_statement_Node): ast.EmptySta
     };
 }
 
+function transformAssureContract(node: parser.contract_Node): ast.Assure.Contract {
+    return {
+        kind: ast.SyntaxKind.AssureContract,
+        position: nodePosition(node),
+        name: transformIdentifier(node.childForFieldName("name")),
+    };
+}
+
 type ExpressionsTypes =
     | parser.binary_expression_Node
     | parser.call_Node
@@ -875,7 +890,16 @@ function transformName(
         };
     } else if (node.type === "compound_name") {
         const global = node.childForFieldName("global");
-        const parts = node.childrenForFieldName("part").filter(p => p.type === "identifier");
+        const parts = node.childrenForFieldName("part");
+
+        // If we have an empty name at the end of the compound name, return an error
+        if (parts[parts.length - 1].endIndex != node.endIndex) {
+            return {
+                kind: ast.SyntaxKind.ERROR,
+                position: nodePosition(node),
+                text: node.text,
+            };
+        }
 
         const firstIdentifier = transformIdentifier(parts[0]);
         let name: ast.Name = global
@@ -888,11 +912,13 @@ function transformName(
             : firstIdentifier;
 
         for (let i = 1; i < parts.length; i++) {
+            const newPart = transformIdentifier(parts[i]);
+
             name = {
                 kind: ast.SyntaxKind.CompoundName,
                 position: combineSourceRanges(name.position, nodePosition(parts[i])),
                 compound: name,
-                name: transformIdentifier(parts[i]),
+                name: newPart,
             } satisfies ast.CompoundName;
         }
 

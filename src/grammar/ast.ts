@@ -58,6 +58,9 @@ export enum SyntaxKind {
     OnTriggerParameters,
     TypeReference,
 
+    // Assure
+    AssureContract,
+
     ERROR,
 }
 
@@ -91,7 +94,8 @@ export type RootStatement =
     | ComponentDefinition
     | FunctionDefinition
     | ForeignFunctionDeclaration
-    | Statement;
+    | Statement
+    | Assure.Contract;
 
 export type Statement = DeclarativeStatement | ImperativeStatement;
 
@@ -130,7 +134,8 @@ export type NamespaceStatement =
     | InterfaceDefinition
     | ComponentDefinition
     | FunctionDefinition
-    | ForeignFunctionDeclaration;
+    | ForeignFunctionDeclaration
+    | Assure.Contract;
 
 export interface Namespace extends AstNode<SyntaxKind.Namespace> {
     name: Name;
@@ -159,6 +164,7 @@ export interface Event extends AstNode<SyntaxKind.Event> {
 export interface ComponentDefinition extends AstNode<SyntaxKind.ComponentDefinition> {
     name: Identifier;
     ports: Port[];
+    implements: Name[];
     body?: Behavior | System;
 }
 
@@ -389,8 +395,17 @@ export interface UnaryOperatorExpression extends AstNode<SyntaxKind.UnaryOperato
 
 // Misc
 
-export type Name = Identifier | CompoundName;
+export type Name = Identifier | CompoundName | Error;
 
 export interface TypeReference extends AstNode<SyntaxKind.TypeReference> {
     typeName: Name;
+}
+
+// Assure
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace Assure {
+    export interface Contract extends AstNode<SyntaxKind.AssureContract> {
+        name: Identifier;
+    }
 }

@@ -31,6 +31,7 @@ export function findLeafAtPosition(
             program
         );
     }
+
     return leaf;
 }
 
@@ -379,6 +380,8 @@ export function findFirstParent<T extends ast.AnyAstNode>(
 
 export function nameToString(name: ast.Name): string {
     if (name.kind === ast.SyntaxKind.Identifier) {
+        return name.text;
+    } else if (isErrorNode(name)) {
         return name.text;
     } else {
         if (name.compound) {

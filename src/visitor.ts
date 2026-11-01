@@ -91,6 +91,10 @@ const visitors: Record<ast.SyntaxKind, (node: any, context: VisitorContext, cb: 
     ) => {
         context.visit(node.name, cb);
 
+        for (const contract of node.implements) {
+            context.visit(contract, cb);
+        }
+
         for (const port of node.ports) {
             context.visit(port, cb);
         }
@@ -299,6 +303,10 @@ const visitors: Record<ast.SyntaxKind, (node: any, context: VisitorContext, cb: 
         cb: VisitorCallback
     ) => {
         context.visit(node.expression, cb);
+    },
+
+    [ast.SyntaxKind.AssureContract]: (node: ast.Assure.Contract, context: VisitorContext, cb: VisitorCallback) => {
+        context.visit(node.name, cb);
     },
 
     // Leaf nodes, no need to visit children of these

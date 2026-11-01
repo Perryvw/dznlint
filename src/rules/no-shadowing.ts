@@ -29,11 +29,7 @@ export const no_shadowing: RuleFactory = factoryContext => {
     const config = getRuleConfig("no_shadowing", factoryContext.userConfig);
 
     if (config.isEnabled) {
-        const createDiagnostics = (
-            newVariable: ast.Identifier,
-            originalDefinition: ast.Identifier,
-            source: InputSource
-        ) => [
+        const createDiagnostics = (newVariable: ast.Identifier, originalDefinition: ast.Name, source: InputSource) => [
             // Create error diagnostic at re-definition node
             shadowingVariablesNotAllowed(
                 config.severity,
@@ -130,7 +126,7 @@ function findDeclarationInUpperScope(
     return undefined;
 }
 
-function declarationName(declaration: ast.AnyAstNode): ast.Identifier {
+function declarationName(declaration: ast.AnyAstNode): ast.Name {
     if (isFunctionDefinition(declaration)) {
         return declaration.name;
     } else if (isInstance(declaration)) {

@@ -90,6 +90,554 @@
     }
   },
   {
+    "type": "assure_after_statement",
+    "named": true,
+    "fields": {
+      "event": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      },
+      "expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_illegal_statement",
+            "named": true
+          },
+          {
+            "type": "assure_on_eventually_statement",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_before_statement",
+    "named": true,
+    "fields": {
+      "event": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      },
+      "expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_illegal_statement",
+            "named": true
+          },
+          {
+            "type": "assure_on_eventually_statement",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_call_expression",
+    "named": true,
+    "fields": {
+      "call": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "call",
+            "named": true
+          }
+        ]
+      },
+      "result": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_during_statement",
+    "named": true,
+    "fields": {
+      "end": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      },
+      "expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_illegal_statement",
+            "named": true
+          },
+          {
+            "type": "assure_on_eventually_statement",
+            "named": true
+          }
+        ]
+      },
+      "start": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_group",
+    "named": true,
+    "fields": {
+      "expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_call_expression",
+            "named": true
+          },
+          {
+            "type": "assure_group",
+            "named": true
+          },
+          {
+            "type": "binary_assure_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_illegal_statement",
+    "named": true,
+    "fields": {
+      "expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_call_expression",
+            "named": true
+          },
+          {
+            "type": "assure_group",
+            "named": true
+          },
+          {
+            "type": "binary_assure_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_on_eventually_statement",
+    "named": true,
+    "fields": {
+      "eventually_expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_call_expression",
+            "named": true
+          },
+          {
+            "type": "assure_group",
+            "named": true
+          },
+          {
+            "type": "binary_assure_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      },
+      "on_expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_call_expression",
+            "named": true
+          },
+          {
+            "type": "assure_group",
+            "named": true
+          },
+          {
+            "type": "binary_assure_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_statement",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_after_statement",
+            "named": true
+          },
+          {
+            "type": "assure_before_statement",
+            "named": true
+          },
+          {
+            "type": "assure_during_statement",
+            "named": true
+          },
+          {
+            "type": "assure_illegal_statement",
+            "named": true
+          },
+          {
+            "type": "assure_on_eventually_statement",
+            "named": true
+          },
+          {
+            "type": "assure_when_statement",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "assure_when_statement",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      },
+      "expression": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_illegal_statement",
+            "named": true
+          },
+          {
+            "type": "assure_on_eventually_statement",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "behavior",
     "named": true,
     "fields": {
@@ -161,6 +709,118 @@
           },
           {
             "type": "variable",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "binary_assure_expression",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_call_expression",
+            "named": true
+          },
+          {
+            "type": "assure_group",
+            "named": true
+          },
+          {
+            "type": "binary_assure_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "and",
+            "named": false
+          },
+          {
+            "type": "or",
+            "named": false
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "assure_call_expression",
+            "named": true
+          },
+          {
+            "type": "assure_group",
+            "named": true
+          },
+          {
+            "type": "binary_assure_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "call",
+            "named": true
+          },
+          {
+            "type": "compound_name",
+            "named": true
+          },
+          {
+            "type": "dollars",
+            "named": true
+          },
+          {
+            "type": "group",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
             "named": true
           }
         ]
@@ -454,6 +1114,16 @@
           }
         ]
       },
+      "implements": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "implements_clause",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -568,6 +1238,36 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "contract",
+    "named": true,
+    "fields": {
+      "contract_statement": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "assure_statement",
+            "named": true
+          },
+          {
+            "type": "port",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "name",
             "named": true
           }
         ]
@@ -1312,6 +2012,22 @@
     "fields": {}
   },
   {
+    "type": "implements_clause",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "scoped_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "import",
     "named": true,
     "fields": {
@@ -1544,6 +2260,10 @@
         "types": [
           {
             "type": "component",
+            "named": true
+          },
+          {
+            "type": "contract",
             "named": true
           },
           {
@@ -1852,6 +2572,10 @@
         "types": [
           {
             "type": "component",
+            "named": true
+          },
+          {
+            "type": "contract",
             "named": true
           },
           {
@@ -2216,6 +2940,10 @@
     "named": false
   },
   {
+    "type": "->",
+    "named": false
+  },
+  {
     "type": ".",
     "named": false
   },
@@ -2288,8 +3016,24 @@
     "named": false
   },
   {
+    "type": "after",
+    "named": false
+  },
+  {
+    "type": "and",
+    "named": false
+  },
+  {
+    "type": "assure",
+    "named": false
+  },
+  {
     "type": "asterisk",
     "named": true
+  },
+  {
+    "type": "before",
+    "named": false
   },
   {
     "type": "behavior",
@@ -2312,6 +3056,10 @@
     "named": false
   },
   {
+    "type": "contract",
+    "named": false
+  },
+  {
     "type": "defer",
     "named": false
   },
@@ -2320,11 +3068,19 @@
     "named": true
   },
   {
+    "type": "during",
+    "named": false
+  },
+  {
     "type": "else",
     "named": false
   },
   {
     "type": "enum",
+    "named": false
+  },
+  {
+    "type": "eventually",
     "named": false
   },
   {
@@ -2349,6 +3105,10 @@
   },
   {
     "type": "illegal",
+    "named": false
+  },
+  {
+    "type": "implements",
     "named": false
   },
   {
@@ -2400,6 +3160,10 @@
     "named": true
   },
   {
+    "type": "or",
+    "named": false
+  },
+  {
     "type": "otherwise",
     "named": true
   },
@@ -2437,6 +3201,10 @@
   },
   {
     "type": "void",
+    "named": false
+  },
+  {
+    "type": "when",
     "named": false
   },
   {
